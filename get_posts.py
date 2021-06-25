@@ -26,7 +26,6 @@ reddit = praw.Reddit(
     client_secret="3HkLZRVIBwAWbUdYExTGFK0e35d1Uw",
     user_agent="android:com.example.myredditapp:v1.2.3",
 )
-df_comments = pd.DataFrame(columns=comment_columns["df"])
 df_posts = pd.DataFrame(columns=post_columns["df"])
 timestamps = list()
 
@@ -50,7 +49,7 @@ def getPushshiftPost(after, before):
 
 after = FIRST_EPOCH
 while int(after) < LAST_EPOCH:
-    #try:
+    try:
         data = getPushshiftPost(after,LAST_EPOCH)
         c = 1
         for p in data:
