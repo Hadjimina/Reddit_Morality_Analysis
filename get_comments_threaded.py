@@ -58,7 +58,7 @@ class commentThread (threading.Thread):
                     self.df = self.df.append(pd.DataFrame(comments, columns=self.df.columns), ignore_index=True)
 
 
-DF_PATH = "post_crashed.csv"
+DF_PATH = "posts.csv"
 NUM_THREADS = 25
 
         
