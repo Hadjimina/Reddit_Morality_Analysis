@@ -9,6 +9,9 @@ import threading
 SHOW_LOGS = True
 DF_PATH = "posts_cleaned_27_6_2021.csv"
 NUM_THREADS = 1000
+MAX_RETRIES = 10
+BACKOFF = 60  #[s]
+TMP_FOLDER ="tmp_comments/"
 # Possible keys found at https://github.com/praw-dev/praw/blob/c818949c848f4520df08b16c098f80a41e897ab5/praw/models/reddit/comment.py
 comment_columns = { 
     "df":   ["post_id", "comment_id", "comment_text", "comment_author_id", "comment_score", "comment_created_utc", "comment_was_edited"],
@@ -62,9 +65,18 @@ class commentThread (threading.Thread):
                 length = self.post_ids.shape[0]
                 timestamp = time.strftime('%H:%M:%S')
                 print("THREAD "+str(self.threadID)+"/"+str(NUM_THREADS)+ " Row "+str(counter_thread)+"/"+str(length)+" "+str(timestamp))
-            comments = self.getCommentsData(j)
-            if comments.size > 0:
+
+            for _ in range(MAX_RETRIES):
+                try:
+                    comments = self.getCommentsData(j)
+                    if comments.size > 0:
                         self.df = self.df.append(pd.DataFrame(comments, columns=self.df.columns), ignore_index=True)
+                        pd.to_csv(TMP_FOLDER+"thread_"+str(self.threadID)+"_tmp.csv")
+                    break
+                except TimeoutError:
+                    time.sleep(BACKOFF)
+                    pass
+            
 
 
 
