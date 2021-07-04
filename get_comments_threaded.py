@@ -4,11 +4,13 @@ import time
 import praw
 from praw.models import MoreComments
 import threading
+import datetime
+import requests
 
 
 SHOW_LOGS = True
 DF_PATH = "posts_cleaned_27_6_2021.csv"
-NUM_THREADS = 1000
+NUM_THREADS = 100+1
 MAX_RETRIES = 10
 BACKOFF = 60  #[s]
 TMP_FOLDER ="tmp_comments/"
@@ -17,11 +19,7 @@ comment_columns = {
     "df":   ["post_id", "comment_id", "comment_text", "comment_author_id", "comment_score", "comment_created_utc", "comment_was_edited"],
     "praw": [                   "id",         "body",            "author.id",      "score",         "created_utc",             "edited"] #useless atm
     }
-reddit = praw.Reddit(
-    client_id="ChMem9TZYJif1A",
-    client_secret="3HkLZRVIBwAWbUdYExTGFK0e35d1Uw",
-    user_agent="android:com.example.myredditapp:v1.2.3",
-)
+
 
 class commentThread (threading.Thread):
     def __init__(self, threadID, post_ids):
@@ -29,9 +27,14 @@ class commentThread (threading.Thread):
       self.threadID = threadID
       self.post_ids = post_ids
       self.df = pd.DataFrame(columns=comment_columns["df"])
-
+            
     def getCommentsData(_, id):
-        submission = reddit.submission(id=id)
+        submission = praw.Reddit(
+                        client_id="ChMem9TZYJif1A",
+                        client_secret="3HkLZRVIBwAWbUdYExTGFK0e35d1Uw",
+                        user_agent="android:com.example.myredditapp:v1.2.3",
+                    ).submission(id=id)
+
         values = []
         counter = 1
         for top_level_comment in submission.comments:
@@ -64,31 +67,38 @@ class commentThread (threading.Thread):
             if SHOW_LOGS:
                 length = self.post_ids.shape[0]
                 timestamp = time.strftime('%H:%M:%S')
-                print("THREAD "+str(self.threadID)+"/"+str(NUM_THREADS)+ " Row "+str(counter_thread)+"/"+str(length)+" "+str(timestamp))
+                string_to_print = "THREAD "+str(self.threadID)+"/"+str(NUM_THREADS-2)+ " Row "+str(counter_thread)+"/"+str(length)+" "+str(timestamp)
+                print(string_to_print)
 
             for _ in range(MAX_RETRIES):
                 try:
                     comments = self.getCommentsData(j)
                     if comments.size > 0:
                         self.df = self.df.append(pd.DataFrame(comments, columns=self.df.columns), ignore_index=True)
-                        pd.to_csv(TMP_FOLDER+"thread_"+str(self.threadID)+"_tmp.csv")
+                        self.df.to_csv(TMP_FOLDER+"thread_"+str(self.threadID)+"_tmp.csv")
                     break
                 except TimeoutError:
                     time.sleep(BACKOFF)
                     pass
+        print("Thread "+str(self.threadID)+" done!")
             
 
 
 
 
-        
+start_time = time.time()       
 df_comments = pd.DataFrame(columns=comment_columns["df"])
-df_posts = pd.read_csv(DF_PATH) 
+df_posts = pd.read_csv(DF_PATH).head(1000)
 post_ids = df_posts["post_id"]
 spacing = np.linspace(0, post_ids.shape[0]-1, NUM_THREADS, endpoint=True, dtype=int)
 
 threadLock = threading.Lock()
 threads = list()
+
+print("STARTING COMMENTS QUERY")
+print("#THREADS: "+str(NUM_THREADS))
+print("CSV: "+str(DF_PATH))
+print("TOTAL POSTS: "+str(df_posts.shape[0]))
 
 for i in range(len(spacing)):
     if i == range(len(spacing))[-1]:
@@ -104,4 +114,6 @@ for t in threads:
 for t in threads:
     df_comments = pd.concat([df_comments, t.df])
 
-df_comments.to_csv("comments.csv", index=False)
+d1 = datetime.date.today().strftime("%d_%m_%YYYY")
+df_comments.to_csv("comments_"+d1+".csv", index=False)
+print("Average execution time: "+str((time.time() - start_time)/df_posts.shape[0]))
