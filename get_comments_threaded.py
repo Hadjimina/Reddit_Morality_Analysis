@@ -6,6 +6,7 @@ from praw.models import MoreComments
 import threading
 import datetime
 import requests
+import sys
 
 
 SHOW_LOGS = True
@@ -80,6 +81,9 @@ class commentThread (threading.Thread):
                 except TimeoutError:
                     time.sleep(BACKOFF)
                     pass
+                except:
+                    print("Unexpected error:", sys.exc_info()[0])
+
         print("Thread "+str(self.threadID)+" done!")
             
 
@@ -88,7 +92,7 @@ class commentThread (threading.Thread):
 
 start_time = time.time()       
 df_comments = pd.DataFrame(columns=comment_columns["df"])
-df_posts = pd.read_csv(DF_PATH).head(1000)
+df_posts = pd.read_csv(DF_PATH)
 post_ids = df_posts["post_id"]
 spacing = np.linspace(0, post_ids.shape[0]-1, NUM_THREADS, endpoint=True, dtype=int)
 
