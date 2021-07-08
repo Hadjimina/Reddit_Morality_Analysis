@@ -9,6 +9,7 @@ import requests
 import sys
 from os import listdir
 from os.path import isfile, join
+import os.path
 
 
 SHOW_LOGS = True
@@ -18,7 +19,7 @@ MAX_RETRIES = 10
 BACKOFF = 60  #[s]
 TMP_FOLDER ="tmp_comments/"
 TMP_MERGED_FILENAME = "tmp_merged.csv"
-DO_RECOVERY = False
+DO_RECOVERY = True
 
 # Possible keys found at https://github.com/praw-dev/praw/blob/c818949c848f4520df08b16c098f80a41e897ab5/praw/models/reddit/comment.py
 comment_columns = { 
@@ -32,7 +33,11 @@ class commentThread (threading.Thread):
       threading.Thread.__init__(self)
       self.threadID = threadID
       self.post_ids = post_ids
-      self.df = pd.DataFrame(columns=comment_columns["df"])
+      self.csv_path = TMP_FOLDER+"thread_"+str(threadID)+"_tmp.csv"
+      if os.path.exists(self.csv_path):
+          self.df = pd.read_csv(self.csv_path)
+      else: 
+        self.df = pd.DataFrame(columns=comment_columns["df"])
             
     def getCommentsData(_, id):
         submission = praw.Reddit(
@@ -80,14 +85,20 @@ class commentThread (threading.Thread):
                 try:
                     comments = self.getCommentsData(j)
                     if comments.size > 0:
-                        self.df = self.df.append(pd.DataFrame(comments, columns=self.df.columns), ignore_index=True)
-                        self.df.to_csv(TMP_FOLDER+"thread_"+str(self.threadID)+"_tmp.csv")
+                        to_append = pd.DataFrame(comments, columns=self.df.columns)
+                        self.df = pd.concat([self.df,to_append])
+                        self.df.to_csv(self.csv_path, index=False)
+                    else:
+                        nans = np.array(["EMPTY"*self.df.columns.shape[0]])
+                        nans[0] = j
+                        to_append = pd.DataFrame(nans, columns=self.df.columns)
                     break
                 except TimeoutError:
                     time.sleep(BACKOFF)
                     pass
-                except:
-                    print("Unexpected error:", sys.exc_info()[0])
+                #except Exception as e:
+                #    print(e)
+                #    print("Unexpected error:", sys.exc_info()[0])
 
         print("Thread "+str(self.threadID)+" done!")
 
@@ -103,7 +114,7 @@ if DO_RECOVERY:
     for f in tmp_files:
         df_i = pd.read_csv(TMP_FOLDER+f)
         merged_tmp_dfs = merged_tmp_dfs.append(df_i, ignore_index = True)
-    merged_tmp_dfs.to_csv(str(time.time())+"_"+TMP_MERGED_FILENAME)
+    merged_tmp_dfs.to_csv(str(time.time())+"_"+TMP_MERGED_FILENAME, index=False)
     print("  RECOVERY COMMENTS MERGED AND SAVED")
     already_checked_ids = merged_tmp_dfs["post_id"].unique()
     size_old = df_posts.shape[0]
