@@ -7,6 +7,8 @@ import threading
 import datetime
 import requests
 import sys
+from os import listdir
+from os.path import isfile, join
 
 
 SHOW_LOGS = True
@@ -15,6 +17,9 @@ NUM_THREADS = 100+1
 MAX_RETRIES = 10
 BACKOFF = 60  #[s]
 TMP_FOLDER ="tmp_comments/"
+TMP_MERGED_FILENAME = "tmp_merged.csv"
+DO_RECOVERY = False
+
 # Possible keys found at https://github.com/praw-dev/praw/blob/c818949c848f4520df08b16c098f80a41e897ab5/praw/models/reddit/comment.py
 comment_columns = { 
     "df":   ["post_id", "comment_id", "comment_text", "comment_author_id", "comment_score", "comment_created_utc", "comment_was_edited"],
@@ -85,14 +90,29 @@ class commentThread (threading.Thread):
                     print("Unexpected error:", sys.exc_info()[0])
 
         print("Thread "+str(self.threadID)+" done!")
-            
 
 
-
-
-start_time = time.time()       
 df_comments = pd.DataFrame(columns=comment_columns["df"])
 df_posts = pd.read_csv(DF_PATH)
+
+#merge tmp files
+if DO_RECOVERY:
+    print("DOING RECOVERY")
+    tmp_files = [f for f in listdir(TMP_FOLDER) if isfile(join(TMP_FOLDER, f))]
+    merged_tmp_dfs = pd.DataFrame(columns=comment_columns["df"])
+    for f in tmp_files:
+        df_i = pd.read_csv(TMP_FOLDER+f)
+        merged_tmp_dfs = merged_tmp_dfs.append(df_i, ignore_index = True)
+    merged_tmp_dfs.to_csv(str(time.time())+"_"+TMP_MERGED_FILENAME)
+    print("  RECOVERY COMMENTS MERGED AND SAVED")
+    already_checked_ids = merged_tmp_dfs["post_id"].unique()
+    size_old = df_posts.shape[0]
+    df_posts = df_posts[~df_posts['post_id'].isin(already_checked_ids)]
+    size_new = df_posts.shape[0]
+    removed = size_old-size_new
+    print("  REMOVED "+str(removed)+"/"+str(already_checked_ids.shape[0])+" IDS")
+
+start_time = time.time()
 post_ids = df_posts["post_id"]
 spacing = np.linspace(0, post_ids.shape[0]-1, NUM_THREADS, endpoint=True, dtype=int)
 
