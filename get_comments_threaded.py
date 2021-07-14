@@ -113,7 +113,7 @@ if DO_RECOVERY:
     merged_tmp_dfs = pd.DataFrame(columns=comment_columns["df"])
     for f in tmp_files:
         print(f)
-        df_i = pd.read_csv(TMP_FOLDER+f)
+        df_i = pd.read_csv(TMP_FOLDER+f, eninge="c", error_bad_lines=False)
         merged_tmp_dfs = merged_tmp_dfs.append(df_i, ignore_index = True)
     merged_tmp_dfs.to_csv(str(time.time())+"_"+TMP_MERGED_FILENAME, index=False)
     print("  RECOVERY COMMENTS MERGED AND SAVED")
