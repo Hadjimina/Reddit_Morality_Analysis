@@ -4,7 +4,7 @@ import os
 def id_to_url(id):
     return 'https://drive.google.com/uc?id='+id
 
-dataset_dir = os.path.dirname(__file__)+"/"
+dataset_dir = os.path.dirname(__file__)+"/data/"
 
 posts = {
     "raw":{
