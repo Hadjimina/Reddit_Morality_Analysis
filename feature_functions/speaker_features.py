@@ -1,16 +1,20 @@
-import prawcore
 import logging as lg
 from datetime import datetime, timezone
+
 import coloredlogs
+import prawcore
+
 coloredlogs.install()
 
 # import global vars
 import settings
 
+
 def get_author_amita_post_activity(account_name):
     """Check how many times account has posted on r/AMITA
 
-    returns count
+    returns : (str, count)
+        count: number of posts on r/AMITA
 
     Parameters
     ----------
@@ -32,12 +36,13 @@ def get_author_amita_post_activity(account_name):
     except prawcore.exceptions.NotFound:
         lg.warning("\n    Author '{0}' not found. Setting activity counter to 0\n".format(account_name))
 
-    return amita_activity_counter
+    return ("amita_#posts", amita_activity_counter)
 
 def get_author_age(account_name):
     """Query post auther age
 
-    returns age in days (rounded down)
+    returns : (str, count)
+        count: age in days (rounded down)
 
     Parameters
     ----------
@@ -60,12 +65,13 @@ def get_author_age(account_name):
 
     if age > 5879: #Reddit: 23.6.2006
         raise ArithmeticError("Author older than Reddit")
-    return age
+    return ("author_age", age)
 
 def get_post_author_karma(account_name):
     """Query post auther karma
 
-    returns 0 if the author has been deleted
+    returns : (str, count)
+        count : karma count, 0 if the author has been deleted
 
     Parameters
     ----------
@@ -81,4 +87,4 @@ def get_post_author_karma(account_name):
         karma = author.comment_karma
     except prawcore.exceptions.NotFound:
         lg.warning("\n    Author '{0}' not found. Setting karma to 0\n".format(account_name))
-    return karma
+    return ("author_karma", karma)
