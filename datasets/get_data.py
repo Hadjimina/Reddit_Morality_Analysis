@@ -4,7 +4,8 @@ import os
 def id_to_url(id):
     return 'https://drive.google.com/uc?id='+id
 
-dataset_dir = os.path.dirname(__file__)+"/data/"
+dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/data/"
+print(dataset_dir)
 
 posts = {
     "raw":{
@@ -24,6 +25,9 @@ comments={
     }
 }
  
+if not os.path.isdir(dataset_dir):
+    os.mkdir(dataset_dir)
+    
 print("Which would you like to download?\n")
 print("[1]: Raw posts ("+posts["raw"]["output"]+")")
 print("[2]: Clean posts ("+posts["cleaned"]["output"]+")")
@@ -44,13 +48,13 @@ elif download_selection == "3":
     url = comments["raw" ]["url" ]
     output = comments["raw" ]["output" ]
 else:
-    print("\nDownloading "+posts["raw" ]["output" ]+"\n")
+    print("\nStart download of "+posts["raw" ]["output" ]+"\n")
     gdown.download(posts["raw" ]["url" ], posts["raw" ]["output" ], quiet=False)
 
-    print("\nDownloading "+posts["cleaned" ]["output" ]+"\n")
+    print("\nStart download of "+posts["cleaned" ]["output" ]+"\n")
     gdown.download(posts["cleaned" ]["url" ], posts["cleaned" ]["output" ], quiet=False)
 
-    print("\nDownloading "+comments["raw" ]["output" ]+"\n")
+    print("\nStart download of "+comments["raw" ]["output" ]+"\n")
     gdown.download(comments["raw" ]["url" ], comments["raw" ]["output" ], quiet=False)    
 
 if not output == None:
