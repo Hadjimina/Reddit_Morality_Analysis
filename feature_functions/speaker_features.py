@@ -5,7 +5,7 @@ import coloredlogs
 coloredlogs.install()
 
 # import global vars
-from ..settings import reddit
+import settings
 
 def get_author_amita_post_activity(account_name):
     """Check how many times account has posted on r/AMITA

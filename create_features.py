@@ -13,6 +13,7 @@ import coloredlogs
 coloredlogs.install()
 
 from feature_functions.speaker_features import * 
+from feature_functions.writing_style_features import *
 """
 Global variables
 """
@@ -30,7 +31,7 @@ def main():
     )
 
     #iterate over all cleaned posts:
-    df_post_cleaned = pd.read_csv(constants.POSTS_CLEAN, index_col=0).head(5) #TODO: remove "index_col=0"
+    df_post_cleaned = pd.read_csv(constants.POSTS_CLEAN, index_col=0).head(5) #TODO: remove "index_col=0" & use entire dataset
     for row in df_post_cleaned.itertuples():
         
         index, post_id, post_text, post_title, post_author, _, _, _, = row
@@ -41,9 +42,14 @@ def main():
         #age = get_author_age(post_author)
         #print(age)
         
-        activity = get_author_amita_post_activity(post_author)
-        print(activity)
+        #activity = get_author_amita_post_activity(post_author)
+        #print(activity)
+
+        punct_count = get_punctuation_count(post_text)
+        print(punct_count)
+
         
     
 if __name__ == "__main__":
+    settings.init()  
     main()
