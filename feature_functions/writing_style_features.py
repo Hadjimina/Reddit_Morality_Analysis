@@ -20,7 +20,7 @@ def get_punctuation_count(post_text):
     """
     symbols = ["!",'"', "?"]
     symbol_dict = dict.fromkeys(symbols, 1)
-    print(post_text)
+    #print(post_text)
     for i in range(len(symbol_dict.keys())):
         
         symbol = list(symbol_dict.keys())[i]
