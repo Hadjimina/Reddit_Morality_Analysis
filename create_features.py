@@ -101,6 +101,7 @@ def main():
 
     feature_df = pd.concat(feature_df_list, axis=1,join="inner")       
     print(feature_df)
+    #TODO: generate histograms for each feature with example texts
     
 if __name__ == "__main__":
     settings.init()  
