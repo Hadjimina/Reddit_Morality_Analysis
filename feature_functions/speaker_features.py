@@ -51,17 +51,18 @@ def get_author_age(account_name):
     
     age = 0
     try:
-        author = settings.reddit.redditor(account_name)
-        
-        print(author.comment_karma)
+        if account_name != "[deleted]":
+            author = settings.reddit.redditor(account_name)
+            
+            print(author.comment_karma)
 
-        if "created_utc" in vars(author):
-            created = author.created_utc
-            time_now = datetime.now(tz=timezone.utc)
-            time_created = datetime.fromtimestamp(created, tz=timezone.utc)
-            age = (time_now-time_created).days
+            if "created_utc" in vars(author):
+                created = author.created_utc
+                time_now = datetime.now(tz=timezone.utc)
+                time_created = datetime.fromtimestamp(created, tz=timezone.utc)
+                age = (time_now-time_created).days
         else:
-            age = 0
+            lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
         
 
     except prawcore.exceptions.NotFound:
@@ -86,8 +87,11 @@ def get_post_author_karma(account_name):
     
     karma = 0
     try:
-        author = settings.reddit.redditor(account_name)
-        karma = author.comment_karma
+        if account_name != "[deleted]":
+            author = settings.reddit.redditor(account_name)
+            karma = author.comment_karma
+        else:
+            lg.warning("\n    Author '{0}' not found. Setting karma to 0\n".format(account_name))
     except prawcore.exceptions.NotFound:
         lg.warning("\n    Author '{0}' not found. Setting karma to 0\n".format(account_name))
     return [("author_karma", karma)]

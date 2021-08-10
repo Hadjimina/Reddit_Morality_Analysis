@@ -165,34 +165,30 @@ def df_to_plots(df):
     df_to_plots_timer = time.time()
 
     df_features = df.drop("post_text",axis=1)
-    nr_rows = len(list(df_features.columns))//5+1
-    nr_cols =  len(list(df_features.columns))%100
+    nr_rows = 1#len(list(df_features.columns))//5+1
+    nr_cols =  len(list(df_features.columns))#%5
     
     plt.rcParams["figure.figsize"] = (4*nr_cols,4*nr_rows)
 
-    fig, axs = plt.subplots(nr_rows,nr_cols)
-    for i in range(nr_cols-1):
+    fig, axs = plt.subplots(nr_rows,nr_cols, sharex=True, sharey=True)
+    for i in range(nr_cols):
             for j in range(nr_rows):
                 index_sum = i+j
                 data = df_features.iloc[:,index_sum].to_list()
                 
-                
-                axs[i].hist(data, range=(0,10)) 
-                
+        
                 if axs.ndim > 1:
+                    axs[i, j].hist(data,bins=100, align="mid", range=(0,10)) 
                     axs[i, j].set_title(df_features.columns[index_sum])                    
                 else:
+                    axs[i].hist(data, bins=100, align="mid", range=(0,10)) 
                     axs[i].set_title(df_features.columns[index_sum])
 
-    
 
     #for ax in axs.flat:
     #    ax.set(xlabel='x-label', ylabel='y-label')
 
-    # Hide x labels and tick labels for top plots and y ticks for right plots.
-    for ax in axs.flat:
-        ax.label_outer()
-
+ 
     fig.savefig(CS.OUTPUT_DIR+"graphs.png")
 
     lg.info("    DURATION: {0} ".format(round(time.time() - df_to_plots_timer,2)))
