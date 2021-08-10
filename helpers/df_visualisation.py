@@ -21,7 +21,6 @@ def df_get_text_samples(df):
     SAMPLE_FRAC = 1
 
     df_sampeled = df.sample(frac=SAMPLE_FRAC)
-    print(df_sampeled)
 
     """ Define low, mid and top ranges to display posts for for each column
     s.t. we only need to iterate once over entire sampled DataFrame """
@@ -41,7 +40,6 @@ def df_get_text_samples(df):
         range_list.append([low_range, mid_range, top_range])
 
     examples_list = [[False, False, False] for _ in range(nr_feature_columns)]
-    print(range_list)
 
     for i, row in enumerate(df_sampeled.itertuples(), 1):
         for j in range(nr_feature_columns):
@@ -53,14 +51,8 @@ def df_get_text_samples(df):
                 cur_range_lower = (range_list[j][cur_range_idx][0]) 
                 cur_range_upper = (range_list[j][cur_range_idx][1])
                 
-                print(value)
-                print(cur_range_lower, cur_range_upper)
-                
                 if value in range(cur_range_lower, cur_range_upper+1):
-                    print("  in range")
-                    if not examples_list[j][cur_range_idx]:
-                        print("    setting")
-                       
+                    if not examples_list[j][cur_range_idx]:                       
                         examples_list[j][cur_range_idx] = row[len(row)-1]
 
     return examples_list
@@ -85,7 +77,7 @@ def df_to_text_png(df):
     Y_GAP = 40
 
     WIDTH = 400
-    HEIGHT = 100+MAX_NR_LINES*3*10+EXAMPLE_OFFSET_Y
+    HEIGHT = 100+MAX_NR_LINES*3*10+EXAMPLE_OFFSET_Y*3
 
     lg.info("  drawing post examples")
     W, H = (WIDTH*(len(df_features.columns)-1),HEIGHT)

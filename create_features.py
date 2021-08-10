@@ -67,7 +67,6 @@ def feature_to_df(category, column, funct):
     cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]
     temp_s = temp_s.apply(lambda x: [v for s,v in x])
     df = pd.DataFrame(temp_s.to_list(), columns=cols)
-    print(df)
     return df
 
 def main():
