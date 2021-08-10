@@ -116,6 +116,7 @@ def main():
                     col = df_post_cleaned.iloc[:,idx]
                     feature_df_list.append(feature_to_df(category, col, funct))
     feature_df_list.append(df_post_cleaned["post_id"])
+    feature_df_list.append(df_post_cleaned["post_text"])
 
     feature_df = pd.concat(feature_df_list, axis=1,join="inner")       
     
