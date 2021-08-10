@@ -16,13 +16,14 @@ import praw
 import prawcore
 
 import constants as CS
-import settings
 import helpers.df_visualisation as vis
+import settings
 
 coloredlogs.install()
 
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
+
 
 def generate_report(df):
     """Generate report by visualising the columns of the dataframe as 
@@ -83,8 +84,8 @@ def main():
     features_to_generate = {
         "speaker":[
             #(get_author_amita_post_activity, CS.POST_AUTHOR),
-            #(get_author_age, CS.POST_AUTHOR),
-            #(get_post_author_karma, CS.POST_AUTHOR)
+            (get_author_age, CS.POST_AUTHOR),
+            (get_post_author_karma, CS.POST_AUTHOR)
         ], 
         "writing_sty":[
             (get_punctuation_count, CS.POST_TEXT)
@@ -101,8 +102,8 @@ def main():
         min_name = "{0}_mini.csv".format(CS.dataset_dir+Path(CS.POSTS_CLEAN).stem)
         df_post_cleaned = pd.read_csv(min_name) #TODO: use entire dataset    
     else:
-        df_post_cleaned = pd.read_csv(CS.POSTS_CLEAN, index_col=0) #TODO: remove "index_col=0" 
-    
+        df_post_cleaned = pd.read_csv(CS.POSTS_CLEAN) 
+
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
     feature_df_list = []
     for category in features_to_generate:
@@ -114,13 +115,20 @@ def main():
                 if idx == i:
                     col = df_post_cleaned.iloc[:,idx]
                     feature_df_list.append(feature_to_df(category, col, funct))
+
     feature_df_list.append(df_post_cleaned["post_id"])
     feature_df_list.append(df_post_cleaned["post_text"])
 
     feature_df = pd.concat(feature_df_list, axis=1,join="inner")       
     
+    # Create histogram and sample texts as png
     vis.df_to_plots(feature_df)
-    #TODO: generate histograms for each feature with example texts
+
+    now = datetime.now()
+    date_time = now.strftime("%m_%d_%Y")
+    feature_df = feature_df.drop("post_text",axis=1)
+    feature_df.to_csv(CS.OUTPUT_DIR+"features_output_"+date_time+".csv")
+    
     
 if __name__ == "__main__":
     settings.init()  

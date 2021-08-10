@@ -9,15 +9,13 @@ coloredlogs.install()
 def get_punctuation_count(post_text):
     """Count how many times certain punctuations syombols occur in text
 
-    returns : [(str, int), ...]
-        e.g. ("!_count": 10)
+    Args:
+        post_text ([str]): Full body text of r/AITA post
 
-    Parameters
-    ----------
-    post_text : str
-        Full body text of r/AITA post
+    Returns:
+        [(str, int)]:  e.g. ("!_count": 10)
+    """    
 
-    """
     symbols = ["!",'"', "?"]
     symbol_dict = dict.fromkeys(symbols, 1)
 
