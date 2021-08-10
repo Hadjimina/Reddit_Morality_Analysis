@@ -8,6 +8,7 @@ coloredlogs.install()
 
 # import global vars
 import settings
+# TODO: Merge account requests into one call
 
 def get_author_amita_post_activity(account_name):
     """Check how many times account has posted on r/AMITA
@@ -51,10 +52,17 @@ def get_author_age(account_name):
     age = 0
     try:
         author = settings.reddit.redditor(account_name)
-        created = author.created_utc
-        time_now = datetime.now(tz=timezone.utc)
-        time_created = datetime.fromtimestamp(created, tz=timezone.utc)
-        age = (time_now-time_created).days
+        
+        print(author.comment_karma)
+
+        if "created_utc" in vars(author):
+            created = author.created_utc
+            time_now = datetime.now(tz=timezone.utc)
+            time_created = datetime.fromtimestamp(created, tz=timezone.utc)
+            age = (time_now-time_created).days
+        else:
+            age = 0
+        
 
     except prawcore.exceptions.NotFound:
         lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
