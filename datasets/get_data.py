@@ -9,18 +9,18 @@ print(dataset_dir)
 
 posts = {
     "raw":{
-        "url": id_to_url("16drt6-z25DSmwnU7s8CWVXaqerYS4cWn"),
+        "url": id_to_url("17fvcKWGNHyxZFIU9kV-bZokhMSd4fEvt"),
         "output": dataset_dir+"posts_27_6_2021.csv"
     },
     "cleaned":{
-        "url":  id_to_url("1uLZ8hX77jUtfAbBV_DCrZbAepKt6wZ1i"),
+        "url":  id_to_url("1NBoO5CU4Dssya4IcWcjJ8Cx1rv-qiRuy"),
         "output": dataset_dir+"posts_cleaned_27_6_2021.csv"
     }
 }
 
 comments={
     "raw":{
-        "url": id_to_url("1QxUlpxklIkL1RYD3ABKnCZlHo0lbJXsL"),
+        "url": id_to_url("18qxC5bv2oGotWPVUYvvSHUWtrIob-QUA"),
         "output": dataset_dir+"comments_16_07_2021.csv"
     }
 }
