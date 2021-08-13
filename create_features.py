@@ -14,15 +14,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import praw
 import prawcore
+from pandarallel import pandarallel
+from tqdm import tqdm
 
 import constants as CS
 import helpers.df_visualisation as vis
 import settings
+from feature_functions.reaction_features import *
+from feature_functions.speaker_features import *
+from feature_functions.writing_style_features import *
 
 coloredlogs.install()
 
-from feature_functions.speaker_features import *
-from feature_functions.writing_style_features import *
+
 
 
 def generate_report(df):
@@ -63,7 +67,8 @@ def feature_to_df(category, column, funct):
     """
     lg.info('Running "{0}"'.format(funct.__name__))
 
-    temp_s = column.apply(funct) # [(a,#)....]
+    temp_s = column.progress_apply(funct) # [(a,#)....]
+    #temp_s = column.parallel_apply(funct)
     fst_value = temp_s.iat[0]
     cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]
     temp_s = temp_s.apply(lambda x: [v for s,v in x])
@@ -73,6 +78,8 @@ def feature_to_df(category, column, funct):
 def main():
     """Iterate over all posts and create features dataframe"""
     
+    tqdm.pandas()
+
     #initalize reddit object for PRAW
     global reddit
     reddit = praw.Reddit(
@@ -84,25 +91,23 @@ def main():
     features_to_generate = {
         "speaker":[
             #(get_author_amita_post_activity, CS.POST_AUTHOR),
-            (get_author_age, CS.POST_AUTHOR),
-            (get_post_author_karma, CS.POST_AUTHOR)
+            #(get_author_age, CS.POST_AUTHOR),
+            #(get_post_author_karma, CS.POST_AUTHOR)
         ], 
         "writing_sty":[
             (get_punctuation_count, CS.POST_TEXT)
         ],
         "behaviour":[
-
+            
         ],
         "reactions":[
-
+            (get_judgement_labels, CS.POST_ID)
         ]
     }
-    #iterate over all cleaned posts:
-    if CS.USE_MINIFIED_DATA:
-        min_name = "{0}_mini.csv".format(CS.dataset_dir+Path(CS.POSTS_CLEAN).stem)
-        df_post_cleaned = pd.read_csv(min_name) #TODO: use entire dataset    
-    else:
-        df_post_cleaned = pd.read_csv(CS.POSTS_CLEAN) 
+    
+
+    lg.info("Loading Clean posts: "+CS.POSTS_CLEAN)
+    df_post_cleaned = pd.read_csv(CS.POSTS_CLEAN, index_col=False)
 
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
     feature_df_list = []
