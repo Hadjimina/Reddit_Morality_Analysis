@@ -6,7 +6,7 @@ import coloredlogs
 import constants as CS
 import pandas as pd
 from helpers import *
-import settings
+import globals_loader
 coloredlogs.install()
 
 def string_to_lower_alphanum(str):
@@ -67,10 +67,10 @@ def get_judgement_labels(post_id):
     Returns:
         [(str, int)]: e.g. [("NTA",10), ("YTA", 20),...]
     """
-    if not hasattr(settings, 'df_comments'):
-        settings.load_comments()
+    if not hasattr(globals_loader, 'df_comments'):
+        globals_loader.load_comments()
     
-    df_comments = settings.df_comments
+    df_comments = globals_loader.df_comments
     df_comments = df_comments.loc[df_comments["post_id"] == post_id]
     df_comments = df_comments[["comment_text", "comment_score"]]
     

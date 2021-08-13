@@ -5,29 +5,21 @@
 ## https://realpython.com/python-logging/
 
 import logging as lg
-import math
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import datetime
 
 import coloredlogs
-import matplotlib.pyplot as plt
 import pandas as pd
 import praw
-import prawcore
-from pandarallel import pandarallel
 from tqdm import tqdm
 
 import constants as CS
+import globals_loader
 import helpers.df_visualisation as vis
-import settings
 from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
 
 coloredlogs.install()
-
-
-
 
 def generate_report(df):
     """Generate report by visualising the columns of the dataframe as 
@@ -136,5 +128,5 @@ def main():
     
     
 if __name__ == "__main__":
-    settings.init()  
+    globals_loader.init()  
     main()
