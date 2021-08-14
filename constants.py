@@ -31,7 +31,7 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS = 1
+NR_THREADS = 8
 TMP_SAVE_DIR = OUTPUT_DIR+"/feature_df_tmp"
 
 # FEATURE DF POSTPEND

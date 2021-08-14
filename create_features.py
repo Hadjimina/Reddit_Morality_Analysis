@@ -5,8 +5,8 @@
 ## https://realpython.com/python-logging/
 
 import logging as lg
-import threading
 from datetime import datetime
+from multiprocessing import Queue
 
 import coloredlogs
 import numpy as np
@@ -15,7 +15,7 @@ import praw
 from tqdm import tqdm
 
 import constants as CS
-import feature_thread as f_thread
+import parallel_process as p_process
 import globals_loader
 import helpers.df_visualisation as vis
 from feature_functions.reaction_features import *
@@ -61,7 +61,7 @@ def main():
             #(get_post_author_karma, CS.POST_AUTHOR)
         ], 
         "writing_sty":[
-            #(get_punctuation_count, CS.POST_TEXT)
+            (get_punctuation_count, CS.POST_TEXT)
         ],
         "behaviour":[
             
@@ -73,23 +73,25 @@ def main():
     
     setup_load_dfs()
     df_posts = globals_loader.df_posts
-
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
 
-    threadLock = threading.Lock()
-    threads = []
+    
+    
     feature_df_list = []
-
-    # Split up & start threading
-    for i in range(len(df_posts_split)):
+    processes = []
+    q = Queue()  # Build a single queue to send to all process objects...
+    for i in range(0, CS.NR_THREADS):
         sub_post = df_posts_split[i]
-        threads.append(f_thread.feature_thread(i, sub_post, features_to_generate))
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
-    for t in threads:
-        feature_df_list.append(t.df)
+        p = p_process.parallel_process(q, i, sub_post, features_to_generate )
+        p.start()
+        processes.append(p)
+
+    # join all
+    [proc.join() for proc in processes]
+    
+    #put all result in list
+    while not q.empty():
+        feature_df_list.append(q.get())
 
     feature_df = pd.concat(feature_df_list, axis=0, join="inner")       
 

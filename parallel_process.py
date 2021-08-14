@@ -3,8 +3,11 @@ import threading
 import logging as lg
 import pandas as pd
 import constants as CS
-class feature_thread (threading.Thread):
-    def __init__(self, thread_id, sub_df, features_to_generate):
+
+from multiprocessing import Process
+
+class parallel_process (Process):
+    def __init__(self, queue, thread_id, sub_df, features_to_generate):
         """Initialize Threading
 
         Args:
@@ -15,12 +18,16 @@ class feature_thread (threading.Thread):
                 argument tuples
 
         """        
-        threading.Thread.__init__(self)
+        #threading.Thread.__init__(self)
+        super(parallel_process, self).__init__()
+        self.queue = queue
+        #self.idx = idx
+
         self.thread_id = thread_id
         self.sub_df = sub_df
         self.features_to_generate = features_to_generate
         self.df = None
-        print("DF on thread "+str(thread_id))
+        #print("DF on thread "+str(thread_id))
         
 
     def feature_to_df(thread, category, column, funct):
@@ -82,5 +89,7 @@ class feature_thread (threading.Thread):
         
         self.df = pd.concat(feature_df_list, axis=1, join="inner")
         self.df.index = self.sub_df.index
+
+        self.queue.put(self.df)
 
             
