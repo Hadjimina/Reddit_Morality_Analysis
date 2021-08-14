@@ -67,8 +67,8 @@ def get_judgement_labels(post_id):
     Returns:
         [(str, int)]: e.g. [("NTA",10), ("YTA", 20),...]
     """
-    if not hasattr(globals_loader, 'df_comments'):
-        globals_loader.load_comments()
+    #if not hasattr(globals_loader, 'df_comments'):
+    #    globals_loader.load_comments()
     
     df_comments = globals_loader.df_comments
     df_comments = df_comments.loc[df_comments["post_id"] == post_id]
@@ -81,7 +81,7 @@ def get_judgement_labels(post_id):
     
     for i, comment_row in enumerate(df_comments.itertuples(), 1):
         _, comment_body, score = comment_row
-        comment_body = string_to_lower_alphanum(comment_body)
+        comment_body = string_to_lower_alphanum(str(comment_body))
 
         # Check votes for each different label in one single comment
         # Maybe somebody "votes twice" within one comment

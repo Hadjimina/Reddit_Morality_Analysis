@@ -5,8 +5,6 @@ import praw
 from praw.models import MoreComments
 import threading
 import datetime
-import requests
-import sys
 from os import listdir
 from os.path import isfile, join
 import os.path

@@ -165,8 +165,7 @@ def df_to_plots(df):
     df_to_plots_timer = time.time()
 
     # Dropt text
-    df_features = df.drop("post_text",axis=1)
-    df_features = df_features.drop("post_id",axis=1)
+    df_features = df.drop(CS.POST_PEND, axis =1)
 
     nr_cols =  5#len(list(df_features.columns))%6
     nr_rows = len(list(df_features.columns))//5+1
@@ -184,11 +183,13 @@ def df_to_plots(df):
                 data = df_features.iloc[:,index_sum].to_list()
                 
                 if axs.ndim > 1:
+                   
                     axs[i, j].hist(data,bins=100, align="mid") 
                     axs[i, j].set_title(df_features.columns[index_sum])                    
                 else:
-                    axs[i].hist(data, bins=100, align="mid") 
-                    axs[i].set_title(df_features.columns[index_sum])
+                   
+                    axs[j].hist(data, bins=100, align="mid") 
+                    axs[j].set_title(df_features.columns[index_sum])
                 index_sum +=1
 
             #terminate if no more features available        
