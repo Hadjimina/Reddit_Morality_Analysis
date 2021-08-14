@@ -6,7 +6,7 @@ import coloredlogs
 import constants as CS
 import pandas as pd
 from helpers import *
-import globals_loader
+import helpers.globals_loader as globals_loader
 coloredlogs.install()
 
 def string_to_lower_alphanum(str):

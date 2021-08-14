@@ -16,7 +16,7 @@ from tqdm import tqdm
 
 import constants as CS
 import parallel_process as p_process
-import globals_loader
+import helpers.globals_loader as globals_loader
 import helpers.df_visualisation as vis
 from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *

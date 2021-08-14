@@ -7,7 +7,7 @@ import prawcore
 coloredlogs.install()
 
 # import global vars
-import globals_loader
+import helpers.globals_loader as globals_loader
 # TODO: Merge account requests into one call
 
 def get_author_amita_post_activity(account_name):
