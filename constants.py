@@ -3,7 +3,7 @@ Constants.py
 """
 import os
 
-USE_MINIFIED_DATA = False
+USE_MINIFIED_DATA = True
 
 #directories
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
@@ -13,7 +13,7 @@ OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"
 
 POSTS_RAW = dataset_dir+"posts_27_6_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"posts_27_6_2021.csv"
 POSTS_CLEAN = dataset_dir+"posts_cleaned_27_6_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"posts_cleaned_27_6_2021.csv"
-COMMENTS_RAW = dataset_dir+"comments_16_07_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"comments_16_07_2021.csv"
+COMMENTS_RAW = dataset_dir+"comments_16_07_2021.csv" #dataset_dir+"comments_16_07_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"comments_16_07_2021.csv"
 
 
 # COLUMN INDICES
@@ -36,3 +36,6 @@ TMP_SAVE_DIR = OUTPUT_DIR+"/feature_df_tmp"
 
 # FEATURE DF POSTPEND
 POST_PEND = ["post_id", "post_text"]
+
+# PERCENTAGE TO MINIFY POSTS
+MINIFY_FRAC = 0.1

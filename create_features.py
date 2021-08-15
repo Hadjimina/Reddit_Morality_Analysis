@@ -4,9 +4,13 @@
 #Logging
 ## https://realpython.com/python-logging/
 
+
 import logging as lg
+import queue
+import sys
 from datetime import datetime
-from multiprocessing import Queue
+from multiprocessing import Queue, process
+from os import walk
 
 import coloredlogs
 import numpy as np
@@ -15,30 +19,15 @@ import praw
 from tqdm import tqdm
 
 import constants as CS
-import parallel_process as p_process
-import helpers.globals_loader as globals_loader
 import helpers.df_visualisation as vis
+import helpers.globals_loader as globals_loader
+import parallel_process as p_process
 from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
 from helpers.helper_functions import *
 
 coloredlogs.install()
-
-def generate_report(df):
-    """Generate report by visualising the columns of the dataframe as 
-        histograms and listing 3 example post (low, medium, high value)
-        below the histograms. Saves as report.png in home directory of script
-
-    Parameters
-    ----------
-    df : Dataframe
-        Dataframe with format of feature_to_df
-
-    """
-    lg.info("Generating report")
-    vis.df_to_plots(df)
-    vis.df_to_text_png(df)
 
 
 def main():
@@ -70,40 +59,64 @@ def main():
             (get_judgement_labels, CS.POST_ID)
         ]
     }
-    
-    setup_load_dfs()
+
     df_posts = globals_loader.df_posts
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
 
     
-    
     feature_df_list = []
     processes = []
-    q = Queue()  # Build a single queue to send to all process objects...
+    q = Queue() 
+    
     for i in range(0, CS.NR_THREADS):
         sub_post = df_posts_split[i]
         p = p_process.parallel_process(q, i, sub_post, features_to_generate )
         p.start()
         processes.append(p)
 
-    # join all
-    [proc.join() for proc in processes]
-    
-    #put all result in list
-    while not q.empty():
-        feature_df_list.append(q.get())
+    # Consume queue content as it comes (avoids deadlock)
+    feature_df_list = []
+    while True:
+        try:
+            result = q.get(False, 0.01)
+            feature_df_list.append(result)
+        except queue.Empty:
+            pass
+        allExited = True
+        for t in processes:
+            if t.exitcode is None:
+                allExited = False
+                break
+        if allExited & q.empty():
+            break
 
     feature_df = pd.concat(feature_df_list, axis=0, join="inner")       
 
     # Create histogram and sample texts as png
-    generate_report(feature_df)
+    vis.generate_report(feature_df)
 
     now = datetime.now()
-    date_time = now.strftime("%m_%d_%Y")
+    date_time = now.strftime("%d_%m_%Y")
     feature_df = feature_df.drop("post_text",axis=1)
-    feature_df.to_csv(CS.OUTPUT_DIR+"features_output_"+date_time+".csv")
+    mini = "_mini" if CS.USE_MINIFIED_DATA else ""
+    feature_df.to_csv(CS.OUTPUT_DIR+"features_output_"+date_time+mini+".csv", index=False)
     
     
 if __name__ == "__main__":
-    globals_loader.init()  
-    main()
+    if "-vis" in sys.argv:
+        
+        filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2]  # [] if no file
+        filenames = list(filter(lambda x: ".csv" in x, filenames))
+        filenames = sorted(filenames, reverse=True)
+
+        lg.info("Only generating report from "+filenames[0])
+        df = pd.read_csv(CS.OUTPUT_DIR+filenames[0], index_col=False)
+
+        globals_loader.load_posts()
+        df_posts = globals_loader.df_posts[["post_id", "post_text"]]
+        df = pd.merge(df, df_posts, on=['post_id','post_id'])
+        
+        vis.generate_report(df)
+    else:
+        globals_loader.init()  
+        main()

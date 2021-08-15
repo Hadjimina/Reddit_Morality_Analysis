@@ -146,11 +146,12 @@ def df_to_text_png(df):
             vertical_gap+= h*MAX_NR_LINES+Y_GAP
         horizontal_gap += EXAMPLE_OFFSET_X+MAX_CHARCTER_PER_LINE*6
 
-    lg.info("    DURATION: {0} ".format(round(time.time() - df_to_text_png_timer,2))) 
-    img.save(CS.OUTPUT_DIR+"text_samples.png")
+    #lg.info("    DURATION: {0} ".format(round(time.time() - df_to_text_png_timer,2))) 
+    mini = "_mini" if CS.USE_MINIFIED_DATA else ""
+    img.save("{0}text_samples{1}.png".format(CS.OUTPUT_DIR, mini))
 
 
-def df_to_plots(df):
+def df_to_plots(df_features):
     """Generate matplotlibs for each df column and save directly as report.png
 
     returns : nothing, 
@@ -161,11 +162,13 @@ def df_to_plots(df):
         dataframe with potentialy multiple columns    
     """
     lg.info("  drawing plot")
-
+    
     df_to_plots_timer = time.time()
 
-    # Dropt text
-    df_features = df.drop(CS.POST_PEND, axis =1)
+    # Drop text & id
+    for to_drop in CS.POST_PEND:
+        if to_drop in list(df_features.columns):
+            df_features = df_features.drop(to_drop, axis =1)
 
     nr_cols =  5#len(list(df_features.columns))%6
     nr_rows = len(list(df_features.columns))//5+1
@@ -196,8 +199,28 @@ def df_to_plots(df):
             if index_sum >= len(list(df_features.columns)):
                     break
 
+    
+    
+    mini_text = "Using minified data ({0} fraction)".format(CS.MINIFY_FRAC) if CS.USE_MINIFIED_DATA else "Using complete dataset"
+    plt.suptitle(mini_text, fontsize=16)
     plt.show()
-    fig.savefig(CS.OUTPUT_DIR+"graphs.png")
 
-    lg.info("    DURATION: {0} ".format(round(time.time() - df_to_plots_timer,2)))
+    mini = "_mini" if CS.USE_MINIFIED_DATA else ""
+    fig.savefig("{0}graphs{1}.png".format(CS.OUTPUT_DIR, mini))
+    #lg.info("    DURATION: {0} ".format(round(time.time() - df_to_plots_timer,2)))
+
+
+def generate_report(df):
+    """Generate report by visualising the columns of the dataframe as 
+        histograms and listing 3 example post (low, medium, high value)
+        below the histograms. Saves as report.png in home directory of script
+
+    Parameters
+    ----------
+    df : Dataframe
+        Dataframe with format of feature_to_df
+
+    """
+    lg.info("Generating report")
+    df_to_plots(df)
     df_to_text_png(df)

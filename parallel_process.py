@@ -82,6 +82,7 @@ class parallel_process (Process):
                         tmp_df.index = self.sub_df.index
                         tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(self.thread_id))
 
+        
         # Post pends some post specific information
         post_pend = self.sub_df[CS.POST_PEND]
         post_pend.reset_index(drop=True, inplace=True)
@@ -89,7 +90,8 @@ class parallel_process (Process):
         
         self.df = pd.concat(feature_df_list, axis=1, join="inner")
         self.df.index = self.sub_df.index
-
+        
         self.queue.put(self.df)
+        
 
             

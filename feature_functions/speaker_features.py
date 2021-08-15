@@ -22,17 +22,21 @@ def get_author_amita_post_activity(account_name):
         reddit account name
 
     """
-    
+    reddit = globals_loader.reddit
     amita_activity_counter = 0
     try:
-        author = globals_loader.reddit.redditor(account_name)
+        author = reddit.redditor(account_name)
         new_submissions = author.submissions.new(limit = None)
         for sub in new_submissions:
-            sub_subreddit_name = globals_loader.reddit.submission(id=sub).subreddit.display_name
+            sub_subreddit_name = reddit.submission(id=sub).subreddit.display_name
             amita_activity_counter += sub_subreddit_name == "AmItheAsshole"
             
     except prawcore.exceptions.NotFound:
-        lg.warning("\n    Author '{0}' not found. Setting activity counter to 0\n".format(account_name))
+        amita_activity_counter
+        #lg.warning("\n    Author '{0}' not found. Setting activity counter to 0\n".format(account_name))
+    except prawcore.exceptions.Forbidden:
+        amita_activity_counter
+        #lg.warning("\n    Author '{0}' forbidden. Setting activity counter to 0\n".format(account_name))
 
     return [("amita_#posts", amita_activity_counter)]
 
@@ -48,11 +52,11 @@ def get_author_age(account_name):
         reddit account name
 
     """
-    
+    reddit = globals_loader.reddit
     age = 0
     try:
         if account_name != "[deleted]":
-            author = globals_loader.reddit.redditor(account_name)
+            author = reddit.redditor(account_name)
             
             print(author.comment_karma)
 
@@ -62,11 +66,13 @@ def get_author_age(account_name):
                 time_created = datetime.fromtimestamp(created, tz=timezone.utc)
                 age = (time_now-time_created).days
         else:
-            lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
+            age
+            #lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
         
 
     except prawcore.exceptions.NotFound:
-        lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
+        age
+        #lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
 
     if age > 5879: #Reddit: 23.6.2006
         raise ArithmeticError("Author older than Reddit")

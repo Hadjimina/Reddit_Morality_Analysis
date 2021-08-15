@@ -24,8 +24,7 @@ def string_to_lower_alphanum(str):
     str = re.sub(r'[^A-Za-z0-9\s]+', '', str)
     return str
 
-
-def count_label(comment, acronym):
+def count_label(comment, acronym, word_list):
     """Check if the judgemnt label (YTA, NTA, INFO, ESH, NAH) is contained in comment.
        We not only check for exact label match but also some minor text analysis
 
@@ -33,13 +32,13 @@ def count_label(comment, acronym):
         comment (string): post comment body
         label (string): label to detect
     Returns:
-        middle_dist (int): distance of label detection from middle of comment
+        middle_dist (int): distance of label detection from middle of comment in percent 
+            0 = detected acryonm in center of post text
+            1 = detected acryonm either at beginning or end of comment
     """    
 
     # split on any whitspace
-    word_list = comment.split()
     label_i = CS.JUDGMENT_ACRONYM.index(acronym)
-
     # naive detection
     
 
@@ -47,17 +46,17 @@ def count_label(comment, acronym):
     middle_index = len(comment)//2
     middle_dist = 0
     try:
-        middle_dist = abs(middle_index - word_list.index(acronym))
-
+        dist_abs = abs(middle_index - word_list.index(acronym.lower()))
+        middle_dist = dist_abs/(len(comment)/2)
+        
     except ValueError as e:
-        middle_dist = 0
-        # specific label not found
+        middle_dist = -1
+        # specific label not naively found
         #TODO: Some more sophisticated checking needed to check expressions (i.e. "you are the asshole")
 
 
     return middle_dist
     
-
 def get_judgement_labels(post_id):
     """Returns judgemnt label counts (YTA, NTA, INFO, ESH, NAH)
 
@@ -67,13 +66,14 @@ def get_judgement_labels(post_id):
     Returns:
         [(str, int)]: e.g. [("NTA",10), ("YTA", 20),...]
     """
-    #if not hasattr(globals_loader, 'df_comments'):
-    #    globals_loader.load_comments()
+
     
     df_comments = globals_loader.df_comments
     df_comments = df_comments.loc[df_comments["post_id"] == post_id]
     df_comments = df_comments[["comment_text", "comment_score"]]
-    
+    #print(post_id)
+    #if  df_comments.empty:
+    #    print('DataFrame empty!')
     # Create accumulation dict
     label_counter = CS.JUDGMENT_ACRONYM + ["weighted_"+s for s in CS.JUDGMENT_ACRONYM]
     label_counter = dict.fromkeys(label_counter,0)
@@ -82,26 +82,32 @@ def get_judgement_labels(post_id):
     for i, comment_row in enumerate(df_comments.itertuples(), 1):
         _, comment_body, score = comment_row
         comment_body = string_to_lower_alphanum(str(comment_body))
-
+        #print(comment_body)
         # Check votes for each different label in one single comment
         # Maybe somebody "votes twice" within one comment
         cur_label_dist = {}
+        word_list = comment_body.split()
         for i in range(len(CS.JUDGMENT_ACRONYM)):
             acronym = CS.JUDGMENT_ACRONYM[i]
-            middle_dist = count_label(comment_body, acronym)
+            middle_dist = count_label(comment_body, acronym, word_list)
             cur_label_dist[acronym] = middle_dist
-        
+        #print(cur_label_dist)
         # Only count vote of label furthest away from middle
         #  (Sort dict by highest value)
-        cur_label_dist = dict(sorted(cur_label_dist.items(), key=lambda item: item[1]))
+        cur_label_dist = dict(sorted(cur_label_dist.items(), key=lambda item: item[1], reverse=True))
+        
+        vote = list(cur_label_dist.keys())[0]
+        dist = list(cur_label_dist.values())[0]
 
-        vote = list(cur_label_dist.values())[0]
-        if vote > 0:
-            weighted_vote = vote * score
-            label_counter[acronym.upper()] += vote
-            label_counter["weighted_"+acronym.upper()] += weighted_vote
+        if dist >= 0:
+            label_counter[vote.upper()] += 1
+            label_counter["weighted_"+vote.upper()] += int(score)
     
     tuple_list =  dict_to_feature_tuples(label_counter)
 
     return tuple_list
+
+
+#def get_current_score(post_id):
+
 
