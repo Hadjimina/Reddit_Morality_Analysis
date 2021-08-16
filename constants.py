@@ -3,7 +3,7 @@ Constants.py
 """
 import os
 
-USE_MINIFIED_DATA = True
+USE_MINIFIED_DATA = False
 
 #directories
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"

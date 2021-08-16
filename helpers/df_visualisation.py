@@ -25,6 +25,7 @@ def df_get_text_samples(df):
     """
     RANGE = 0.1
     SAMPLE_FRAC = 0.5
+    lg.info("  Drawing samples text with sample frac of "+str(SAMPLE_FRAC))
    
 
     df_sampeled = df.sample(frac=SAMPLE_FRAC)
@@ -63,7 +64,7 @@ def df_get_text_samples(df):
                     if not examples_list[j][cur_range_idx]:                       
                         examples_list[j][cur_range_idx] = (row[len(row)-NR_APPENDED_COLS], value)
 
-    return examples_list
+    return examples_list, [ top_range, mid_range, low_range]
 
 def df_to_text_png(df):
     """Generate png that shows 3 post example of each df column 
@@ -78,7 +79,7 @@ def df_to_text_png(df):
     lg.info("  drawing post examples")
     df_to_text_png_timer = time.time()
     
-    ex_list = df_get_text_samples(df)
+    ex_list, ranges_min_max = df_get_text_samples(df)
 
     MAX_NR_LINES = 20
     MAX_CHARCTER_PER_LINE = 70
@@ -120,6 +121,7 @@ def df_to_text_png(df):
         for ex_index in reversed(range(len(ex_list[cat_index]))):    
             #draw range type (i.e. top range, mid range, low range)
             rang_name = [ s + " range:" for s in ["low", "mid", "top"]][ex_index]
+            rang_name += " "+str(reversed(ranges_min_max)[ex_index]) #TODO: net yet working
             w_r, h_r = draw.textsize(rang_name)
             draw.text((WIDTH*cat_index+(WIDTH-w_r)/2,EXAMPLE_OFFSET_Y+vertical_gap), rang_name,  fill="black")
 
