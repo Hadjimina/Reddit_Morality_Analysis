@@ -2,6 +2,8 @@ import logging as lg
 import os
 from os import walk
 from pathlib import Path
+import sys 
+sys.path.append('..')
 
 import coloredlogs
 import pandas as pd
@@ -18,7 +20,7 @@ dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/data/"
 filenames = next(walk(dataset_dir), (None, None, []))[2]  # [] if no file
 
 for name in filenames:
-    if "mini" in name or "comment":
+    if "mini" in name or "comment" in name:
         continue
 
     lg.info("Minifying "+dataset_dir+name)
