@@ -19,7 +19,6 @@ POSTS_RAW = dataset_dir+"posts_27_6_2021_mini.csv" if USE_MINIFIED_DATA else dat
 POSTS_CLEAN = dataset_dir+"posts_cleaned_27_6_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"posts_cleaned_27_6_2021.csv"
 COMMENTS_RAW = dataset_dir+"comments_16_07_2021.csv" #dataset_dir+"comments_16_07_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"comments_16_07_2021.csv"
 
-
 # COLUMN INDICES
 #INDEX = 0
 POST_ID = 0
@@ -35,8 +34,9 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS = 2# multiprocessing.cpu_count()
+NR_THREADS =  multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"feature_df_tmp"
+MONO_ID = "mono"
 
 # FEATURE DF POSTPEND
 POST_PEND = ["post_id", "post_text"]

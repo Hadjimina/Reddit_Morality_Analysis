@@ -15,7 +15,7 @@ import coloredlogs
 import numpy as np
 import pandas as pd
 import praw
-from tqdm import tqdm, tqdm_pandas
+
 
 import constants as CS
 import helpers.df_visualisation as vis
@@ -25,6 +25,7 @@ from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
 from helpers.helper_functions import *
+from helpers.process_helper import *
 
 coloredlogs.install()
 
@@ -32,35 +33,46 @@ coloredlogs.install()
 def main():
     """Iterate over all posts and create features dataframe"""
  
-    features_to_generate = {
+    features_to_generate_mp = {
         "speaker":[
             #(get_author_amita_post_activity, CS.POST_AUTHOR),
             #(get_author_age, CS.POST_AUTHOR),
             #(get_post_author_karma, CS.POST_AUTHOR)
         ], 
         "writing_sty":[
-            #(get_punctuation_count, CS.POST_TEXT),
-            (get_tense_time_and_voice, CS.POST_TEXT)
+            (get_punctuation_count, CS.POST_TEXT),
+            #(get_tense_time_and_voice, CS.POST_TEXT)
         ],
         "behaviour":[
-            
         ],
         "reactions":[
             #(get_judgement_labels, CS.POST_ID)
         ]
     }
 
+    features_to_generate_mono = {
+        "speaker":[
+        ], 
+        "writing_sty":[
+            (get_tense_time_and_voice, CS.POST_TEXT)
+        ],
+        "behaviour":[
+        ],
+        "reactions":[
+        ]}
+
     df_posts = globals_loader.df_posts
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
 
-    
+    # Do multiprocessing
     feature_df_list = []
     processes = []
     q = Queue() 
     
     for i in range(0, CS.NR_THREADS):
         sub_post = df_posts_split[i]
-        p = p_process.parallel_process(q, i, sub_post, features_to_generate, globals_loader.stz_nlp )
+        #p = p_process.parallel_process(q, i, sub_post, features_to_generate, globals_loader.stz_nlp )
+        p = p_process.parallel_process(q, i, sub_post, features_to_generate_mp)
         p.start()
         processes.append(p)
 
@@ -79,7 +91,14 @@ def main():
                 break
         if allExited & q.empty():
             break
+    
+    #Do mono processing
+    mono_feat_df_list = process_run(features_to_generate_mono, df_posts, CS.MONO_ID)
+    mono_df = pd.concat(mono_feat_df_list, axis=1, join="inner")
+    mono_df.index = df_posts.index
+    feature_df_list.append(mono_df)
 
+    # Merge mono and multiprocessing
     feature_df = pd.concat(feature_df_list, axis=0, join="inner")       
 
     # Create histogram and sample texts as png
@@ -93,11 +112,7 @@ def main():
     
     
 if __name__ == "__main__":
-
-    set_start_method('spawn')
-    tqdm.pandas()
     
-
     if "-vis" in sys.argv:
         
         filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2]  # [] if no file
@@ -114,4 +129,9 @@ if __name__ == "__main__":
         vis.generate_report(df)
     else:
         globals_loader.init()  
+        lg_str = "Using {0} threads".format(CS.NR_THREADS)
+        if CS.NR_THREADS < 2:
+            lg.warn(lg_str+" !")
+        else:
+            lg.info(lg_str)
         main()
