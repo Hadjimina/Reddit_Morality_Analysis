@@ -35,14 +35,14 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS =  multiprocessing.cpu_count()
+NR_THREADS = 2# multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"feature_df_tmp"
 
 # FEATURE DF POSTPEND
 POST_PEND = ["post_id", "post_text"]
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.1
+MINIFY_FRAC = 0.01
 
 # STANZA STRINGS
 ST_VERB = "VERB"

@@ -75,15 +75,13 @@ def get_tense_time_and_voice(post_text, **kwargs):
     
     #stanza.download('en')
     #stz_nlp = stanza.Pipeline('en')
-
+    
     stz_nlp = kwargs["stz_nlp"]
-    doc = stz_nlp(post_text)
-
+    doc = stz_nlp(post_text)    
     tenses = ["past", "present", "future"]
     tense_dict = dict.fromkeys(tenses, 0)
     voices = ["active", "passive"]
     voice_dict = dict.fromkeys(voices, 0)
-
     verb_count = 0
     for sent in doc.sentences:
         #print("--NEW SENT--")
@@ -139,5 +137,6 @@ def get_tense_time_and_voice(post_text, **kwargs):
     
     abs_features = dict_to_feature_tuples(merged_dict, suffix= "_abs")
     perc_features = dict_to_feature_tuples(perc_dict)
+    lg.info(abs_features+perc_features)
     return abs_features+perc_features
     
