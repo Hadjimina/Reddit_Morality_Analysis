@@ -7,7 +7,7 @@ import constants as CS
 from multiprocessing import Process
 
 class parallel_process (Process):
-    def __init__(self, queue, thread_id, sub_df, features_to_generate):
+    def __init__(self, queue, thread_id, sub_df, features_to_generate, stz_nlp):
         """Initialize Threading
 
         Args:
@@ -16,16 +16,18 @@ class parallel_process (Process):
             end_id (int): end index of subsection of post dataframe for this thread (exclusive)
             features_to_generate ({ string: [ ((int)->Dataframe, int) ]}): Dictionary wich contains function, 
                 argument tuples
+            stz_nlp: Stanza nlp object
 
         """        
         #threading.Thread.__init__(self)
         super(parallel_process, self).__init__()
         self.queue = queue
         #self.idx = idx
-
+        
         self.thread_id = thread_id
         self.sub_df = sub_df
         self.features_to_generate = features_to_generate
+        self.stz_nlp = stz_nlp
         self.df = None
 
         lg_str = "Using {0} threads".format(CS.NR_THREADS)
@@ -37,7 +39,7 @@ class parallel_process (Process):
         #print("DF on thread "+str(thread_id))
         
 
-    def feature_to_df(thread, category, column, funct):
+    def feature_to_df(thread, category, column, funct, stz_nlp):
         """Generate dataframe out of return value of category name, column data and feature function
 
         returns : dataframe
@@ -59,7 +61,7 @@ class parallel_process (Process):
         """
         lg.info('Running "{0}" on thread {1}'.format(funct.__name__, thread.thread_id))
     
-        temp_s = column.apply(funct) # [(a,#)....]# was progress.apply
+        temp_s = column.apply(funct, stz_nlp=stz_nlp) # [(a,#)....]# was progress.apply
         #temp_s = column.parallel_apply(funct)
         fst_value = temp_s.iat[0]
         cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]
@@ -84,7 +86,7 @@ class parallel_process (Process):
                     idx = feature_tuple[1]
                     if idx == i:
                         col = self.sub_df.iloc[:,idx]
-                        feature_df_list.append(self.feature_to_df(category, col, funct))
+                        feature_df_list.append(self.feature_to_df(category, col, funct, self.stz_nlp))
                         tmp_df = pd.concat(feature_df_list, axis=1)                
                         tmp_df.index = self.sub_df.index
                         tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(self.thread_id))

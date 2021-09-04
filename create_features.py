@@ -70,7 +70,7 @@ def main():
     
     for i in range(0, CS.NR_THREADS):
         sub_post = df_posts_split[i]
-        p = p_process.parallel_process(q, i, sub_post, features_to_generate )
+        p = p_process.parallel_process(q, i, sub_post, features_to_generate, globals_loader.stz_nlp )
         p.start()
         processes.append(p)
 
@@ -103,7 +103,7 @@ def main():
     
     
 if __name__ == "__main__":
-    #set_start_method('spawn')
+    set_start_method('spawn')
     if "-vis" in sys.argv:
         
         filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2]  # [] if no file

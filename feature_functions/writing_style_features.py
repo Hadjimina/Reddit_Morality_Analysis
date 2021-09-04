@@ -55,7 +55,7 @@ def get_feats_dict(st_word):
     feats_dict = dict(zip(k, v)) if len(k) > 0 else {}
     return feats_dict
 
-def get_tense_time_and_voice(post_text):
+def get_tense_time_and_voice(post_text, **kwargs):
     """Iterate through text and count how many sentances are in past, present, future tense and in active/passive voice
        Return values are in absolute number and in percentage of #verbs / #all sentances (Where verbs are defined as "VERBS" from POS tagger)
 
@@ -73,7 +73,8 @@ def get_tense_time_and_voice(post_text):
     #stanza.download('en')
     #stz_nlp = stanza.Pipeline('en')
 
-    doc = globals_loader.stz_nlp(post_text)
+    stz_nlp = kwargs["stz_nlp"]
+    doc = stz_nlp(post_text)
 
     tenses = ["past", "present", "future"]
     tense_dict = dict.fromkeys(tenses, 0)
