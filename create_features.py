@@ -15,7 +15,7 @@ import coloredlogs
 import numpy as np
 import pandas as pd
 import praw
-from tqdm import tqdm
+from tqdm import tqdm, tqdm_pandas
 
 import constants as CS
 import helpers.df_visualisation as vis
@@ -31,17 +31,7 @@ coloredlogs.install()
 
 def main():
     """Iterate over all posts and create features dataframe"""
-    
-    tqdm.pandas()
-
-    #initalize reddit object for PRAW
-    global reddit
-    reddit = praw.Reddit(
-        client_id="ChMem9TZYJif1A",
-        client_secret="3HkLZRVIBwAWbUdYExTGFK0e35d1Uw",
-        user_agent="android:com.example.myredditapp:v1.2.3"
-    )
-
+ 
     features_to_generate = {
         "speaker":[
             #(get_author_amita_post_activity, CS.POST_AUTHOR),
@@ -49,7 +39,7 @@ def main():
             #(get_post_author_karma, CS.POST_AUTHOR)
         ], 
         "writing_sty":[
-            #(get_punctuation_count, CS.POST_TEXT)
+            #(get_punctuation_count, CS.POST_TEXT),
             (get_tense_time_and_voice, CS.POST_TEXT)
         ],
         "behaviour":[
@@ -103,7 +93,11 @@ def main():
     
     
 if __name__ == "__main__":
+
     set_start_method('spawn')
+    tqdm.pandas()
+    
+
     if "-vis" in sys.argv:
         
         filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2]  # [] if no file

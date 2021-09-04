@@ -61,6 +61,10 @@ class parallel_process (Process):
         """
         lg.info('Running "{0}" on thread {1}'.format(funct.__name__, thread.thread_id))
     
+        # convert column to df
+
+        
+        
         temp_s = column.apply(funct, stz_nlp=stz_nlp) # [(a,#)....]# was progress.apply
         #temp_s = column.parallel_apply(funct)
         fst_value = temp_s.iat[0]
@@ -82,6 +86,7 @@ class parallel_process (Process):
             # We iterate over every column in dataset s.t. we first use all columns that use e.g. "post_author", before moving on
             for i in range(len(self.sub_df.columns)):
                 for feature_tuple in self.features_to_generate[category]:
+                    
                     funct = feature_tuple[0]
                     idx = feature_tuple[1]
                     if idx == i:
