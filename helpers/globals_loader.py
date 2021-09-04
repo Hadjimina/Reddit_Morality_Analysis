@@ -5,6 +5,7 @@ import praw
 import logging as lg
 import constants as CS
 import pandas as pd
+import spacy
 
 def init():
     if not hasattr(globals(), 'reddit'):
@@ -19,6 +20,8 @@ def init():
         else:
             lg.warning("Skipping loading comments...")
 
+    if not hasattr(globals(), 'nlp'):
+        load_spacy()
     
 
 def load_reddit_settings():
@@ -47,3 +50,7 @@ def load_posts():
 
 
     
+def load_spacy():
+    global nlp
+    lg.info("Loading spacy")
+    nlp = spacy.load('en_core_web_trf')

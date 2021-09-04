@@ -11,16 +11,6 @@ def process_run(feat_to_gen, sub_df, id):
     """ Apply all functions of "features_to_generate"
         to each row of subsection of dataframe
     """  
-    stz_nlp = None
-    
-    if id == CS.MONO_ID:
-        lg.info("Loading stanza")
-        #stanza.download('en',logging_level='WARN')
-        #stz_nlp = stanza.Pipeline('en', logging_level='WARN', use_gpu= True)
-
-        stanza.download('en')
-        stz_nlp = stanza.Pipeline('en', use_gpu= True)
-
 
     #df_posts = globals_loader.df_posts
     #df_posts_subsection = df_posts.loc[self.start_index : self.end_index]
@@ -37,7 +27,7 @@ def process_run(feat_to_gen, sub_df, id):
                 if idx == i:
                     col = sub_df.iloc[:,idx]
                     #feature_df_list.append(self.feature_to_df(category, col, funct, self.stz_nlp))
-                    feature_df_list.append(feature_to_df(id, category, col, funct, stz_nlp)) # we only pass stanze refernce in mono processing
+                    feature_df_list.append(feature_to_df(id, category, col, funct)) # we only pass stanze refernce in mono processing
                     tmp_df = pd.concat(feature_df_list, axis=1)                
                     tmp_df.index = sub_df.index
                     tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
@@ -50,7 +40,7 @@ def process_run(feat_to_gen, sub_df, id):
     return feature_df_list
 
 
-def feature_to_df(id, category, column, funct, stz_nlp):#stz_nlp
+def feature_to_df(id, category, column, funct):#stz_nlp
         """Generate dataframe out of return value of category name, column data and feature function
 
         returns : dataframe
@@ -74,10 +64,9 @@ def feature_to_df(id, category, column, funct, stz_nlp):#stz_nlp
 
 
         #temp_s = column.apply(funct, stz_nlp=stz_nlp) # [(a,#)....]# was progress.apply
-        if stz_nlp == None:
-            temp_s = column.progress_apply(funct)
-        else: 
-            temp_s = column.progress_apply(funct, stz_nlp=stz_nlp)
+       
+        temp_s = column.progress_apply(funct)
+        
         fst_value = temp_s.iat[0]
         cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]
         temp_s = temp_s.apply(lambda x: [v for s,v in x])

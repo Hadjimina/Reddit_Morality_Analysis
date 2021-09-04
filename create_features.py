@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import praw
 
-
 import constants as CS
 import helpers.df_visualisation as vis
 import helpers.globals_loader as globals_loader
@@ -92,12 +91,14 @@ def main():
         if allExited & q.empty():
             break
     
-    #Do mono processing
+    lg.info("Finished Multiprocessing")
+    
+    # Do mono processing
     mono_feat_df_list = process_run(features_to_generate_mono, df_posts, CS.MONO_ID)
-    mono_df = pd.concat(mono_feat_df_list, axis=1, join="inner")
-    mono_df.index = df_posts.index
-    feature_df_list.append(mono_df)
-
+    #mono_df = pd.concat(mono_feat_df_list, axis=1, join="inner")
+    #mono_df.index = df_posts.index
+    #feature_df_list.append(mono_df)
+    lg.info("Finished Monoprocessing")
     # Merge mono and multiprocessing
     feature_df = pd.concat(feature_df_list, axis=0, join="inner")       
 

@@ -45,14 +45,14 @@ POST_PEND = ["post_id", "post_text"]
 MINIFY_FRAC = 0.01
 
 # STANZA STRINGS
-ST_VERB = "VERB"
+SP_VERB = "VERB"
 
-ST_VOICE_ACTIVE = "Act"
-ST_VOICE_PASSIVE = "Pass"
+#SP_VOICE_ACTIVE = "Act"
+#SP_VOICE_PASSIVE = "nsubjpass"
 
-ST_TENSE_PAST = "Past"
-ST_TENSE_PRESENT = "Pres"
-ST_TENSE_FUTURE = "Fut"
+SP_TENSE_PAST = "Past"
+SP_TENSE_PRESENT = "Pres"
+SP_TENSE_FUTURE = "Fut"
 
-ST_FEATS_TENSE = "Tense"
-ST_FEATS_VOICE = "Voice"
+SP_FEATS_TENSE = "Tense"
+SP_FEATS_VOICE = "Voice"
