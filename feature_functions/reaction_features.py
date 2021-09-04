@@ -103,6 +103,21 @@ def get_judgement_labels(post_id):
             label_counter[vote.upper()] += 1
             label_counter["weighted_"+vote.upper()] += int(score)
     
+    ''' Calculate controversy score as a ratio of postive judgemnte to overall judgement count.
+         We want to see how big the diffeence in opinion is.
+         Score of 1 = 0.5, 0.5 vote ratio split => big controversy
+         Score of 0 = 0 or 1 pos_score ratio => no controversy
+    '''
+    pos_score = label_counter["NAH"]+label_counter["NTA"]
+    neg_score = label_counter["YTA"]+label_counter["ESH"]
+    pos_score_weighted = label_counter["weighted_NAH"]+label_counter["weighted_NTA"]
+    neg_score_weighted = label_counter["weighted_YTA"]+label_counter["weighted_ESH"]
+    if pos_score+neg_score >0:
+        label_counter["controversy"] = 1-2*abs(pos_score/(pos_score+neg_score)-0.5)
+    
+    if pos_score_weighted+neg_score_weighted > 0:
+        label_counter["weighted_controversy"] = 1-2*abs(pos_score_weighted/(pos_score_weighted+neg_score_weighted)-0.5)
+
     tuple_list =  dict_to_feature_tuples(label_counter)
 
     return tuple_list

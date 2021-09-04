@@ -4,12 +4,11 @@
 #Logging
 ## https://realpython.com/python-logging/
 
-
 import logging as lg
 import queue
 import sys
 from datetime import datetime
-from multiprocessing import Queue, process
+from multiprocessing import Queue, process, set_start_method
 from os import walk
 
 import coloredlogs
@@ -50,13 +49,14 @@ def main():
             #(get_post_author_karma, CS.POST_AUTHOR)
         ], 
         "writing_sty":[
-            (get_punctuation_count, CS.POST_TEXT)
+            #(get_punctuation_count, CS.POST_TEXT)
+            (get_tense_time_and_voice, CS.POST_TEXT)
         ],
         "behaviour":[
             
         ],
         "reactions":[
-            (get_judgement_labels, CS.POST_ID)
+            #(get_judgement_labels, CS.POST_ID)
         ]
     }
 
@@ -103,6 +103,7 @@ def main():
     
     
 if __name__ == "__main__":
+    #set_start_method('spawn')
     if "-vis" in sys.argv:
         
         filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2]  # [] if no file

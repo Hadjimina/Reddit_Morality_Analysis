@@ -5,6 +5,7 @@ import praw
 import logging as lg
 import constants as CS
 import pandas as pd
+import stanza
 
 def init():
     if not hasattr(globals(), 'reddit'):
@@ -14,8 +15,13 @@ def init():
         load_posts()
 
     if not hasattr(globals(), 'df_comments'):
-        load_comments()
+        if CS.LOAD_COMMENTS:
+            load_comments()
+        else:
+            lg.warning("Skipping loading comments...")
 
+    if not hasattr(globals(), 'stz_nlp'):
+        load_stanza_nlp()
     
 
 def load_reddit_settings():
@@ -41,3 +47,10 @@ def load_posts():
     df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False)
     if CS.USE_MINIFIED_DATA:
         lg.warning("Using minified post data (fraction: {0}, Nr. posts: {1})".format(CS.MINIFY_FRAC, df_posts.shape[0]))
+
+def load_stanza_nlp():
+    # Load stanza
+    global stz_nlp
+    
+    stanza.download('en')
+    stz_nlp = stanza.Pipeline('en')

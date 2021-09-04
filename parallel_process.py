@@ -27,6 +27,13 @@ class parallel_process (Process):
         self.sub_df = sub_df
         self.features_to_generate = features_to_generate
         self.df = None
+
+        lg_str = "Using {0} threads".format(CS.NR_THREADS)
+        if CS.NR_THREADS < 2:
+            lg.warn(lg_str+" !")
+        else:
+            lg.info(lg_str)
+            
         #print("DF on thread "+str(thread_id))
         
 
@@ -52,7 +59,7 @@ class parallel_process (Process):
         """
         lg.info('Running "{0}" on thread {1}'.format(funct.__name__, thread.thread_id))
     
-        temp_s = column.progress_apply(funct) # [(a,#)....]
+        temp_s = column.apply(funct) # [(a,#)....]# was progress.apply
         #temp_s = column.parallel_apply(funct)
         fst_value = temp_s.iat[0]
         cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]

@@ -2,8 +2,12 @@
 Constants.py
 """
 import os
+import multiprocessing
 
-USE_MINIFIED_DATA = False
+
+
+USE_MINIFIED_DATA = True
+LOAD_COMMENTS = False
 
 #directories
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
@@ -31,7 +35,7 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS = 8
+NR_THREADS = 1# multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"/feature_df_tmp"
 
 # FEATURE DF POSTPEND
@@ -39,3 +43,16 @@ POST_PEND = ["post_id", "post_text"]
 
 # PERCENTAGE TO MINIFY POSTS
 MINIFY_FRAC = 0.1
+
+# STANZA STRINGS
+ST_VERB = "VERB"
+
+ST_VOICE_ACTIVE = "Act"
+ST_VOICE_PASSIVE = "Pass"
+
+ST_TENSE_PAST = "Past"
+ST_TENSE_PRESENT = "Pres"
+ST_TENSE_FUTURE = "Fut"
+
+ST_FEATS_TENSE = "Tense"
+ST_FEATS_VOICE = "Voice"

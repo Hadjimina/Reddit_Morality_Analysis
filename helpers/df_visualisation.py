@@ -1,16 +1,16 @@
+
 import logging as lg
+import textwrap
+import time
 
 import coloredlogs
 import constants as CS
 import matplotlib.pyplot as plt
+import numpy as np
 from pandas.core.frame import DataFrame
-
-coloredlogs.install()
-import textwrap
-import time
-
 from PIL import Image, ImageDraw, ImageFont
 
+coloredlogs.install()
 NR_APPENDED_COLS = 2
 
 def df_get_text_samples(df):
@@ -121,7 +121,10 @@ def df_to_text_png(df):
         for ex_index in reversed(range(len(ex_list[cat_index]))):    
             #draw range type (i.e. top range, mid range, low range)
             rang_name = [ s + " range:" for s in ["low", "mid", "top"]][ex_index]
-            rang_name += " "+str(reversed(ranges_min_max)[ex_index]) #TODO: net yet working
+
+            #ranges_min_max_reversed  = ranges_min_max.reverse()
+            #rang_name += " "+str(ranges_min_max_reversed[ex_index]) #TODO: net yet working
+
             w_r, h_r = draw.textsize(rang_name)
             draw.text((WIDTH*cat_index+(WIDTH-w_r)/2,EXAMPLE_OFFSET_Y+vertical_gap), rang_name,  fill="black")
 
@@ -186,14 +189,16 @@ def df_to_plots(df_features):
                     break
 
                 data = df_features.iloc[:,index_sum].to_list()
-                
+                nr_bins = 100 #TODO: set correct amount of bins
+                #nr_bins = abs(np.max(data)-np.min(data))
+
                 if axs.ndim > 1:
                    
-                    axs[i, j].hist(data,bins=100, align="mid") 
+                    axs[i, j].hist(data,bins=nr_bins, align="mid") 
                     axs[i, j].set_title(df_features.columns[index_sum])                    
                 else:
                    
-                    axs[j].hist(data, bins=100, align="mid") 
+                    axs[j].hist(data, bins=nr_bins, align="mid") 
                     axs[j].set_title(df_features.columns[index_sum])
                 index_sum +=1
 
