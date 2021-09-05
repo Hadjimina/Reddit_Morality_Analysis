@@ -129,7 +129,6 @@ def get_tense_time_and_voice(post_text):
                 voice_dict[sentence_voice] += 1
 
        
-       
                     
 
                             
@@ -137,7 +136,8 @@ def get_tense_time_and_voice(post_text):
     merged_dict = {**tense_dict, **voice_dict}
 
     mrg_keys = [s + "_perc" for s in merged_dict.keys()]
-    mrg_values = list(map(lambda x: round(x/verb_count,3), merged_dict.values()))
+    
+    mrg_values = list(map(lambda x: round(x/max(verb_count,1),3), merged_dict.values()))
     perc_dict = dict(zip(mrg_keys, mrg_values))
 
     abs_features = dict_to_feature_tuples(merged_dict, suffix= "_abs")

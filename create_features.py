@@ -20,9 +20,7 @@ import constants as CS
 import helpers.df_visualisation as vis
 import helpers.globals_loader as globals_loader
 import parallel_process as p_process
-from feature_functions.reaction_features import *
-from feature_functions.speaker_features import *
-from feature_functions.writing_style_features import *
+
 from helpers.helper_functions import *
 from helpers.process_helper import *
 
@@ -31,56 +29,26 @@ coloredlogs.install()
 
 def main():
     """Iterate over all posts and create features dataframe"""
- 
-    features_to_generate_mp = {
-        "speaker":[
-            #(get_author_amita_post_activity, CS.POST_AUTHOR),
-            #(get_author_age, CS.POST_AUTHOR),
-            #(get_post_author_karma, CS.POST_AUTHOR)
-        ], 
-        "writing_sty":[
-            (get_punctuation_count, CS.POST_TEXT),
-            #(get_tense_time_and_voice, CS.POST_TEXT)
-        ],
-        "behaviour":[
-        ],
-        "reactions":[
-            #(get_judgement_labels, CS.POST_ID)
-        ]
-    }
-
-    features_to_generate_mono = {
-        "speaker":[
-        ], 
-        "writing_sty":[
-            (get_tense_time_and_voice, CS.POST_TEXT)
-        ],
-        "behaviour":[
-        ],
-        "reactions":[
-        ]}
-
     df_posts = globals_loader.df_posts
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
 
     # Do multiprocessing
-    feature_df_list = []
     processes = []
     q = Queue() 
     
     for i in range(0, CS.NR_THREADS):
         sub_post = df_posts_split[i]
         #p = p_process.parallel_process(q, i, sub_post, features_to_generate, globals_loader.stz_nlp )
-        p = p_process.parallel_process(q, i, sub_post, features_to_generate_mp)
+        p = p_process.parallel_process(q, i, sub_post, CS.FEATURES_TO_GENERATE_MP)
         p.start()
         processes.append(p)
 
     # Consume queue content as it comes (avoids deadlock)
-    feature_df_list = []
+    multi_feature_df_list = []
     while True:
         try:
             result = q.get(False, 0.01)
-            feature_df_list.append(result)
+            multi_feature_df_list.append(result)
         except queue.Empty:
             pass
         allExited = True
@@ -91,17 +59,17 @@ def main():
         if allExited & q.empty():
             break
     
+    feature_df_multi = pd.concat(multi_feature_df_list, axis=0, join="inner")  
     lg.info("Finished Multiprocessing")
     
     # Do mono processing
-    mono_feat_df_list = process_run(features_to_generate_mono, df_posts, CS.MONO_ID)
-    #mono_df = pd.concat(mono_feat_df_list, axis=1, join="inner")
-    #mono_df.index = df_posts.index
-    #feature_df_list.append(mono_df)
+    mono_feat_df_list = process_run(CS.FEATURES_TO_GENERATE_MONO, df_posts, CS.MONO_ID)
+    feature_df_mono = pd.concat(mono_feat_df_list, axis=1, join="inner")  
     lg.info("Finished Monoprocessing")
-    # Merge mono and multiprocessing
-    feature_df = pd.concat(feature_df_list, axis=0, join="inner")       
 
+    # Merge mono and multiprocessing
+    feature_df = feature_df_multi.merge(feature_df_mono, left_on="post_id", right_on="post_id", validate="1:1")
+    
     # Create histogram and sample texts as png
     vis.generate_report(feature_df)
 

@@ -6,12 +6,34 @@ import time
 import coloredlogs
 import constants as CS
 import matplotlib.pyplot as plt
+from matplotlib import rc
+rc('text', usetex=False) 
 import numpy as np
 from pandas.core.frame import DataFrame
 from PIL import Image, ImageDraw, ImageFont
 
 coloredlogs.install()
 NR_APPENDED_COLS = 2
+
+def id_text_at_end(df):
+    # move post_id and post_text cols to end
+    col_list = list(df.columns)
+    col_list.remove("post_id")
+    col_list.remove("post_text")
+    col_list.append("post_id")
+    col_list.append("post_text")
+    
+    df = df[col_list]
+    return df
+
+def drop_non_feature_cols(df):
+     # Drop all non feature columns
+    prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys()))
+    for c in df.columns:
+        flag = len([pref for pref in prefixes if pref in c]) > 0
+        if not flag:
+            df = df.drop(c, axis=1)
+    return df
 
 def df_get_text_samples(df):
     """ Get the sample texts of every feature to be displayed in png
@@ -25,9 +47,10 @@ def df_get_text_samples(df):
     """
     RANGE = 0.1
     SAMPLE_FRAC = 0.5
+    
     lg.info("  Drawing samples text with sample frac of "+str(SAMPLE_FRAC))
    
-
+    df = id_text_at_end(df)
     df_sampeled = df.sample(frac=SAMPLE_FRAC)
 
     """ Define low, mid and top ranges to display posts for for each column
@@ -78,6 +101,7 @@ def df_to_text_png(df):
     """
     lg.info("  drawing post examples")
     df_to_text_png_timer = time.time()
+    
     
     ex_list, ranges_min_max = df_get_text_samples(df)
 
@@ -169,11 +193,7 @@ def df_to_plots(df_features):
     lg.info("  drawing plot")
     
     df_to_plots_timer = time.time()
-
-    # Drop text & id
-    for to_drop in CS.POST_PEND:
-        if to_drop in list(df_features.columns):
-            df_features = df_features.drop(to_drop, axis =1)
+    df_features = drop_non_feature_cols(df_features)
 
     nr_cols =  5#len(list(df_features.columns))%6
     nr_rows = len(list(df_features.columns))//5+1
