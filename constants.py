@@ -44,7 +44,7 @@ POST_PEND = ["post_id", "post_text"]
 POST_PEND_MONO = ["post_id"]
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.01
+MINIFY_FRAC = 0.1
 
 # STANZA STRINGS
 SP_VERB = "VERB"
