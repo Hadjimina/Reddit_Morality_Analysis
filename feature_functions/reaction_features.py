@@ -108,7 +108,8 @@ def get_judgement_labels(post_id):
          Score of 1 = 0.5, 0.5 vote ratio split => big controversy
          Score of 0 = 0 or 1 pos_score ratio => no controversy
     '''
-    pos_score = label_counter["NAH"]+label_counter["NTA"]
+    # TODO: controversy score
+    """ pos_score = label_counter["NAH"]+label_counter["NTA"]
     neg_score = label_counter["YTA"]+label_counter["ESH"]
     pos_score_weighted = label_counter["weighted_NAH"]+label_counter["weighted_NTA"]
     neg_score_weighted = label_counter["weighted_YTA"]+label_counter["weighted_ESH"]
@@ -117,12 +118,11 @@ def get_judgement_labels(post_id):
     
     if pos_score_weighted+neg_score_weighted > 0:
         label_counter["weighted_controversy"] = 1-2*abs(pos_score_weighted/(pos_score_weighted+neg_score_weighted)-0.5)
+    """    
 
-    tuple_list =  dict_to_feature_tuples(label_counter)
+    tuple_list =  dict_to_feature_tuples(label_counter) 
 
     return tuple_list
 
-
-#def get_current_score(post_id):
 
 

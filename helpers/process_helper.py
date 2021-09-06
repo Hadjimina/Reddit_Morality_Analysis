@@ -44,7 +44,7 @@ def process_run(feat_to_gen, sub_df, id):
     return feature_df_list
 
 
-def feature_to_df(id, category, column, funct):#stz_nlp
+def feature_to_df(id, category, column, funct):
         """Generate dataframe out of return value of category name, column data and feature function
 
         returns : dataframe
@@ -66,12 +66,10 @@ def feature_to_df(id, category, column, funct):#stz_nlp
         """
         lg.info('Running "{0}" on thread {1}'.format(funct.__name__, id))
 
-
-        #temp_s = column.apply(funct, stz_nlp=stz_nlp) # [(a,#)....]# was progress.apply
-       
         temp_s = column.progress_apply(funct)
         fst_value = temp_s.iat[0]
-        cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]
+        cols = ["{0}_{1}".format(category, tpl[0]) for tpl in fst_value]
         temp_s = temp_s.apply(lambda x: [v for s,v in x])
         df = pd.DataFrame(temp_s.to_list(), columns=cols)
+        
         return df

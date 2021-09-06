@@ -8,7 +8,7 @@ sys.path.append('..')
 import coloredlogs
 import pandas as pd
 import constants as CS
-from fix_liwc import do_fix_liwc
+
 
 coloredlogs.install()
 
@@ -21,8 +21,6 @@ coloredlogs.install()
 dataset_dir = CS.dataset_dir
 filenames = next(walk(dataset_dir), (None, None, []))[2]  # [] if no file
 filenames = list(filter(lambda x: not "mini" in x and not "Identifier" in x, filenames))
-
-do_fix_liwc()
 
 print("")
 lg.warning("Minifying with Frac = "+str(CS.MINIFY_FRAC))

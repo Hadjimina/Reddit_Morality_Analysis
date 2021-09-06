@@ -11,6 +11,7 @@ import coloredlogs
 coloredlogs.install()
 
 def save_df(df, name):
+    name = name.replace("posts_cleaned","fixed")
     lg.info("    Saving "+name)
     df.to_csv(CS.dataset_dir+name, index=False)
 
@@ -58,7 +59,9 @@ def do_fix_liwc():
                 # drop first column
                 df = df.iloc[1:]
                 # rename
+                cols = list(map(lambda x: ' '.join(x.split()), cols))
                 df.columns = cols
+
                 
                 df = remove_unnecessary_columns(df)
                 save_df(df,name)
@@ -69,4 +72,4 @@ def do_fix_liwc():
                 if not df is None:
                     save_df(df,name)
 
-#fix_liwc()
+do_fix_liwc()

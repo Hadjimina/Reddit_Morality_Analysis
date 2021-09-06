@@ -74,12 +74,14 @@ def load_foundations():
     global df_foundations
     lg.info("Loading foundations: "+CS.FOUNDATIONS)
     df_foundations = pd.read_csv(CS.FOUNDATIONS, index_col=False)
+    df_foundations = df_foundations.add_prefix(CS.FOUNDATIONS_PREFIX)
 
 def load_liwc():
     # Load foundations csv
     global df_liwc
-    lg.info("Loading foundations: "+CS.LIWC)
+    lg.info("Loading liwc: "+CS.LIWC)
     df_liwc = pd.read_csv(CS.LIWC, index_col=False)
+    df_liwc = df_liwc.add_prefix(CS.LIWC_PREFIX)
 
 def load_spacy():
     global nlp

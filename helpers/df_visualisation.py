@@ -18,6 +18,11 @@ NR_APPENDED_COLS = 2
 def id_text_at_end(df):
     # move post_id and post_text cols to end
     col_list = list(df.columns)
+    if CS.LOAD_LIWC:
+        col_list.remove(CS.LIWC_PREFIX+"post_id")
+    if CS.LOAD_FOUNDATIONS:
+        col_list.remove(CS.FOUNDATIONS_PREFIX+"post_id")
+
     col_list.remove("post_id")
     col_list.remove("post_text")
     col_list.append("post_id")
@@ -28,10 +33,14 @@ def id_text_at_end(df):
 
 def drop_non_feature_cols(df):
      # Drop all non feature columns
-    prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys()))
+    foundation_prefix = [CS.FOUNDATIONS_PREFIX] if CS.LOAD_FOUNDATIONS else []
+    liwc_prefix = [CS.LIWC_PREFIX] if CS.LOAD_LIWC else []
+    prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys())+foundation_prefix+liwc_prefix)
+
     for c in df.columns:
-        flag = len([pref for pref in prefixes if pref in c]) > 0
+        flag = len([pref for pref in prefixes if pref in c]) > 0 and not "post_id" in c
         if not flag:
+            lg.info("      not visualising "+c)
             df = df.drop(c, axis=1)
     return df
 
@@ -62,6 +71,7 @@ def df_get_text_samples(df):
 
     for i in range(nr_feature_columns):
         max = df_sampeled.iloc[:, i].max()
+
         min = df_sampeled.iloc[:, i].min()
         length = max * RANGE
         low_range = [int(min), int(min+length)]
@@ -230,7 +240,8 @@ def df_to_plots(df_features):
     
     mini_text = "Using minified data ({0} fraction)".format(CS.MINIFY_FRAC) if CS.USE_MINIFIED_DATA else "Using complete dataset"
     plt.suptitle(mini_text, fontsize=16)
-    plt.show()
+    if df_features.shape[1] < 25:
+        plt.show()
 
     mini = "_mini" if CS.USE_MINIFIED_DATA else ""
     fig.savefig("{0}graphs{1}.png".format(CS.OUTPUT_DIR, mini))

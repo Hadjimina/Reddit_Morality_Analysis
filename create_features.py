@@ -73,10 +73,9 @@ def main():
     # Merge generate Features with LIWC & Moral foundations
     # TODO: Should we change how duplicates are handeled? right now we have suffixes
     if CS.LOAD_LIWC:
-        feature_df = feature_df_multi.merge(globals_loader.df_liwc, left_on="post_id", right_on="post_id", validate="1:1", suffixes=("_created", "_liwc")) 
+        feature_df = feature_df.merge(globals_loader.df_liwc, left_on="post_id", right_on=CS.LIWC_PREFIX+"post_id", validate="1:1") 
     if CS.LOAD_FOUNDATIONS:
-        feature_df = feature_df_multi.merge(globals_loader.df_liwc, left_on="post_id", right_on="post_id", validate="1:1", suffixes=("_created/liwc", "_foundations")) 
-
+        feature_df = feature_df.merge(globals_loader.df_foundations, left_on="post_id", right_on=CS.FOUNDATIONS_PREFIX+"post_id", validate="1:1") 
     # Create histogram and sample texts as png
     vis.generate_report(feature_df)
 

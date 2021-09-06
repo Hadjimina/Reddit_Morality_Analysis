@@ -7,10 +7,15 @@ from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
 
+# Loading & minified
 USE_MINIFIED_DATA = True
 LOAD_COMMENTS = True
 LOAD_FOUNDATIONS = True
 LOAD_LIWC = True
+
+# Prefixes
+LIWC_PREFIX = "liwc_"
+FOUNDATIONS_PREFIX = "foundations_"
 
 
 #directories
@@ -23,8 +28,8 @@ mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 COMMENTS_RAW = "{0}comments_16_07_2021{1}.csv".format(dataset_dir, mini_str)
-LIWC = "{0}LIWC_posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS = "{0}moral_foundations_posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+LIWC = "{0}LIWC_fixed_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+FOUNDATIONS = "{0}moral_foundations_fixed_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 
 
 # COLUMN INDICES
@@ -93,7 +98,7 @@ FEATURES_TO_GENERATE_MONO = {
     ], 
     "writing_sty":[
         #(get_punctuation_count, CS.POST_TEXT),
-        (get_tense_voice_sentiment, CS.POST_TEXT)
+        #(get_tense_voice_sentiment, CS.POST_TEXT)
     ],
     "behaviour":[
     ],
