@@ -70,6 +70,13 @@ def main():
     # Merge mono and multiprocessing
     feature_df = feature_df_multi.merge(feature_df_mono, left_on="post_id", right_on="post_id", validate="1:1")
     
+    # Merge generate Features with LIWC & Moral foundations
+    # TODO: Should we change how duplicates are handeled? right now we have suffixes
+    if CS.LOAD_LIWC:
+        feature_df = feature_df_multi.merge(globals_loader.df_liwc, left_on="post_id", right_on="post_id", validate="1:1", suffixes=("_created", "_liwc")) 
+    if CS.LOAD_FOUNDATIONS:
+        feature_df = feature_df_multi.merge(globals_loader.df_liwc, left_on="post_id", right_on="post_id", validate="1:1", suffixes=("_created/liwc", "_foundations")) 
+
     # Create histogram and sample texts as png
     vis.generate_report(feature_df)
 
@@ -100,7 +107,7 @@ if __name__ == "__main__":
         globals_loader.init()  
         lg_str = "Using {0} threads".format(CS.NR_THREADS)
         if CS.NR_THREADS < 2:
-            lg.warn(lg_str+" !")
+            lg.warning(lg_str[:-1]+"!")
         else:
             lg.info(lg_str)
         main()

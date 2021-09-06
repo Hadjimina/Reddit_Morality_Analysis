@@ -8,7 +8,10 @@ from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
 
 USE_MINIFIED_DATA = True
-LOAD_COMMENTS = False
+LOAD_COMMENTS = True
+LOAD_FOUNDATIONS = True
+LOAD_LIWC = True
+
 
 #directories
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
@@ -16,9 +19,13 @@ dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
 HOME_DIR = os.path.dirname(os.path.abspath(__file__))+"/"
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"
 
-POSTS_RAW = dataset_dir+"posts_27_6_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"posts_27_6_2021.csv"
-POSTS_CLEAN = dataset_dir+"posts_cleaned_27_6_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"posts_cleaned_27_6_2021.csv"
-COMMENTS_RAW = dataset_dir+"comments_16_07_2021.csv" #dataset_dir+"comments_16_07_2021_mini.csv" if USE_MINIFIED_DATA else dataset_dir+"comments_16_07_2021.csv"
+mini_str = "_mini" if USE_MINIFIED_DATA else ""
+POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+COMMENTS_RAW = "{0}comments_16_07_2021{1}.csv".format(dataset_dir, mini_str)
+LIWC = "{0}LIWC_posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+FOUNDATIONS = "{0}moral_foundations_posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+
 
 # COLUMN INDICES
 #INDEX = 0
@@ -35,7 +42,7 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS =  multiprocessing.cpu_count()
+NR_THREADS =  1#multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"feature_df_tmp"
 MONO_ID = "mono"
 
@@ -44,9 +51,9 @@ POST_PEND = ["post_id", "post_text"]
 POST_PEND_MONO = ["post_id"]
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.1
+MINIFY_FRAC = 0.001
 
-# STANZA STRINGS
+# SPACY STRINGS
 SP_VERB = "VERB"
 
 #SP_VOICE_ACTIVE = "Act"
@@ -74,7 +81,7 @@ FEATURES_TO_GENERATE_MP = {
     "behaviour":[
     ],
     "reactions":[
-        #(get_judgement_labels, CS.POST_ID)
+        (get_judgement_labels, CS.POST_ID)
     ]
 }
 
@@ -86,7 +93,7 @@ FEATURES_TO_GENERATE_MONO = {
     ], 
     "writing_sty":[
         #(get_punctuation_count, CS.POST_TEXT),
-        (get_tense_time_and_voice, CS.POST_TEXT)
+        (get_tense_voice_sentiment, CS.POST_TEXT)
     ],
     "behaviour":[
     ],

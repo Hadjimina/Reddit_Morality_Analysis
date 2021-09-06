@@ -2,7 +2,6 @@
 import pandas as pd
 import constants as CS
 import logging as lg
-import stanza
 from tqdm import tqdm
 
 tqdm.pandas()
@@ -25,7 +24,7 @@ def process_run(feat_to_gen, sub_df, id):
                 funct = feature_tuple[0]
                 idx = feature_tuple[1]
                 if idx == i:
-                    col = sub_df.iloc[:,idx]
+                    col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
                     #feature_df_list.append(self.feature_to_df(category, col, funct, self.stz_nlp))
                     feature_df_list.append(feature_to_df(id, category, col, funct)) # we only pass stanze refernce in mono processing
                     tmp_df = pd.concat(feature_df_list, axis=1)                
@@ -71,7 +70,6 @@ def feature_to_df(id, category, column, funct):#stz_nlp
         #temp_s = column.apply(funct, stz_nlp=stz_nlp) # [(a,#)....]# was progress.apply
        
         temp_s = column.progress_apply(funct)
-        
         fst_value = temp_s.iat[0]
         cols = ["{0}_{1}".format(category,tpl[0]) for tpl in fst_value]
         temp_s = temp_s.apply(lambda x: [v for s,v in x])

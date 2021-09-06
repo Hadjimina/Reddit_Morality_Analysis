@@ -17,7 +17,6 @@ class parallel_process (Process):
             end_id (int): end index of subsection of post dataframe for this thread (exclusive)
             features_to_generate ({ string: [ ((int)->Dataframe, int) ]}): Dictionary wich contains function, 
                 argument tuples
-            stz_nlp: Stanza nlp object
 
         """        
         #threading.Thread.__init__(self)
