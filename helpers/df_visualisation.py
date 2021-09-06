@@ -2,12 +2,11 @@
 import logging as lg
 import textwrap
 import time
-
+import math
 import coloredlogs
 import constants as CS
 import matplotlib.pyplot as plt
 from matplotlib import rc
-rc('text', usetex=False) 
 import numpy as np
 from pandas.core.frame import DataFrame
 from PIL import Image, ImageDraw, ImageFont
@@ -125,7 +124,9 @@ def df_to_text_png(df):
 
     font = ImageFont.truetype(CS.HOME_DIR+"misc/bins/DejaVuSans.ttf")
     
-    W, H = (WIDTH*(len(df.columns)-NR_APPENDED_COLS),HEIGHT)
+    nr_cols = min((len(df.columns)-NR_APPENDED_COLS),CS.NR_COLS_TEXT)
+    nr_rows = math.ceil((len(df.columns)-NR_APPENDED_COLS)/nr_cols)
+    W, H = (WIDTH*nr_cols,HEIGHT*nr_rows)
     img = Image.new("RGBA",(W,H),"white")
     draw = ImageDraw.Draw(img)
 
@@ -144,12 +145,15 @@ def df_to_text_png(df):
 
     
     horizontal_gap = 0
+    
     for cat_index in range(len(ex_list)):
         cat_title = df.columns[cat_index]
         vertical_gap = 0
         #draw cateogry title (i.e. df.column name)
+
+        row_offset = math.floor(cat_index/CS.NR_COLS_TEXT)*HEIGHT
         w, h = draw.textsize(cat_title)
-        draw.text((WIDTH*cat_index+(WIDTH-w)/2,20), cat_title,  fill="black", font=font)
+        draw.text(((WIDTH*cat_index+(WIDTH-w)/2)% W,20+row_offset), cat_title,  fill="black", font=font)
         
         
         for ex_index in reversed(range(len(ex_list[cat_index]))):    
@@ -160,14 +164,10 @@ def df_to_text_png(df):
             #rang_name += " "+str(ranges_min_max_reversed[ex_index]) #TODO: net yet working
 
             w_r, h_r = draw.textsize(rang_name)
-            draw.text((WIDTH*cat_index+(WIDTH-w_r)/2,EXAMPLE_OFFSET_Y+vertical_gap), rang_name,  fill="black")
+            draw.text(((WIDTH*cat_index+(WIDTH-w_r)/2)%W,EXAMPLE_OFFSET_Y+vertical_gap+row_offset), rang_name,  fill="black")
 
             #draw each example below each other
             text = ex_list[cat_index][ex_index]
-
-            #replace " ' " encoding
-            #if u"\u2018" in text or u"\u2019" in text:
-            #    text = text.replace(u"\u2018", "'").replace(u"\u2019", "'")
 
             lines = textwrap.wrap(text, width=MAX_CHARCTER_PER_LINE)
             y_text = h
@@ -175,8 +175,8 @@ def df_to_text_png(df):
                 line = lines[line_index]
                 
                 width, height = 8,10
-                x = (WIDTH*cat_index+(WIDTH-w)/2)-100
-                y = EXAMPLE_OFFSET_Y+y_text+vertical_gap
+                x = ((WIDTH*cat_index+(WIDTH-w)/2)-100) % W
+                y = EXAMPLE_OFFSET_Y+y_text+vertical_gap+row_offset
                 
                 draw.text((x, y), line, fill="black", font=font)
                 y_text += height
@@ -205,7 +205,7 @@ def df_to_plots(df_features):
     df_to_plots_timer = time.time()
     df_features = drop_non_feature_cols(df_features)
 
-    nr_cols =  5#len(list(df_features.columns))%6
+    nr_cols =  CS.NR_COLS_MPL#len(list(df_features.columns))%6
     nr_rows = len(list(df_features.columns))//5+1
 
     plt.rcParams["figure.figsize"] = (4*nr_cols,4*nr_rows)
@@ -260,5 +260,5 @@ def generate_report(df):
 
     """
     lg.info("Generating report")
-    df_to_plots(df)
+    #df_to_plots(df)
     df_to_text_png(df)
