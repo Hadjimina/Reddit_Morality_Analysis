@@ -7,6 +7,8 @@ from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
 
+ENFORCE_POST_REQUIREMENTS = True
+
 # Loading & minified
 USE_MINIFIED_DATA = True
 LOAD_COMMENTS = True

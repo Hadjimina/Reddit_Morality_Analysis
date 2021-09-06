@@ -149,8 +149,8 @@ def df_to_text_png(df):
     for cat_index in range(len(ex_list)):
         cat_title = df.columns[cat_index]
         vertical_gap = 0
-        #draw cateogry title (i.e. df.column name)
 
+        #draw cateogry title (i.e. df.column name)
         row_offset = math.floor(cat_index/CS.NR_COLS_TEXT)*HEIGHT
         w, h = draw.textsize(cat_title)
         draw.text(((WIDTH*cat_index+(WIDTH-w)/2)% W,20+row_offset), cat_title,  fill="black", font=font)
@@ -219,7 +219,7 @@ def df_to_plots(df_features):
                     break
 
                 data = df_features.iloc[:,index_sum].to_list()
-                nr_bins = 100 #TODO: set correct amount of bins
+                nr_bins = 300 #TODO: set correct amount of bins
                 #nr_bins = abs(np.max(data)-np.min(data))
 
                 if axs.ndim > 1:
@@ -260,5 +260,5 @@ def generate_report(df):
 
     """
     lg.info("Generating report")
-    #df_to_plots(df)
+    df_to_plots(df)
     df_to_text_png(df)
