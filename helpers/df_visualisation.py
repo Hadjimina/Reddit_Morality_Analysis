@@ -56,7 +56,7 @@ def get_hist_bar_at_value(patches, value):
             min_distance = tmp
             index_of_bar_to_label = i
     #print(min_distance)
-    return value if min_distance < 0.006 else None
+    return value if abs(min_distance) < 0.1 else None
 
 def df_get_text_samples(df):
     """ Get the sample texts of every feature to be displayed in png

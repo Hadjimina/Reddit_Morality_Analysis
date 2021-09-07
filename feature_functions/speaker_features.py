@@ -60,7 +60,7 @@ def get_author_info(account_name):
     try:
         if account_name != "[deleted]":
             author = reddit.redditor(account_name)
-            print(author.created_utc)
+            print(author.created_utc) #THIS PRINT IS REQUIRED TO MAKE author OBJECT NON-LAZY
             #Get age
             if "created_utc" in vars(author):
                 created = author.created_utc
@@ -84,9 +84,9 @@ def get_author_info(account_name):
         lg.warning("Author older than Reddit. Setting to max age")
         age = 5879
 
-    feature_list.append([("author_age", age)])
-    feature_list.append([("author_karma", karma)])
-    return 
+    feature_list += [("author_age", age)]
+    feature_list +=[("author_karma", karma)]
+    return feature_list
 
 
 
