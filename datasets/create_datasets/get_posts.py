@@ -66,7 +66,7 @@ def main(df_posts):
         #    df_posts.to_csv("posts_crashed.csv", index=False)
         
     # Write to a csv file
-    df_posts.to_csv("posts.csv", index=False)
+    df_posts.to_csv("posts_raw.csv", index=False)
 
 if __name__ == "__main__":
     SHOW_LOGS = False

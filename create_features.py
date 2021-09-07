@@ -77,6 +77,13 @@ def main():
     if CS.LOAD_FOUNDATIONS:
         feature_df = feature_df.merge(globals_loader.df_foundations, left_on="post_id", right_on=CS.FOUNDATIONS_PREFIX+"post_id", validate="1:1") 
     
+    # Save features in one big dataframe
+    now = datetime.now()
+    date_time = now.strftime("%d_%m_%Y")
+    feature_df_to_save = feature_df.drop("post_text",axis=1)
+    mini = "_mini" if CS.USE_MINIFIED_DATA else ""
+    feature_df_to_save.to_csv(CS.OUTPUT_DIR+"features_output_"+date_time+mini+".csv", index=False)
+
     # Enforce minimum post requiremnets
     if CS.ENFORCE_POST_REQUIREMENTS:
         feature_df = enforce_requirements(feature_df)
@@ -84,12 +91,6 @@ def main():
     # Create histogram and sample texts as png
     vis.generate_report(feature_df)
 
-    now = datetime.now()
-    date_time = now.strftime("%d_%m_%Y")
-    feature_df = feature_df.drop("post_text",axis=1)
-    mini = "_mini" if CS.USE_MINIFIED_DATA else ""
-    feature_df.to_csv(CS.OUTPUT_DIR+"features_output_"+date_time+mini+".csv", index=False)
-    
     
 if __name__ == "__main__":
     
@@ -105,7 +106,11 @@ if __name__ == "__main__":
         globals_loader.load_posts()
         df_posts = globals_loader.df_posts[["post_id", "post_text"]]
         df = pd.merge(df, df_posts, on=['post_id','post_id'])
-        
+
+        # Enforce minimum post requiremnets
+        if CS.ENFORCE_POST_REQUIREMENTS:
+            df = enforce_requirements(df)
+
         vis.generate_report(df)
     else:
         globals_loader.init()  

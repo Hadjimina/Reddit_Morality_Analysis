@@ -1,3 +1,8 @@
+"""
+    Raw output from the LIWC program sometimes has wrong headers and includes unecessry columns. 
+    Here we fix that
+"""
+
 import pandas as pd
 import sys 
 sys.path.append('..')

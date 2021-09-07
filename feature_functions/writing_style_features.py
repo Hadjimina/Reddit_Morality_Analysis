@@ -3,9 +3,11 @@ import logging as lg
 import re
 import coloredlogs
 import constants as CS
+
 import helpers.globals_loader as globals_loader
 
 from helpers import *
+from nrclex import NRCLex
 
 
 coloredlogs.install()
@@ -59,6 +61,31 @@ def get_feats_dict(morph_feats):
     feats_dict = dict(zip(k, v)) if len(k) > 0 else {}
     return feats_dict
 
+def get_emotions(post_text):
+    """Analyse emotions contained within a text using NRC Word-Emotion Association Lexicon (aka EmoLex)
+       Frequencies => ratio to total number of words
+
+    Args:
+        post_text (str): Full body text of r/AITA post
+
+    Returns:
+         [(str, int)]:  e.g. [("joy_freq": 10), ("joy_abs": 0.10)]
+    """
+
+    analysed_text = NRCLex(post_text)
+    abs_affect = analysed_text.raw_emotion_scores
+    freq_affect = analysed_text.affect_frequencies
+
+    # Initialize all emotions that have 0 raw count
+    for key in list(freq_affect.keys()):
+        if not key in abs_affect:
+            abs_affect[key] = 0
+
+    abs_list = dict_to_feature_tuples(abs_affect, suffix="_abs")
+    freq_list = dict_to_feature_tuples(freq_affect, suffix="_freq")
+
+    ret_list = abs_list+freq_list
+    return ret_list
 
 def get_tense_voice_sentiment(post_text):
     """Iterate through text and 
@@ -68,9 +95,6 @@ def get_tense_voice_sentiment(post_text):
 
        3. check if post_text sentiment is postitive or negative => only checked on per text level (not individual sentances)
        
-       
-
-
     Args:
         post_text (str): Full body text of r/AITA post
 

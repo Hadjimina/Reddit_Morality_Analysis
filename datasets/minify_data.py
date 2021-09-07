@@ -1,3 +1,8 @@
+"""" Script to minify the big datasets.
+      Dataframes get downsampled to CS.MINIFY_FRAC % of their original size
+      We rewrite all already minified dataframes
+
+"""
 import logging as lg
 import os
 from os import walk
@@ -8,15 +13,7 @@ sys.path.append('..')
 import coloredlogs
 import pandas as pd
 import constants as CS
-
-
 coloredlogs.install()
-
-"""" Script to minify the big datasets.
-      Dataframes get downsampled to CS.MINIFY_FRAC % of their original size
-      We rewrite all already minified dataframes
-
-"""
 
 dataset_dir = CS.dataset_dir
 filenames = next(walk(dataset_dir), (None, None, []))[2]  # [] if no file

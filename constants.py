@@ -45,13 +45,14 @@ POST_AUTHOR = 3
 DIAGRAM_HIDE_0_VALUES = True
 NR_COLS_MPL = 5
 NR_COLS_TEXT = 10
+MAX_FEATURES_TO_DISPLAY = 25
 
 # JUDGEMENT LABELS
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS =  1#multiprocessing.cpu_count()
+NR_THREADS =  multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"feature_df_tmp"
 MONO_ID = "mono"
 
@@ -80,12 +81,13 @@ SP_FEATS_VOICE = "Voice"
 FEATURES_TO_GENERATE_MP = {
     "speaker":[
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
+        (get_author_info, CS.POST_AUTHOR),
         #(get_author_age, CS.POST_AUTHOR),
         #(get_post_author_karma, CS.POST_AUTHOR)
     ], 
     "writing_sty":[
         (get_punctuation_count, CS.POST_TEXT),
-        #(get_tense_time_and_voice, CS.POST_TEXT)
+        (get_emotions, CS.POST_TEXT),
     ],
     "behaviour":[
     ],
@@ -96,17 +98,12 @@ FEATURES_TO_GENERATE_MP = {
 
 FEATURES_TO_GENERATE_MONO = {
     "speaker":[
-        #(get_author_amita_post_activity, CS.POST_AUTHOR),
-        #(get_author_age, CS.POST_AUTHOR),
-        #(get_post_author_karma, CS.POST_AUTHOR)
     ], 
     "writing_sty":[
-        #(get_punctuation_count, CS.POST_TEXT),
-        #(get_tense_voice_sentiment, CS.POST_TEXT)
+        (get_tense_voice_sentiment, CS.POST_TEXT),
     ],
     "behaviour":[
     ],
     "reactions":[
-        #(get_judgement_labels, CS.POST_ID)
     ]
 }

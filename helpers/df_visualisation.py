@@ -22,11 +22,12 @@ def id_text_at_end(df):
     if CS.LOAD_FOUNDATIONS:
         col_list.remove(CS.FOUNDATIONS_PREFIX+"post_id")
 
-    col_list.remove("post_id")
-    col_list.remove("post_text")
-    col_list.append("post_id")
-    col_list.append("post_text")
-    
+    move_to_end = ["post_id", "post_text"]
+    for col in move_to_end:
+        if col in col_list:
+            col_list.remove(col)
+            col_list.append(col)
+
     df = df[col_list]
     return df
 
@@ -42,6 +43,20 @@ def drop_non_feature_cols(df):
             lg.info("      not visualising "+c)
             df = df.drop(c, axis=1)
     return df
+
+def get_hist_bar_at_value(patches, value):
+    min_distance = float("inf")  # initialize min_distance with infinity
+    index_of_bar_to_label = 0
+    for i, rectangle in enumerate(patches):  # iterate over every bar
+        tmp = abs(  # tmp = distance from middle of the bar to bar_value_to_label
+            (rectangle.get_x() +
+                (rectangle.get_width() * (1 / 2))) - value)
+        if tmp < min_distance:  # we are searching for the bar with x cordinate
+                                # closest to bar_value_to_label
+            min_distance = tmp
+            index_of_bar_to_label = i
+    #print(min_distance)
+    return value if min_distance < 0.006 else None
 
 def df_get_text_samples(df):
     """ Get the sample texts of every feature to be displayed in png
@@ -109,9 +124,6 @@ def df_to_text_png(df):
         dataframe with potentialy multiple columns    
     """
     lg.info("  drawing post examples")
-    df_to_text_png_timer = time.time()
-    
-    
     ex_list, ranges_min_max = df_get_text_samples(df)
 
     MAX_NR_LINES = 20
@@ -219,17 +231,23 @@ def df_to_plots(df_features):
                     break
 
                 data = df_features.iloc[:,index_sum].to_list()
-                nr_bins = 300 #TODO: set correct amount of bins
+                nr_bins = 100 #TODO: set correct amount of bins
                 #nr_bins = abs(np.max(data)-np.min(data))
 
+                patches = None
                 if axs.ndim > 1:
                    
-                    axs[i, j].hist(data,bins=nr_bins, align="mid") 
+                    _,_,patches = axs[i, j].hist(data,bins=nr_bins, align="mid") 
                     axs[i, j].set_title(df_features.columns[index_sum])                    
                 else:
-                   
-                    axs[j].hist(data, bins=nr_bins, align="mid") 
+                    _,_,patches = axs[j].hist(data, bins=nr_bins, align="mid") 
                     axs[j].set_title(df_features.columns[index_sum])
+
+                # set color of bar at value 0 to red
+                zero_bar = get_hist_bar_at_value(patches,0)
+                if not zero_bar is None:
+                    patches[zero_bar].set_color('r')
+
                 index_sum +=1
 
             #terminate if no more features available        
@@ -237,10 +255,9 @@ def df_to_plots(df_features):
                     break
 
     
-    
     mini_text = "Using minified data ({0} fraction)".format(CS.MINIFY_FRAC) if CS.USE_MINIFIED_DATA else "Using complete dataset"
     plt.suptitle(mini_text, fontsize=16)
-    if df_features.shape[1] < 25:
+    if df_features.shape[1] < CS.MAX_FEATURES_TO_DISPLAY:
         plt.show()
 
     mini = "_mini" if CS.USE_MINIFIED_DATA else ""
