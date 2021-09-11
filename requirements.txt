@@ -1,0 +1,13 @@
+tqdm==4.62.0
+spacy==3.1.2
+numpy==1.21.1
+prawcore==2.3.0
+NRCLex==3.0.0
+coloredlogs==15.0.1
+matplotlib==3.4.2
+pandas==1.3.1
+gdown==3.13.0
+praw==7.4.0
+requests==2.22.0
+Pillow==8.3.2
+spacytextblob==3.0.1

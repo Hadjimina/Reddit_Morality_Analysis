@@ -42,7 +42,7 @@ POST_TITLE = 2
 POST_AUTHOR = 3
 
 # VISUALISATION
-DIAGRAM_HIDE_0_VALUES = True
+DIAGRAM_HIDE_0_VALUES = False
 NR_COLS_MPL = 5
 NR_COLS_TEXT = 10
 MAX_FEATURES_TO_DISPLAY = 25
@@ -61,7 +61,7 @@ POST_PEND = ["post_id", "post_text"]
 POST_PEND_MONO = ["post_id"]
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.001
+MINIFY_FRAC = 0.01
 
 # SPACY STRINGS
 SP_VERB = "VERB"
@@ -81,13 +81,14 @@ SP_FEATS_VOICE = "Voice"
 FEATURES_TO_GENERATE_MP = {
     "speaker":[
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
-        (get_author_info, CS.POST_AUTHOR),
+        #(get_author_info, CS.POST_AUTHOR), # => seems to be ultra slow!!!
         #(get_author_age, CS.POST_AUTHOR),
         #(get_post_author_karma, CS.POST_AUTHOR)
     ], 
     "writing_sty":[
         (get_punctuation_count, CS.POST_TEXT),
         (get_emotions, CS.POST_TEXT),
+        (aita_location, CS.POST_TEXT)
     ],
     "behaviour":[
     ],
@@ -100,7 +101,7 @@ FEATURES_TO_GENERATE_MONO = {
     "speaker":[
     ], 
     "writing_sty":[
-        (get_tense_voice_sentiment, CS.POST_TEXT),
+        #(get_tense_voice_sentiment, CS.POST_TEXT), # => 4h for 10%
     ],
     "behaviour":[
     ],

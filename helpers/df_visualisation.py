@@ -225,39 +225,74 @@ def df_to_plots(df_features):
     fig, axs = plt.subplots(nr_rows,nr_cols, sharex=False, sharey=False)
     index_sum = 0
     for i in range(nr_rows):
-            for j in range(nr_cols):
-                #terminate if no more features available
-                if index_sum >= len(list(df_features.columns)):
-                    break
-
-                data = df_features.iloc[:,index_sum].to_list()
-                nr_bins = 100 #TODO: set correct amount of bins
-                #nr_bins = abs(np.max(data)-np.min(data))
-
-                patches = None
-                if axs.ndim > 1:
-                   
-                    _,_,patches = axs[i, j].hist(data,bins=nr_bins, align="mid") 
-                    axs[i, j].set_title(df_features.columns[index_sum])                    
-                else:
-                    _,_,patches = axs[j].hist(data, bins=nr_bins, align="mid") 
-                    axs[j].set_title(df_features.columns[index_sum])
-
-                # set color of bar at value 0 to red
-                zero_bar = get_hist_bar_at_value(patches,0)
-                if not zero_bar is None:
-                    patches[zero_bar].set_color('r')
-
-                index_sum +=1
-
-            #terminate if no more features available        
+        for j in range(nr_cols):
+            #terminate if no more features available
             if index_sum >= len(list(df_features.columns)):
-                    break
+                break
 
-    
+            
+
+            data = df_features.iloc[:,index_sum].to_list()
+
+            # Hide 0 values
+            if CS.DIAGRAM_HIDE_0_VALUES:
+                data = [value for value in data if value != 0]
+
+            """ if not data:
+                continue
+            # Get correct visualistaion bins & ranges
+            min_x = math.floor(min(data))
+            max_x = math.ceil(max(data))
+            value_range = abs(max_x-min_x)
+            nr_unique_vals = len(set(data))
+            #find nr bins
+            # get max distance between consecutive elements
+            elem_set = list(set(data))
+            elem_set.sort()
+            max_dist = max([x - elem_set[i - 1] for i, x in enumerate(elem_set)][1:])
+
+
+            #print(max_dist/value_range)
+            #print(nr_unique_vals/value_range)
+
+            if max_dist/value_range > 0.6: # this means value lie far apart => set bins based on value range
+                nr_bins = min(value_range,300)#TODO: set correct amount of bins
+            else: #values close together => set bins based on nr of different values
+                nr_bins = min(nr_unique_vals,300)#TODO: set correct amount of bins
+
+            border = abs(max_x-min_x)*0.025
+            min_x -= border
+            max_x += border
+            #if len(set(data))<100:
+               #print(set(data))
+            print(nr_bins, min_x, max_x) """
+            
+            nr_bins = 200
+            patches = None
+            if axs.ndim > 1:
+                
+                _,_,patches = axs[i, j].hist(data, bins=nr_bins, align="mid") 
+                axs[i, j].set_title(df_features.columns[index_sum])                    
+                #axs[i, j].set_xlim([min_x, max_x])
+            else:
+                _,_,patches = axs[j].hist(data, bins=nr_bins, align="mid") 
+                axs[j].set_title(df_features.columns[index_sum])
+                #axs[j].set_xlim([min_x, max_x])
+
+            # set color of bar at value 0 to red
+            #zero_bar = get_hist_bar_at_value(patches,0)
+            #if not zero_bar is None:
+            #    patches[zero_bar].set_color('r')
+
+            index_sum +=1
+
+        #terminate if no more features available        
+        if index_sum >= len(list(df_features.columns)):
+                break
+
     mini_text = "Using minified data ({0} fraction)".format(CS.MINIFY_FRAC) if CS.USE_MINIFIED_DATA else "Using complete dataset"
     plt.suptitle(mini_text, fontsize=16)
-    if df_features.shape[1] < CS.MAX_FEATURES_TO_DISPLAY:
+    if False and df_features.shape[1] < CS.MAX_FEATURES_TO_DISPLAY:
         plt.show()
 
     mini = "_mini" if CS.USE_MINIFIED_DATA else ""

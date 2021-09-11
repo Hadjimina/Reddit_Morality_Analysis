@@ -36,5 +36,6 @@ def enforce_requirements(df):
 
     new_df_size = df.shape[0]
     new_size = round(new_df_size/old_df_size,3)*100
-    lg.warning("By enforcing requirments df reduced to {0}% (new size = {1})".format(new_size, new_df_size))
+    if new_size < 1:
+        lg.warning("By enforcing requirments df reduced to {0}% (new size = {1})".format(new_size, new_df_size))
     return df

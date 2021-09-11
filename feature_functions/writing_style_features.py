@@ -3,10 +3,12 @@ import logging as lg
 import re
 import coloredlogs
 import constants as CS
-
+import statistics as st
 import helpers.globals_loader as globals_loader
 
-from helpers import *
+import re
+
+from helpers.helper_functions import *
 from nrclex import NRCLex
 
 
@@ -61,6 +63,40 @@ def get_feats_dict(morph_feats):
     feats_dict = dict(zip(k, v)) if len(k) > 0 else {}
     return feats_dict
 
+def aita_location(post_text):
+    """Get the location (in % of entire text) and the number of "aita?" questions the author asks.
+
+    Args:
+        post_text (str): Full body text of r/AITA post
+
+    Returns:
+        [(str, int)]:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
+    """    
+
+    aita_strings = ["am i the asshole", "aita", "am i the", "wita", "would i be the asshole"]
+    aita_strings = string_matching_arr_append_ah(aita_strings)
+
+    post_text = prep_text_for_string_matching(post_text)
+
+    occurences = 0
+    location_abs = []
+    for aita_string in aita_strings:
+        cur_occurences = post_text.count(aita_string)
+        occurences += cur_occurences
+        # if we know we have some occurences get all the start indices
+        if cur_occurences > 0:
+            location_abs += [m.start() for m in re.finditer(aita_string, post_text)]
+
+    post_length = len(post_text)
+    location_ratio = list(map(lambda x: x/post_length, location_abs))
+    mean_loc_ratio =  st.mean(location_ratio) if len(location_ratio) > 0 else -1 #TODO: mean might not be the best idea
+    
+    # if we have not found any matches the mean_loc_ratio is -1
+    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location_ratio",mean_loc_ratio)]
+    return ret_tuple_list
+
+
+
 def get_emotions(post_text):
     """Analyse emotions contained within a text using NRC Word-Emotion Association Lexicon (aka EmoLex)
        Frequencies => ratio to total number of words
@@ -77,14 +113,18 @@ def get_emotions(post_text):
     freq_affect = analysed_text.affect_frequencies
 
     # Initialize all emotions that have 0 raw count
-    for key in list(freq_affect.keys()):
+    hard_coded_list = ['fear', 'anger', 'anticip', 'trust', 'surprise', 'positive', 'negative', 'sadness', 'disgust', 'joy', 'anticipation']
+    key_set = set(hard_coded_list+list(freq_affect.keys()))    
+    for key in key_set:
         if not key in abs_affect:
             abs_affect[key] = 0
+            freq_affect[key] = 0
 
     abs_list = dict_to_feature_tuples(abs_affect, suffix="_abs")
     freq_list = dict_to_feature_tuples(freq_affect, suffix="_freq")
 
     ret_list = abs_list+freq_list
+
     return ret_list
 
 def get_tense_voice_sentiment(post_text):

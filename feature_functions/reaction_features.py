@@ -119,7 +119,7 @@ def get_judgement_labels(post_id):
     if pos_score_weighted+neg_score_weighted > 0:
         label_counter["weighted_controversy"] = 1-2*abs(pos_score_weighted/(pos_score_weighted+neg_score_weighted)-0.5)
     """    
-
+    #print(label_counter)
     tuple_list =  dict_to_feature_tuples(label_counter) 
 
     return tuple_list
