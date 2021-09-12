@@ -12,13 +12,12 @@ ENFORCE_POST_REQUIREMENTS = True
 # Loading & minified
 USE_MINIFIED_DATA = True
 LOAD_COMMENTS = True
-LOAD_FOUNDATIONS = True
-LOAD_LIWC = True
+LOAD_FOUNDATIONS = False
+LOAD_LIWC = False
 
 # Prefixes
 LIWC_PREFIX = "liwc_"
 FOUNDATIONS_PREFIX = "foundations_"
-
 
 #directories
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
@@ -78,6 +77,7 @@ SP_FEATS_VOICE = "Voice"
 
 
 #Feature Generation
+#TOKENIZED_FUNCTIONS = [get_sentiment, get_tense, get_voice]
 FEATURES_TO_GENERATE_MP = {
     "speaker":[
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
@@ -86,14 +86,14 @@ FEATURES_TO_GENERATE_MP = {
         #(get_post_author_karma, CS.POST_AUTHOR)
     ], 
     "writing_sty":[
-        (get_punctuation_count, CS.POST_TEXT),
-        (get_emotions, CS.POST_TEXT),
+        #(get_punctuation_count, CS.POST_TEXT),
+        #(get_emotions, CS.POST_TEXT),
         (aita_location, CS.POST_TEXT)
     ],
     "behaviour":[
     ],
     "reactions":[
-        (get_judgement_labels, CS.POST_ID)
+        #(get_judgement_labels, CS.POST_ID)
     ]
 }
 
@@ -101,7 +101,7 @@ FEATURES_TO_GENERATE_MONO = {
     "speaker":[
     ], 
     "writing_sty":[
-        #(get_tense_voice_sentiment, CS.POST_TEXT), # => 4h for 10%
+        (get_spacy_features, CS.POST_TEXT), # includes tense, voice, sentiment, focus => 4h for 10%
     ],
     "behaviour":[
     ],

@@ -50,3 +50,25 @@ def string_matching_arr_append_ah(matching_list):
     return matching_list
 
 
+def get_abs_and_perc_dict(abs_dict, out_off_ratio, append_abs=True):
+    """Get a feature dictinoary containing only absolute values and extended it to include the percentage values aswell.
+
+    Args:
+        abs_dict ({str: int}): dict of calucluated features with only absolute features
+
+    Returns:
+        {str:int}: dict of calucluated features with absolute and percentage features
+    """ 
+
+    features = list(abs_dict.keys())
+    #create abs and perc values
+    all_keys = [x+"_abs" for x in features] + [x+"_perc" for x in features] 
+    complete_dict = dict.fromkeys(all_keys,0)
+
+    #nr_sents = len(doc.sents)
+    for v in features:
+        curr_value = abs_dict[v]
+        abs_postpend = "_abs" if append_abs else ""
+        complete_dict[v+abs_postpend] = curr_value
+        complete_dict[v+"_perc"] = curr_value/out_off_ratio
+    return complete_dict
