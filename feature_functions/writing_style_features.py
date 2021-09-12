@@ -176,7 +176,11 @@ def find_focus_str(txt):
             return focus_str
     
     return None
-    
+
+ def get_profanity_count(post_text):
+    # https://pypi.org/project/better-profanity/
+    # https://pypi.org/project/profanity-check/
+     return None
         
 def get_focus(token):
     """ Count personal and possesive pronouns in text. 
