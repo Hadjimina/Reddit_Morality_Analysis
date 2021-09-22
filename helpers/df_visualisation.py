@@ -209,8 +209,8 @@ def df_to_plots(df_features):
 
     Parameters
     ----------
-    df : Dataframe
-        dataframe with potentialy multiple columns    
+    df_features : Dataframe
+                  dataframe with potentialy multiple columns    
     """
     lg.info("  drawing plot")
     
@@ -290,7 +290,7 @@ def df_to_plots(df_features):
         if index_sum >= len(list(df_features.columns)):
                 break
 
-    mini_text = "Using minified data ({0} fraction)".format(CS.MINIFY_FRAC) if CS.USE_MINIFIED_DATA else "Using complete dataset"
+    mini_text = "Using minified data ({0} fraction, {1} posts)".format(CS.MINIFY_FRAC, df_features.shape[0]) if CS.USE_MINIFIED_DATA else "Using complete dataset"
     plt.suptitle(mini_text, fontsize=16)
     if False and df_features.shape[1] < CS.MAX_FEATURES_TO_DISPLAY:
         plt.show()

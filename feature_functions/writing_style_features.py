@@ -8,10 +8,9 @@ import helpers.globals_loader as globals_loader
 import re
 from helpers.helper_functions import *
 from nrclex import NRCLex
+from better_profanity import profanity
 
 coloredlogs.install()
-
-tokenized_post = None
 
 def get_punctuation_count(post_text,**kwargs):
     """Count how many times certain punctuations syombols occur in text
@@ -61,6 +60,34 @@ def get_feats_dict(morph_feats):
     feats_dict = dict(zip(k, v)) if len(k) > 0 else {}
     return feats_dict
 
+def get_emotions(post_text):
+    """Analyse emotions contained within a text using NRC Word-Emotion Association Lexicon (aka EmoLex)
+       Frequencies => ratio to total number of words
+
+    Args:
+        post_text (str): Full body text of r/AITA post
+
+    Returns:
+         [(str, int)]:  e.g. [("joy_freq": 10), ("joy_abs": 0.10)]
+    """
+
+    analysed_text = NRCLex(post_text)
+    abs_affect = analysed_text.raw_emotion_scores
+    freq_affect = analysed_text.affect_frequencies # TODO: what exactly does freq do?
+
+    # Initialize all emotions that have 0 raw count
+    key_set = set(CS.EMOTIONS+list(freq_affect.keys()))    
+    for key in key_set:
+        if not key in abs_affect:
+            abs_affect[key] = 0
+            freq_affect[key] = 0
+
+    abs_list = dict_to_feature_tuples(abs_affect, suffix="_abs")
+    freq_list = dict_to_feature_tuples(freq_affect, suffix="_freq")
+
+    ret_list = abs_list+freq_list
+    return ret
+
 def aita_location(post_text):
     """Get the location (in % of entire text) and the number of "aita?" questions the author asks.
 
@@ -94,7 +121,7 @@ def aita_location(post_text):
     return ret_tuple_list
 
 def get_sentiment_in_spacy(doc):
-    """We get the sentiment of the spacy doc
+    """ We get the sentiment of the spacy doc
 
      Args:  spaCy doc:  object containing tokenized post text (see https://spacy.io/api/doc)
 
@@ -149,26 +176,22 @@ def get_tense_in_spacy(token):
             
     return sentence_tense, verb_increment
 
-def find_focus_str(txt):
+def find_focus_str(pronoun):
     """ Create focus string to determine internal or external focus. It can determine of different types of pronouns
+        Returns None if pronoun not found in pronouns list
 
     Args: 
-        txt (str): String which we want to map onto the pronouns list
+        pronoun (str): String which we want to map onto the pronouns list
 
     Returns:
         str: e.g. "focus_i" or "focus_he" or "focus_you_pl"
     
     """
     # list from https://www.lingographics.com/english/personal-pronouns/
-    pronouns = [["i", "me", "my", "mine", "myself"],
-                ["you", "your","yours", "yourself"], 
-                ["he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself"],
-                ["we", "us", "our", "ours", "ourselves"], 
-                ["yourselves"], # TODO: 2nd Person plurar & singular is almost identical
-                ["they", "them", "their", "theirs", "themselves"]]
+    pronouns = CS.PRONOUNS
 
     for lst in pronouns:
-        if txt in lst:
+        if pronoun in lst:
             focus_str = "focus_"+lst[0]
             lst_idx = pronouns.index(lst)
             focus_str += "sg" if lst_idx == 1 else ""
@@ -177,12 +200,25 @@ def find_focus_str(txt):
     
     return None
 
- def get_profanity_count(post_text):
-    # https://pypi.org/project/better-profanity/
-    # https://pypi.org/project/profanity-check/
-     return None
-        
-def get_focus(token):
+def get_profanity_count(post_text):
+    """ Count how many profane words appear in text and also normalise that value by the number of words
+
+    Args:
+        post_text (str): Full body text of r/AITA post
+
+    Returns:
+         [(str, int)]:  e.g. [("profanity_abs": 10), ("profanity_norm", 0.1)]
+    """
+
+    words = post_text.split() #TODO: should we do this with split or use the tokens from spaCy
+    profanity_abs = 0
+    for w in words:
+        profanity_abs += profanity.contains_profanity(w)
+
+    profanity_norm = profanity_abs / max( len(words), 1) 
+    return [("profanity_abs", profanity_abs), ("profanity_norm",profanity_norm)]
+
+def get_focus_in_spacy(token, count_possesive_pronouns=True):
     """ Count personal and possesive pronouns in text. 
         For personal pronouns, if it was the subject of the sentance we give it a higher weight than if it was the object.
         Possesive always have the same weight
@@ -193,7 +229,6 @@ def get_focus(token):
     Returns:
         str, int: the focus string as well as its weight
     """
-    count_possesive_pronouns = True
     weight = 0
     focus_str = ""
 
@@ -217,14 +252,88 @@ def get_focus(token):
         if not focus_str is None:
             return focus_str, weight
 
-    return None, None
+    return None, None 
+
+def get_profanity_self_vs_other_in_spacy(sentence):
+    """ Iterate over text and
+        1. Determine for each sentance if it is about the self (i.e. subject) or about other people 
+        2. Sum all raw profanity scores for all sentances. Distinguish between subject I and subject other people
+        Returns empty dictionary if subject is not in pronouns list
+        
+    Args:
+        sentence (spaCy doc sentence):  object containing tokenized post text (see https://spacy.io/api/doc)
+
+    Returns:
+         ret_dict (dict): dictioanry with profanity values normalised by sentence length. Prefixed with either belonging to "self_" or "other_" focus
+    """
+    sent_subjects = [token for token in sentence if (token.dep_ == "nsubj") ] # TODO: should we only check subject?
+    profanity_abs = 0
+    ret_dict = {"self_prof":0, "other_prof":0}
+
+    if len(sent_subjects) > 0:
+        focus_str = find_focus_str(str(sent_subjects[0]))
+
+        if not focus_str is None:
+            for w in str(sentence).split():
+                #print(w)
+                profanity_abs += profanity.contains_profanity(w)
+                #if profanity.contains_profanity(w):
+                #    print(sentence)
+
+            prefix = "self_" if focus_str == "focus_i" else "other_"
+            ret_dict[prefix+"prof"] = profanity_abs
+            #print(ret_dict)
+            return ret_dict  
+
+    elif len(sent_subjects) > 1:
+        print(sent_subjects)
+        print("MULTIPLE SUBECTS")
+    # sent_object = [token for token in sentence if (token.dep_ == "iobj" or tokken.dep_ == "dobj") ]
+    return {}
+
+def get_emotions_self_vs_other_in_spacy(sentence):
+    """ Iterate over text and
+        1. Determine for each sentance if it is about the self (i.e. subject) or about other people 
+        2. Sum all raw emotion scores for all sentances for each type of emotions up. Distinguish between subject I and subject other people
+        Returns empty dictionary if subject is not in pronouns list
+        
+     Args:
+        sentence (spaCy doc sentence):  object containing tokenized post text (see https://spacy.io/api/doc)
+
+    Returns:
+         ret_dict (dict): dictioanry with raw emotion values. Prefixed with either belonging to "self_" or "other_" focus
+    """
+    sent_subjects = [token for token in sentence if (token.dep_ == "nsubj") ] # TODO: should we only check subject?
+    if len(sent_subjects) > 0:
+        focus_str = find_focus_str(str(sent_subjects[0]))
+
+        if not focus_str is None:
+            analysed_text = NRCLex(str(sentence))
+            abs_affect = analysed_text.raw_emotion_scores 
+            #TODO: should we use raw emotions scores or normalize them by length of sentence?
+            # Right now we normalize at end with length of post
+            #norm_values = [v/len(sentence) for v in list(abs_affect.values())]
+
+            prefix = "self_" if focus_str == "focus_i" else "other_"
+            keys = [prefix+k for k in list(abs_affect.keys())]
+            ret_dict = dict(zip(keys, list(abs_affect.values())))
+            return ret_dict  
+
+    elif len(sent_subjects) > 1:
+        print(sent_subjects)
+        print("MULTIPLE SUBECTS")
+    # sent_object = [token for token in sentence if (token.dep_ == "iobj" or tokken.dep_ == "dobj") ]
+    return {}
+
 
 def get_spacy_features(post_text):
-    """Iterate through text and 
-      1. Get tense -> get_tense_in_spacy
-      2. Get voice -> get_voice_in_spacy
-      3. Get sentiment -> get_sentiment_in_spacy
-      4. Get internal/external focus -> get_focus
+    """ Iterate through text and 
+        1. Get tense -> get_tense_in_spacy()
+        2. Get voice -> get_voice_in_spacy()
+        3. Get sentiment -> get_sentiment_in_spacy()
+        4. Get internal/external focus -> get_focus_in_spacy()
+        5. Get self/oth emotions -> get_emotions_self_vs_other_in_spacy()
+        6. Get self/oth profanity -> get_profanity_self_vs_other_in_spacy()
        
     Args:
         post_text (str): Full body text of r/AITA post
@@ -249,35 +358,60 @@ def get_spacy_features(post_text):
     pol, subj = get_sentiment_in_spacy(doc)
     sent_dict = {"sent_polarity":pol, "sent_subjectivity": subj} 
 
+    # 5. Get emotions in sentence about self vs other    
+    emo_self_vs_oth_dict_keys = ["self_"+k for k in CS.EMOTIONS] + ["other_"+k for k in CS.EMOTIONS]
+    emo_self_vs_oth_dict = dict.fromkeys(emo_self_vs_oth_dict_keys,0)
     verb_count = 0
+
+    # 6. Get profanity in sentence about self vs other 
+    prof_self_vs_oth_dict = {"self_prof":0, "other_prof":0}
     
     for sentence in doc.sents:
+
+        # 5. Get self/other emotions
+        if get_emotions_self_vs_other_in_spacy in CS.SPACY_FUNCTIONS:
+            tmp_self_oth_emo = get_emotions_self_vs_other_in_spacy(sentence)
+            #TODO: only return emotions that are nonzero
+            for key in tmp_self_oth_emo.keys():
+                emo_self_vs_oth_dict[key] += tmp_self_oth_emo[key]
+
+        # 6. Get self/other profanity
+        if get_profanity_self_vs_other_in_spacy in CS.SPACY_FUNCTIONS:
+            tmp_self_oth_prof = get_profanity_self_vs_other_in_spacy(sentence)
+            #TODO: only return profanity (self,other) that are nonzero
+            for key in tmp_self_oth_prof.keys():
+                prof_self_vs_oth_dict[key] += tmp_self_oth_prof[key]
+            
+                
 
         voice_flag = False
         for token in sentence:
 
             # 1. Get tense
             # TODO: this should be done on a per sentance level, not per token
-            tense, verb_increment = get_tense_in_spacy(token)
-            if tense != "":
-                tense_dict[tense] += 1
-            verb_count +=verb_increment
+            if get_tense_in_spacy in CS.SPACY_FUNCTIONS:
+                tense, verb_increment = get_tense_in_spacy(token)
+                if tense != "":
+                    tense_dict[tense] += 1
+                verb_count +=verb_increment
 
             # 2. Get voice 
             # We only set voice value once per sentence
             # TODO: This is definetly not perfect. Naive implementation only https://stackoverflow.com/questions/19495967/getting-additional-information-active-passive-tenses-from-a-tagger
-            if voice_flag:
-                continue
+            if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
+                if voice_flag:
+                    continue
 
-            sentence_voice  = get_voice_in_spacy(token)
-            if not sentence_voice == "":
-                voice_flag = True
-                voice_dict[sentence_voice] += 1
+                sentence_voice  = get_voice_in_spacy(token)
+                if not sentence_voice == "":
+                    voice_flag = True
+                    voice_dict[sentence_voice] += 1
 
             # 4. Get focus 
-            focus_str, weight = get_focus(token)
-            if focus_str in focus_dict_raw.keys():
-                focus_dict_raw[focus_str] += 1*weight
+            if get_focus_in_spacy in CS.SPACY_FUNCTIONS:
+                focus_str, weight = get_focus_in_spacy(token)
+                if focus_str in focus_dict_raw.keys():
+                    focus_dict_raw[focus_str] += 1*weight
 
 
     to_return = []
@@ -286,11 +420,11 @@ def get_spacy_features(post_text):
     post_length = len(post_text)
     
     # 1. Get tense in tuple list
-    tense_dict = get_abs_and_perc_dict(tense_dict, out_off_ratio=verb_count)
+    tense_dict = get_abs_and_norm_dict(tense_dict, out_off_ratio=verb_count)
     to_return += dict_to_feature_tuples(tense_dict)
 
     # 2. Get voice in tuple list       
-    voice_dict = get_abs_and_perc_dict(voice_dict, out_off_ratio=nr_sentances)
+    voice_dict = get_abs_and_norm_dict(voice_dict, out_off_ratio=nr_sentances)
     to_return += dict_to_feature_tuples(voice_dict)
 
     # 3. Get sentiment in tuple list
@@ -301,13 +435,19 @@ def get_spacy_features(post_text):
     ## to_return += dict_to_feature_tuples(focus_dict_raw)
     focus_int_ext["internal_focus"] = focus_dict_raw["focus_i"] # TODO: should we count "focus_we" as internal focus aswell?
     focus_int_ext["external_focus"] = sum(list(focus_dict_raw.values())) - focus_dict_raw["focus_i"]
-    focus_int_ext = get_abs_and_perc_dict(focus_int_ext, out_off_ratio=nr_words)
+    focus_int_ext = get_abs_and_norm_dict(focus_int_ext, out_off_ratio=nr_words)
     to_return += dict_to_feature_tuples(focus_int_ext)
     
+    # 5. Get self/other emotions in tuple list
+    emo_self_vs_oth_dict = get_abs_and_norm_dict(emo_self_vs_oth_dict, out_off_ratio=post_length, only_norm=True)
+    to_return += dict_to_feature_tuples(emo_self_vs_oth_dict)
+
+    # 6. Get self/other profanity in tuple list
+    prof_self_vs_oth_dict = get_abs_and_norm_dict(prof_self_vs_oth_dict, out_off_ratio=post_length, only_norm=True)
+    to_return += dict_to_feature_tuples(prof_self_vs_oth_dict)
 
     return to_return
     
-
 
 # Calculate absolute profanity
 #prof_dict["profanity_perc"] = prof_dict["profanity_abs"]/max(token_count,1)
@@ -341,33 +481,7 @@ return feat_list """
 #        return_list += fn(post_text)
 #    return return_list
 #
-#def get_emotions(post_text):
-#    """Analyse emotions contained within a text using NRC Word-Emotion Association Lexicon (aka EmoLex)
-#       Frequencies => ratio to total number of words
-#
-#    Args:
-#        post_text (str): Full body text of r/AITA post
-#
-#    Returns:
-#         [(str, int)]:  e.g. [("joy_freq": 10), ("joy_abs": 0.10)]
-#    """
-#
-#    analysed_text = NRCLex(post_text)
-#    abs_affect = analysed_text.raw_emotion_scores
-#    freq_affect = analysed_text.affect_frequencies
-#
-#    # Initialize all emotions that have 0 raw count
-#    hard_coded_list = ['fear', 'anger', 'anticip', 'trust', 'surprise', 'positive', 'negative', 'sadness', 'disgust', 'joy', 'anticipation']
-#    key_set = set(hard_coded_list+list(freq_affect.keys()))    
-#    for key in key_set:
-#        if not key in abs_affect:
-#            abs_affect[key] = 0
-#            freq_affect[key] = 0
-#
-#    abs_list = dict_to_feature_tuples(abs_affect, suffix="_abs")
-#    freq_list = dict_to_feature_tuples(freq_affect, suffix="_freq")
-#
-#    ret_list = abs_list+freq_list
+
 #
 #    return ret_list
 #
@@ -426,7 +540,7 @@ return feat_list """
 #                        sentence_tense = "future"
 #                    tense_dict[sentence_tense] += 1
 #    
-#    ret = get_abs_and_perc_dict(tense_dict, out_off_ratio=verb_count)
+#    ret = get_abs_and_norm_dict(tense_dict, out_off_ratio=verb_count)
 #    ret = dict_to_feature_tuples(ret)
 #    return ret
 #    
@@ -468,7 +582,7 @@ return feat_list """
 #                voice_flag = True
 #                voice_dict[sentence_voice] += 1
 #    
-#    ret = get_abs_and_perc_dict(voice_dict, out_off_ratio=len(list(doc.sents)))
+#    ret = get_abs_and_norm_dict(voice_dict, out_off_ratio=len(list(doc.sents)))
 #    ret = dict_to_feature_tuples(ret)
 #
 #    return ret

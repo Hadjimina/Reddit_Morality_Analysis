@@ -2,6 +2,8 @@
 helper_functions.py
 """
 import helpers.globals_loader as globals_loader
+import numpy as np
+import re
 
 def dict_to_feature_tuples(dict, suffix=""):
     """Take a dict at end of a feature function and convert it to a tuple format for the dataframe
@@ -12,7 +14,15 @@ def dict_to_feature_tuples(dict, suffix=""):
     Returns:
         [(feature name, value)]: [description]
     """
-    return [(("{0}"+suffix).format(k), v) for k, v in dict.items()]
+    to_ret = []
+    all_values_zero = True
+    for k,v in dict.items():
+        tpl = (("{0}"+suffix).format(k), v)
+        if not np.isclose(v, 0, rtol=1e-05, atol=1e-08, equal_nan=False):
+            all_values_zero = False
+        to_ret.append(tpl)
+
+    return to_ret if not all_values_zero else []
 
 def prep_text_for_string_matching(text):
     """Prepare text for string matching in two steps
@@ -25,6 +35,7 @@ def prep_text_for_string_matching(text):
         str: text prepared for string matching
     """    
     text = text.lower()
+    
     text = " ".join(text.split())
     return text
 
@@ -50,25 +61,28 @@ def string_matching_arr_append_ah(matching_list):
     return matching_list
 
 
-def get_abs_and_perc_dict(abs_dict, out_off_ratio, append_abs=True):
-    """Get a feature dictinoary containing only absolute values and extended it to include the percentage values aswell.
+def get_abs_and_norm_dict(abs_dict, out_off_ratio, append_abs=True, only_norm=False):
+    """Get a feature dictinoary containing only absolute values and extended it to include the normalised values aswell.
 
     Args:
         abs_dict ({str: int}): dict of calucluated features with only absolute features
+        append_abs (bool): whether or not we should append the string "_abs" to the exisitng keys in abs_dict
+        only_norm (bool): whether or not we should return only the normalised values
 
     Returns:
-        {str:int}: dict of calucluated features with absolute and percentage features
+        {str:int}: dict of calucluated features with absolute and normalised features
     """ 
-
     features = list(abs_dict.keys())
     #create abs and perc values
-    all_keys = [x+"_abs" for x in features] + [x+"_perc" for x in features] 
+    abs_postpend = "_abs" if append_abs else ""
+    all_keys = [x+"_norm" for x in features] 
+    if not only_norm:
+        all_keys = [x+abs_postpend for x in features] + all_keys
     complete_dict = dict.fromkeys(all_keys,0)
 
-    #nr_sents = len(doc.sents)
     for v in features:
         curr_value = abs_dict[v]
-        abs_postpend = "_abs" if append_abs else ""
-        complete_dict[v+abs_postpend] = curr_value
-        complete_dict[v+"_perc"] = curr_value/out_off_ratio
+        if not only_norm:
+            complete_dict[v+abs_postpend] = curr_value
+        complete_dict[v+"_norm"] = curr_value/max(out_off_ratio,1)
     return complete_dict

@@ -25,6 +25,8 @@ from helpers.helper_functions import *
 from helpers.process_helper import *
 from helpers.requirements import *
 
+from better_profanity import profanity
+
 coloredlogs.install()
 
 
@@ -114,6 +116,8 @@ if __name__ == "__main__":
         vis.generate_report(df)
     else:
         globals_loader.init()  
+        profanity.load_censor_words()
+
         lg_str = "Using {0} threads".format(CS.NR_THREADS)
         if CS.NR_THREADS < 2:
             lg.warning(lg_str[:-1]+"!")

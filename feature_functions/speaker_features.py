@@ -2,11 +2,14 @@ import logging as lg
 from datetime import datetime, timezone
 import coloredlogs
 import prawcore
+import re
+import constants as CS
 
 coloredlogs.install()
 
 # import global vars
 import helpers.globals_loader as globals_loader
+from helpers.helper_functions import *
 # TODO: Merge account requests into one call
 
 def get_author_amita_post_activity(account_name):
@@ -84,13 +87,13 @@ def get_author_info(account_name):
         lg.warning("Author older than Reddit. Setting to max age")
         age = 5879
 
-    feature_list += [("author_age", age)]
-    feature_list +=[("author_karma", karma)]
+    feature_list += [("accoun_age", age)]
+    feature_list +=[("account_karma", karma)]
     return feature_list
 
 
 
-def get_author_age(account_name):
+def get_author_account_age(account_name):
     """Query post auther age
 
     returns : [(str, count)]
@@ -127,7 +130,7 @@ def get_author_age(account_name):
 
     if age > 5879: #Reddit: 23.6.2006
         raise ArithmeticError("Author older than Reddit")
-    return [("author_age", age)]
+    return [("account_age", age)]
 
 def get_post_author_karma(account_name):
     """Query post auther karma
@@ -159,3 +162,95 @@ def get_post_author_karma(account_name):
         lg.warning("\n    Author '{0}' not found. Setting karma to 0\n".format(account_name))
     
     return [("author_karma", karma)]
+
+
+
+
+
+def get_author_age_and_gender(post_text):
+    """ Extract age and gender from post text e.g. "I (24 M)" for post author
+
+        Args:
+            post_text (string):  full body of post on AITA
+
+        Returns:
+           [(str, int)]:  e.g. [("author_age": 10), ("author_gender": 1),...] 
+
+    """
+
+    cleaned_text = prep_text_for_string_matching(post_text) 
+
+    # extract all ages
+    rgx_age_gender = re.compile(r"(\d{1,2}\s?(f|m|female|male)[^a-zA-Z0-9]{1})|([^a-zA-Z0-9]{1}(f|m|female|male)\s?\d{1,2})")
+    all_ages_genders_w_span = []
+    for match in rgx_age_gender.finditer(cleaned_text):
+        match_span = list(match.span())
+        match_str = match.group().replace(" ", "")
+        if match.group(0)[0] == " ":
+            match_span[0] = match_span[0]+1
+        if match.group(0)[-1] == " ":
+            match_span[1] = match_span[1]-1
+        match_span = (match_span[0], match_span[1])
+        all_ages_genders_w_span.append([match_span, match_str])
+    
+    # create age, gender tuple list
+    age_gender_tpl = []
+    for span, age_gend_str in all_ages_genders_w_span:
+        age = []
+        gender = []
+        for c in age_gend_str:
+            if c.isdigit():
+                age.append(c)
+            elif c.isalpha():
+                gender.append(c)
+        age_int = int("".join(age))
+        if len(age)>0 and len(gender)>0:
+            age_gender_tpl.append([span,(age_int, gender[0])])
+    
+    if not len(age_gender_tpl) > 0:
+        return [("author_age",-1), ("author_gender", -1)]
+    #print(age_gender_tpl)
+    #print(cleaned_text)
+
+    # extract all pronouns
+    cleaned_text = re.sub('[^a-zA-Z0-9 \n\.]', " ", cleaned_text)
+
+    pronouns_flat = [e for sub in CS.PRONOUNS for e in sub]
+    pronouns_rgx_str = "|".join(pronouns_flat) #structure needs to be: 1 non alpha numeric char, pronoun 1 non alphnumeric char
+    pronouns_rgx_str = "[^a-zA-Z0-9]{1}("+pronouns_rgx_str+")[^a-zA-Z0-9]{1}" 
+    rgx_pronoun = re.compile(r""+pronouns_rgx_str)
+    pronouns_list = []
+    pronoun_keys = set({})
+    for match in rgx_pronoun.finditer(cleaned_text):
+        match_str = ""
+        for lst in CS.PRONOUNS:
+            match_group_str = match.group(0)
+            match_group_str = match_group_str.strip()
+            if match_group_str in lst:
+                match_str = lst[0]
+        if len(match_str) != 0:
+            pronoun_keys.add(match_str)
+            pronouns_list.append([match.span(), match_str])
+
+    pronoun_age_gender_dict = {}#dict.fromkeys(list(pronoun_keys), set())
+
+    for span_age_gender, age_gender in age_gender_tpl:
+        for span_pronoun, pronoun in pronouns_list:
+            sub_str = cleaned_text[span_pronoun[1]:span_age_gender[0]]
+            if len(sub_str) < CS.PRONOUN_AGE_GENDER_DIST and len(sub_str) > 0:
+                if not pronoun in pronoun_age_gender_dict:
+                    pronoun_age_gender_dict[pronoun] = [age_gender]
+                elif not age_gender in pronoun_age_gender_dict[pronoun]:
+                    pronoun_age_gender_dict[pronoun].append(age_gender)
+                #print(pronoun_age_gender_dict)
+                #print("---")
+                continue
+    
+    # TODO: should we only look at "i" pronoun or also others?
+    author_age = -1
+    author_gender = -1
+    if "i" in pronoun_age_gender_dict:
+        author_gender = int(pronoun_age_gender_dict["i"][0][1] == "f") # author_gender = 1 => author is a woman
+        author_age = pronoun_age_gender_dict["i"][0][0]
+
+    return [("author_age",author_age), ("author_gender", author_gender)]

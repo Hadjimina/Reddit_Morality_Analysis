@@ -65,6 +65,9 @@ def feature_to_df(id, category, column, funct):
 
         """
         lg.info('Running "{0}" on thread {1}'.format(funct.__name__, id))
+        if id == "mono":
+            spacy_fn_names = [fn.__name__ for fn in CS.SPACY_FUNCTIONS]
+            lg.info ("  Spacy features: {0}".format(spacy_fn_names))
 
         temp_s = column.progress_apply(funct)
         fst_value = temp_s.iat[0]
