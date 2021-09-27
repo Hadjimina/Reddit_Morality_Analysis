@@ -4,25 +4,27 @@ helper_functions.py
 import helpers.globals_loader as globals_loader
 import numpy as np
 import re
+from datetime import datetime
 
 def dict_to_feature_tuples(dict, suffix=""):
-    """Take a dict at end of a feature function and convert it to a tuple format for the dataframe
+    """ Take a dict at end of a feature function and converts it into the tuple format suitable for the dataframe
 
     Args:
-        dict (dictionary): feature dictionary
+        dict: dictionary containing features data
+        suffix: string we post pend to each feature category
 
     Returns:
-        [(feature name, value)]: [description]
+        tuple_list: list of tuples for the dataframe e.g. [(feature name, value),...]
     """
-    to_ret = []
-    all_values_zero = True
+    tuple_list = []
+    #all_values_zero = True
     for k,v in dict.items():
         tpl = (("{0}"+suffix).format(k), v)
-        if not np.isclose(v, 0, rtol=1e-05, atol=1e-08, equal_nan=False):
-            all_values_zero = False
-        to_ret.append(tpl)
+        #if not np.isclose(v, 0, rtol=1e-05, atol=1e-08, equal_nan=False):
+        #    all_values_zero = False
+        tuple_list.append(tpl)
 
-    return to_ret if not all_values_zero else []
+    return tuple_list #if not all_values_zero else []
 
 def prep_text_for_string_matching(text):
     """Prepare text for string matching in two steps
@@ -86,3 +88,13 @@ def get_abs_and_norm_dict(abs_dict, out_off_ratio, append_abs=True, only_norm=Fa
             complete_dict[v+abs_postpend] = curr_value
         complete_dict[v+"_norm"] = curr_value/max(out_off_ratio,1)
     return complete_dict
+
+def get_date_str():
+    """ Get current date in format dd_mm_YYYY
+
+    Returns:
+        date_time: date string
+    """
+    now = datetime.now()
+    date_time = now.strftime("%d_%m_%Y")
+    return date_time

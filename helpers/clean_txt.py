@@ -2,10 +2,13 @@ import re
 import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
-
+import helpers.globals_loader as globals_loader
+import gensim
 from gensim.utils import simple_preprocess
 import string
+
 #alternatively can be done using spacy?
+#TODO: add remove names option
 def get_clean_txt(post_text, 
                     remove_URL=True,
                     remove_punctuation=False,
@@ -19,7 +22,7 @@ def get_clean_txt(post_text,
         post_text = re.sub(r'^https?:\/\/.*[\r\n]*', '', post_text)
 
     if remove_punctuation:
-        post_text = post_text.translate(str.maketrans('', '', string.punctuation))
+        post_text = post_text.translate(str.maketrans(' ', ' ', string.punctuation))
 
     # \n = newline, \r = carriage return
     if remove_newline:

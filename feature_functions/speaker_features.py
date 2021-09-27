@@ -75,7 +75,6 @@ def get_author_info(account_name):
                 karma = author.comment_karma
         else:
             lg.error("\n    Author '{0}' not found.\n".format(account_name))
-        
 
     except prawcore.exceptions.NotFound:
         lg.error("\n    Exception Author '{0}' not found.\n".format(account_name))
@@ -86,7 +85,7 @@ def get_author_info(account_name):
         lg.warning("Author older than Reddit. Setting to max age")
         age = 5879
 
-    feature_list += [("accoun_age", age)]
+    feature_list += [("account_age", age)]
     feature_list +=[("account_karma", karma)]
     return feature_list
 

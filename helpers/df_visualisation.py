@@ -35,7 +35,8 @@ def drop_non_feature_cols(df):
      # Drop all non feature columns
     foundation_prefix = [CS.FOUNDATIONS_PREFIX] if CS.LOAD_FOUNDATIONS else []
     liwc_prefix = [CS.LIWC_PREFIX] if CS.LOAD_LIWC else []
-    prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys())+foundation_prefix+liwc_prefix)
+    topic_prefix = [CS.TOPIC_PREFIX] if CS.DO_TOPIC_MODELING else []
+    prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys())+foundation_prefix+liwc_prefix+topic_prefix)
 
     for c in df.columns:
         flag = len([pref for pref in prefixes if pref in c]) > 0 and not "post_id" in c
@@ -216,6 +217,7 @@ def df_to_plots(df_features):
     
     df_to_plots_timer = time.time()
     df_features = drop_non_feature_cols(df_features)
+    #print(df_features.head(3).to_string())
 
     nr_cols =  CS.NR_COLS_MPL#len(list(df_features.columns))%6
     nr_rows = len(list(df_features.columns))//5+1
@@ -270,7 +272,6 @@ def df_to_plots(df_features):
             nr_bins = 200
             patches = None
             if axs.ndim > 1:
-                
                 _,_,patches = axs[i, j].hist(data, bins=nr_bins, align="mid") 
                 axs[i, j].set_title(df_features.columns[index_sum])                    
                 #axs[i, j].set_xlim([min_x, max_x])
@@ -311,6 +312,9 @@ def generate_report(df):
         Dataframe with format of feature_to_df
 
     """
+    # Check if df contains NaNs
+    assert not df.isnull().values.any()
+    
     lg.info("Generating report")
     df_to_plots(df)
     df_to_text_png(df)

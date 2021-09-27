@@ -15,25 +15,22 @@ from better_profanity import profanity
 coloredlogs.install()
 
 def get_punctuation_count(post_text,**kwargs):
-    """Count how many times certain punctuations syombols occur in text
+    """ Count how many times certain punctuations syombols occur in text
 
     Args:
-        post_text (str): Full body text of r/AITA post
+        post_text: Full body text of r/AITA post
 
     Returns:
-        [(str, int)]:  e.g. ("!_count": 10)
+       tuple_list:  list of tuples e.g. [("!_count": 10), ("?_count":2),...]
     """    
 
     symbols = ["!",'"', "?"]
     symbol_dict = dict.fromkeys(symbols, 0)
 
     #filter out hyperlinks
-    #print(post_text)
     post_text = re.sub(r'http\S+', '', post_text)
-
     
     for i in range(len(symbol_dict.keys())):
-        
         symbol = list(symbol_dict.keys())[i]
         symbol_dict[symbol] = post_text.count(symbol)
 
