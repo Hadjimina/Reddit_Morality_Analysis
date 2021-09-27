@@ -24,8 +24,10 @@ import parallel_process as p_process
 from helpers.helper_functions import *
 from helpers.process_helper import *
 from helpers.requirements import *
+from helpers.clean_txt import *
 
 from better_profanity import profanity
+from bertopic import BERTopic
 
 coloredlogs.install()
 
@@ -69,6 +71,20 @@ def main():
     mono_feat_df_list = process_run(CS.FEATURES_TO_GENERATE_MONO, df_posts, CS.MONO_ID)
     feature_df_mono = pd.concat(mono_feat_df_list, axis=1, join="inner")  
     lg.info("Finished Monoprocessing")
+
+
+    # Do topic modeling
+    post_list_raw = df_posts["post_text"].to_list()
+    post_list_clean = [get_clean_txt(post,
+                            remove_punctuation=False,
+                            remove_stopwords=True,
+                            do_lemmatization=False) 
+                        for post in post_list_raw]
+    print(post_list_clean)
+    model = BERTopic()
+    topics, probabilities = model.fit_transform(post_list_clean)
+    print(model.get_topic_info())
+    model.visualize_topics()
 
     # Merge mono and multiprocessing
     feature_df = feature_df_multi.merge(feature_df_mono, left_on="post_id", right_on="post_id", validate="1:1")

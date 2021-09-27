@@ -6,6 +6,7 @@ import multiprocessing
 from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
+from feature_functions.behaviour_features import *
 
 ENFORCE_POST_REQUIREMENTS = True
 
@@ -31,7 +32,6 @@ POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 COMMENTS_RAW = "{0}comments_16_07_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC = "{0}LIWC_fixed_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 FOUNDATIONS = "{0}moral_foundations_fixed_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-
 
 # COLUMN INDICES
 #INDEX = 0
@@ -84,6 +84,9 @@ PRONOUN_AGE_GENDER_DIST = 3 # max number of characters that may lie between end 
 # EMO LEX EMOTIONS
 EMOTIONS = ['fear', 'anger', 'anticip', 'trust', 'surprise', 'positive', 'negative', 'sadness', 'disgust', 'joy', 'anticipation']
 
+# TOPIC MODELING
+NR_TOPICS_PER_POST = 10
+
 #Feature Generation
 FEATURES_TO_GENERATE_MP = {
     "speaker":[
@@ -101,6 +104,7 @@ FEATURES_TO_GENERATE_MP = {
         
     ],
     "behaviour":[
+        #(get_N_topics, CS.POST_TEXT)
     ],
     "reactions":[
         #(get_judgement_labels, CS.POST_ID)
@@ -111,7 +115,7 @@ FEATURES_TO_GENERATE_MONO = {
     "speaker":[
     ], 
     "writing_sty":[
-        (get_spacy_features, CS.POST_TEXT), # => 4h for 10%
+        #(get_spacy_features, CS.POST_TEXT), # => 4h for 10%
     ],
     "behaviour":[
     ],
@@ -124,5 +128,5 @@ SPACY_FUNCTIONS = [  #get_tense_in_spacy,
                      #get_sentiment_in_spacy, 
                      #get_focus_in_spacy, 
                      #get_emotions_self_vs_other_in_spacy,
-                     get_profanity_self_vs_other_in_spacy,
+                     #get_profanity_self_vs_other_in_spacy,
                      ]

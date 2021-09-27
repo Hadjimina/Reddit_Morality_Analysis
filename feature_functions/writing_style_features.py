@@ -7,6 +7,8 @@ import statistics as st
 import helpers.globals_loader as globals_loader
 import re
 from helpers.helper_functions import *
+from helpers.clean_txt import *
+
 from nrclex import NRCLex
 from better_profanity import profanity
 
@@ -341,7 +343,7 @@ def get_spacy_features(post_text):
     Returns:
          [(str, int)]:  e.g. [("future_count": 10), ("future_perc": 0.10),...]
     """
-    doc = globals_loader.nlp(post_text)    
+    doc = get_clean_txt(post_text)
 
     # Dictionary setup
     tenses = ["past", "present", "future"]
@@ -383,7 +385,6 @@ def get_spacy_features(post_text):
                 prof_self_vs_oth_dict[key] += tmp_self_oth_prof[key]
             
                 
-
         voice_flag = False
         for token in sentence:
 

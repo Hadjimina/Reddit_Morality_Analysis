@@ -10,7 +10,6 @@ coloredlogs.install()
 # import global vars
 import helpers.globals_loader as globals_loader
 from helpers.helper_functions import *
-# TODO: Merge account requests into one call
 
 def get_author_amita_post_activity(account_name):
     """Check how many times account has posted on r/AMITA
