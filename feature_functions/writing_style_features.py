@@ -86,7 +86,7 @@ def get_emotions(post_text):
     freq_list = dict_to_feature_tuples(freq_affect, suffix="_freq")
 
     ret_list = abs_list+freq_list
-    return ret
+    return ret_list
 
 def aita_location(post_text):
     """Get the location (in % of entire text) and the number of "aita?" questions the author asks.
