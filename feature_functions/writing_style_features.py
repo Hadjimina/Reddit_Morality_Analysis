@@ -97,7 +97,7 @@ def aita_location(post_text):
         [(str, int)]:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
     """    
 
-    aita_strings = ["am i the asshole", "aita", "am i the", "wita", "would i be the asshole"]
+    aita_strings = ["am i the asshole", "aita", "am i the", "wibta", "would i be the asshole"]
     aita_strings = string_matching_arr_append_ah(aita_strings)
 
     post_text = prep_text_for_string_matching(post_text)

@@ -6,13 +6,12 @@ from tqdm import tqdm
 
 tqdm.pandas()
 
+
+
 def process_run(feat_to_gen, sub_df, id):
     """ Apply all functions of "features_to_generate"
         to each row of subsection of dataframe
     """  
-
-    #df_posts = globals_loader.df_posts
-    #df_posts_subsection = df_posts.loc[self.start_index : self.end_index]
 
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
     feature_df_list = []
@@ -23,17 +22,25 @@ def process_run(feat_to_gen, sub_df, id):
                 
                 funct = feature_tuple[0]
                 idx = feature_tuple[1]
+                
                 if idx == i:
                     col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
-                    #feature_df_list.append(self.feature_to_df(category, col, funct, self.stz_nlp))
-                    feature_df_list.append(feature_to_df(id, category, col, funct)) # we only pass stanze refernce in mono processing
-                    tmp_df = pd.concat(feature_df_list, axis=1)                
-                    tmp_df.index = sub_df.index
-                    tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
+                    tmp_cat = "title_"+category if CS.TITLE_AS_STANDALONE and idx == CS.POST_TITLE else category
+                    feature_df_list.append(feature_to_df(id, tmp_cat, col, funct)) 
+                    #tmp_df = pd.concat(feature_df_list, axis=1)                
+                    #tmp_df.index = sub_df.index
+                    #tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
+
+                # Make standalone title feature for each feature on post text
+                #if CS.TITLE_AS_STANDALONE and idx == CS.POST_TEXT:
+                #    col = sub_df.iloc[:,CS.POST_TITLE] #TODO: change this to use column text (e.g. "post_text") instead of index
+                #    feature_df_list.append(feature_to_df(id, "title_"+category, col, funct))
+                #    #tmp_df = pd.concat(feature_df_list, axis=1)                
+                #    #tmp_df.index = sub_df.index
+                #    #tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
 
     
     # Post pends some post specific information
-    
     if id == CS.MONO_ID:
         post_pend = sub_df[CS.POST_PEND_MONO]
     else:

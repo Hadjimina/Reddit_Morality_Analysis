@@ -11,51 +11,17 @@ coloredlogs.install()
 import helpers.globals_loader as globals_loader
 from helpers.helper_functions import *
 
-def get_author_amita_post_activity(account_name):
-    """Check how many times account has posted on r/AMITA
-
-    returns : [(str, count)]
-        count: number of posts on r/AMITA
-
-    Parameters
-    ----------
-    account_name : str
-        reddit account name
-
-    """
-    reddit = globals_loader.reddit
-    amita_activity_counter = 0
-    try:
-        author = reddit.redditor(account_name)
-        new_submissions = author.submissions.new(limit = None)
-        for sub in new_submissions:
-            sub_subreddit_name = reddit.submission(id=sub).subreddit.display_name
-            amita_activity_counter += sub_subreddit_name == "AmItheAsshole"
-            
-    except prawcore.exceptions.NotFound:
-        amita_activity_counter
-        #lg.warning("\n    Author '{0}' not found. Setting activity counter to 0\n".format(account_name))
-    except prawcore.exceptions.Forbidden:
-        amita_activity_counter
-        #lg.warning("\n    Author '{0}' forbidden. Setting activity counter to 0\n".format(account_name))
-
-    return [("amita_#posts", amita_activity_counter)]
-
 def get_author_info(account_name):
-    """Query 
-        1. post auther age
-        2. post author karma #TODO: Total karma or of r/AMITA? #TODO CHeck obfuscation in PRAW documentation
+    """ Get information about the post author. Namely get the author account age and account karma
 
-    returns : [(str, count)]
-        count: age in days (rounded down)
-
-    Parameters
-    ----------
-    account_name : str
-        reddit account name
-
-    """
+    Args:
+        account_name: name of account for post
+    Returns:
+        feature_list: list of features tuples e.g. [("account_age", age), ("account_karma", karma)]
+    """ 
     reddit = globals_loader.reddit
+
+
     feature_list = []
     age = 0
     karma = 0
@@ -88,81 +54,6 @@ def get_author_info(account_name):
     feature_list += [("account_age", age)]
     feature_list +=[("account_karma", karma)]
     return feature_list
-
-
-
-def get_author_account_age(account_name):
-    """Query post auther age
-
-    returns : [(str, count)]
-        count: age in days (rounded down)
-
-    Parameters
-    ----------
-    account_name : str
-        reddit account name
-
-    """
-    reddit = globals_loader.reddit
-    age = 0
-    karma = 0
-    try:
-        if account_name != "[deleted]":
-            author = reddit.redditor(account_name)
-            
-
-            if "created_utc" in vars(author):
-                created = author.created_utc
-                time_now = datetime.now(tz=timezone.utc)
-                time_created = datetime.fromtimestamp(created, tz=timezone.utc)
-                age = (time_now-time_created).days
-
-           
-        else:
-            #age
-            lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
-        
-
-    except prawcore.exceptions.NotFound:
-        lg.warning("\n    Author '{0}' not found. Setting account age to 0\n".format(account_name))
-
-    if age > 5879: #Reddit: 23.6.2006
-        raise ArithmeticError("Author older than Reddit")
-    return [("account_age", age)]
-
-def get_post_author_karma(account_name):
-    """Query post auther karma
-
-    returns : [(str, count)]
-        count : karma count, 0 if the author has been deleted
-
-    Parameters
-    ----------
-    account_name : str
-        reddit account name
-
-    """
-    print(account_name)
-    
-    karma = 0
-    try:
-        if account_name != "[deleted]":
-            author = globals_loader.reddit.redditor(account_name,fetch=True)
-            print(type(author))
-            #Get karma
-            #print(author.comment_karma)
-            print(vars(author))
-            if "comment_karma" in vars(author):
-                karma = author.comment_karma
-        else:
-            lg.warning("\n    Author '{0}' not found. Setting karma to 0\n".format(account_name))
-    except prawcore.exceptions.NotFound:
-        lg.warning("\n    Author '{0}' not found. Setting karma to 0\n".format(account_name))
-    
-    return [("author_karma", karma)]
-
-
-
 
 
 def get_author_age_and_gender(post_text):
@@ -252,3 +143,40 @@ def get_author_age_and_gender(post_text):
         author_age = pronoun_age_gender_dict["i"][0][0]
 
     return [("author_age",author_age), ("author_gender", author_gender)]
+
+
+
+"""
+
+def get_author_amita_post_activity(account_name):
+    Check how many times account has posted on r/AMITA
+
+    returns : [(str, count)]
+        count: number of posts on r/AMITA
+
+    Parameters
+    ----------
+    account_name : str
+        reddit account name
+
+    reddit = globals_loader.reddit
+    amita_activity_counter = 0
+    try:
+        author = reddit.redditor(account_name)
+        new_submissions = author.submissions.new(limit = None)
+        for sub in new_submissions:
+            sub_subreddit_name = reddit.submission(id=sub).subreddit.display_name
+            amita_activity_counter += sub_subreddit_name == "AmItheAsshole"
+            
+    except prawcore.exceptions.NotFound:
+        amita_activity_counter
+        #lg.warning("\n    Author '{0}' not found. Setting activity counter to 0\n".format(account_name))
+    except prawcore.exceptions.Forbidden:
+        amita_activity_counter
+        #lg.warning("\n    Author '{0}' forbidden. Setting activity counter to 0\n".format(account_name))
+
+    return [("amita_#posts", amita_activity_counter)]
+
+
+
+"""

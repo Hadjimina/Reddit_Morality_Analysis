@@ -6,6 +6,26 @@ import numpy as np
 import re
 from datetime import datetime
 
+
+def get_ups_downs_from_ratio_score(r,s):
+    """ Given a ratio and a score, we will return individual number of upvotes and downvotes
+        We have to do this since, reddit remove the possibility to check the exact amount of upvotes and downvotes a few years ago. 
+        Also the ratio is rounded so we will not get completely accurate values.
+
+        We get formula since we know that x-y=s and x/x+y = r
+    Args:
+        ratio: upvote ratio from reddit
+        score: the current score of the post/comment
+
+    Returns:
+        ups, downs: ups = number of upvotes, downs = number of downvotes
+    """
+
+    ups = round((s - r * s) / ( 2 * r - 1 ) + s) if r != 0.5 else 0 #if we have have a 50% upvote ratio we set the upvotes to 0
+    downs = round(ups - s)
+
+    return [ups, downs]
+
 def dict_to_feature_tuples(dict, suffix=""):
     """ Take a dict at end of a feature function and converts it into the tuple format suitable for the dataframe
 

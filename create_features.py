@@ -27,7 +27,6 @@ from helpers.requirements import *
 
 coloredlogs.install()
 
-
 def main():
     """Iterate over all posts and create features dataframe"""
     df_posts = globals_loader.df_posts
@@ -60,6 +59,9 @@ def main():
         if allExited & q.empty():
             break
     
+    # fix "uniquely valued index object"
+    for df in multi_feature_df_list:
+        df.reset_index(inplace=True, drop=True)
     feature_df_multi = pd.concat(multi_feature_df_list, axis=0, join="inner")  
     lg.info("Finished Multiprocessing")
     
@@ -68,22 +70,26 @@ def main():
     feature_df_mono = pd.concat(mono_feat_df_list, axis=1, join="inner")  
     lg.info("Finished Monoprocessing")
 
-
     # Merge mono, multiprocessing and topics
     feature_df = feature_df_multi.merge(feature_df_mono, left_on="post_id", right_on="post_id", validate="1:1")
 
-    # Do topic modeling
+    # Do topic modeling & merge
     if CS.DO_TOPIC_MODELING:
         posts_raw = df_posts["post_text"].to_list()
         post_ids = df_posts["post_id"].to_list()
         topic_df = topic_modeling(posts_raw, post_ids)   
         feature_df = topic_df.merge(feature_df, left_on="post_id", right_on="post_id", validate="1:1")
 
-    # Merge generate Features with LIWC & Moral foundations
+    # Merge generate features with LIWC & Moral foundations
     if CS.LOAD_LIWC:
         feature_df = feature_df.merge(globals_loader.df_liwc, left_on="post_id", right_on=CS.LIWC_PREFIX+"post_id", validate="1:1") 
+        if CS.TITLE_AS_STANDALONE:
+            feature_df = feature_df.merge(globals_loader.df_liwc_title, left_on="post_id", right_on=CS.LIWC_TITLE_PREFIX+"post_id", validate="1:1") 
     if CS.LOAD_FOUNDATIONS:
         feature_df = feature_df.merge(globals_loader.df_foundations, left_on="post_id", right_on=CS.FOUNDATIONS_PREFIX+"post_id", validate="1:1") 
+        if CS.TITLE_AS_STANDALONE:
+            feature_df = feature_df.merge(globals_loader.df_foundations_title, left_on="post_id", right_on=CS.FOUNDATIONS_TITLE+"post_id", validate="1:1") 
+
     
     # Save features in one big dataframe
     date_time = get_date_str()

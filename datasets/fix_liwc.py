@@ -1,6 +1,10 @@
 """
     Raw output from the LIWC program sometimes has wrong headers and includes unecessry columns. 
-    Here we fix that
+    Here we fix that. 
+    IMPORTANT:
+        - Only usable if in LIWC we select "process headers" and only select one data column
+        - Only processes files in this the /data directory and files need to start with "LIWC_" "moral_foundations_"
+
 """
 
 import pandas as pd

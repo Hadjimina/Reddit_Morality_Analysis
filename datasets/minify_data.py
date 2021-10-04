@@ -19,7 +19,9 @@ dataset_dir = CS.dataset_dir
 filenames = next(walk(dataset_dir), (None, None, []))[2]  # [] if no file
 filenames = list(filter(lambda x: not "mini" in x and not "Identifier" in x, filenames))
 
-print("")
+#if not "-all" in sys.argv:
+#    filenames = list(filter(lambda x: "posts" in x and "cleaned" in x, filenames))
+
 lg.warning("Minifying with Frac = "+str(CS.MINIFY_FRAC))
 
 # get posts_cleaned
@@ -59,6 +61,10 @@ for name in filenames:
     
     min_name = "{0}_mini.csv".format(dataset_dir+Path(dataset_dir+name).stem)
     split_name = min_name.split("/")
-    lg.info("    Saving {0} minified to {1}%".format(split_name[len(split_name)-1], df_sampeled_size/df_orig_size))
+    downsampeled_perc = df_sampeled_size/df_orig_size
+    lg.info("    Saving {0} minified to {1}%".format(split_name[len(split_name)-1], downsampeled_perc))
     df_cur.to_csv(min_name, index=False)
+
+    
+lg.warning("Remember to update the scores if applicable")
     

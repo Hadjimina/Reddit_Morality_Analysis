@@ -32,14 +32,16 @@ def id_text_at_end(df):
     return df
 
 def drop_non_feature_cols(df):
-     # Drop all non feature columns
+    # Drop all non feature columns
     foundation_prefix = [CS.FOUNDATIONS_PREFIX] if CS.LOAD_FOUNDATIONS else []
     liwc_prefix = [CS.LIWC_PREFIX] if CS.LOAD_LIWC else []
     topic_prefix = [CS.TOPIC_PREFIX] if CS.DO_TOPIC_MODELING else []
     prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys())+foundation_prefix+liwc_prefix+topic_prefix)
 
     for c in df.columns:
-        flag = len([pref for pref in prefixes if pref in c]) > 0 and not "post_id" in c
+        flag = c in ["post_num_comments", "post_ups", "post_downs"] or (
+            len([pref for pref in prefixes if pref in c]) > 0 and not "post_id" in c)
+            
         if not flag:
             lg.info("      not visualising "+c)
             df = df.drop(c, axis=1)
@@ -291,7 +293,10 @@ def df_to_plots(df_features):
         if index_sum >= len(list(df_features.columns)):
                 break
 
+
     mini_text = "Using minified data ({0} fraction, {1} posts)".format(CS.MINIFY_FRAC, df_features.shape[0]) if CS.USE_MINIFIED_DATA else "Using complete dataset"
+    mini_text+="\n LOAD_POSTS={0}, LOAD_COMMENTS={1}, LOAD_FOUNDATIONS={2}, LOAD_LIWC={3}".format(CS.LOAD_POSTS, CS.LOAD_COMMENTS, CS.LOAD_FOUNDATIONS, CS.LOAD_LIWC)
+    mini_text +="\n ENFORCE_POST_REQUIREMENTS={0}, TITLE_AS_STANDALONE={1}".format(CS.ENFORCE_POST_REQUIREMENTS, CS.TITLE_AS_STANDALONE)
     plt.suptitle(mini_text, fontsize=16)
     if False and df_features.shape[1] < CS.MAX_FEATURES_TO_DISPLAY:
         plt.show()

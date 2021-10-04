@@ -9,13 +9,14 @@ from helpers import *
 import helpers.globals_loader as globals_loader
 coloredlogs.install()
 
+
 def string_to_lower_alphanum(str):
-    """Convert any string to lowercase and only containing alphanumeric characters + whitespaces
+    """ Convert any string to lowercase and only containing alphanumeric characters + whitespaces
 
     Args:
-        str (string): string to convert
+        str: string to convert
     Returns:
-        str (string): lowercase string with only alphanumeric characters + whitespaces
+        str: lowercase string with only alphanumeric characters + whitespaces
     """    
 
     # to lower case
@@ -64,7 +65,7 @@ def get_judgement_labels(post_id):
         post_id (int): Id of the reddit post
 
     Returns:
-        [(str, int)]: e.g. [("NTA",10), ("YTA", 20),...]
+        tupel list: e.g. [("NTA",10), ("YTA", 20),...]
     """
 
     

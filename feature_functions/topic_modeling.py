@@ -30,8 +30,8 @@ def topic_modeling(posts_raw, post_ids):
     topics, probs = model.fit_transform(post_list_clean)
 
     actual_nr_topics = len(set(topics))
-    desired_nr_topics = int(len(posts_raw)*CS.TOPICS_FRAC)
-    if actual_nr_topics > int(len(posts_raw)*CS.TOPICS_FRAC):
+    desired_nr_topics = int(CS.TOPICS_ABS)
+    if actual_nr_topics > int(CS.TOPICS_ABS):
         topics, probs = model.reduce_topics(post_list_clean, topics, probabilities=probs, nr_topics=desired_nr_topics)
 
     # get dataframe to return
