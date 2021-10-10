@@ -17,7 +17,7 @@ TITLE_AS_STANDALONE = False
 TOPICS_ABS = 30 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.01 
+MINIFY_FRAC = 0.1
 
 # Prefixes
 LIWC_PREFIX = "liwc_"
@@ -59,13 +59,13 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
 
 # MULTITHREADING
-NR_THREADS = multiprocessing.cpu_count()
+NR_THREADS = 1#multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"feature_df_tmp"
 MONO_ID = "mono"
 
 # FEATURE DF POSTPEND
 # post_id,post_text,post_title,post_author_id,post_score,post_created_utc,post_num_comments
-POST_PEND = ["post_id", "post_text", "post_num_comments", "post_ups", "post_downs"]
+POST_PEND = ["post_id", "post_text", "post_num_comments", ] #"post_ups", "post_downs"
 POST_PEND_MONO = ["post_id"]
 
 # SPACY STRINGS

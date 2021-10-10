@@ -17,9 +17,11 @@ def get_clean_txt(post_text,
                     do_lowercaseing=True,
                     remove_stopwords=False,
                     do_lemmatization=True):
+    if not isinstance(post_text, str):
+        type(post_text)
 
     if remove_URL:
-        post_text = re.sub(r'^https?:\/\/.*[\r\n]*', '', post_text)
+        post_text = re.sub(r'^https?:\/\/.*[\r\n]*', '', str(post_text))
 
     if remove_punctuation:
         post_text = post_text.translate(str.maketrans(' ', ' ', string.punctuation))

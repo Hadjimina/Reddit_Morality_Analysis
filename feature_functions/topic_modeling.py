@@ -1,3 +1,4 @@
+from re import T
 from helpers.clean_txt import *
 from helpers.helper_functions import *
 from bertopic import BERTopic
@@ -5,6 +6,7 @@ import constants as CS
 import pandas as pd 
 import logging as lg
 import coloredlogs
+from matplotlib import pyplot as plt
 
 coloredlogs.install()
 
@@ -40,6 +42,17 @@ def topic_modeling(posts_raw, post_ids):
         data = list(zip(post_ids, topics, probs)),
         columns = ["post_id", "topic_nr", "topic_probability"])
 
+    print(info_df.head(3))
+
+    topic_ids = info_df["Topic"]
+    topic_sizes = info_df["Count"]
+
+    # chart of size per topic
+    size_per_topic_dir = "{0}{1}_{2}{3}.png".format(CS.OUTPUT_DIR, "size_per_topic", get_date_str(),  "_mini" if CS.USE_MINIFIED_DATA else "")
+    fig, ax = plt.subplots( nrows=1, ncols=1 )
+    ax.bar(x=topic_ids, height = topic_sizes)
+    fig.savefig(size_per_topic_dir)
+
     # Save dataframe with mapping from topic id to topic string
     MAX_WORDS_PER_TOPIC = 4
     topic_strings = list(map(lambda topic_nr: "_".join([tpl[0] for tpl in model.get_topic(topic_nr)[:MAX_WORDS_PER_TOPIC]]), topics))
@@ -55,6 +68,12 @@ def topic_modeling(posts_raw, post_ids):
     visualsation_dir = "{0}{1}_{2}{3}.html".format(CS.OUTPUT_DIR, "topic_visualsation", get_date_str(),  "_mini" if CS.USE_MINIFIED_DATA else "")
     fig = model.visualize_topics()
     fig.write_html(visualsation_dir)
+
+    visualsation_dir_bar = "{0}{1}_{2}{3}.html".format(CS.OUTPUT_DIR, "topic_barchchart", get_date_str(),  "_mini" if CS.USE_MINIFIED_DATA else "")
+    fig_bar = model.visualize_barchart()
+    fig_bar.write_html(visualsation_dir_bar)
+
+
 
     lg.info("    generated {0} topics".format(len(set(topics))))
 
