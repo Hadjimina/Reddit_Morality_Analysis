@@ -17,7 +17,7 @@ TITLE_AS_STANDALONE = False
 TOPICS_ABS = 30 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.1
+MINIFY_FRAC = 0.2
 
 # Prefixes
 LIWC_PREFIX = "liwc_"

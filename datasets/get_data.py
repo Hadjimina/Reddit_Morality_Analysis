@@ -14,20 +14,28 @@ files = {
     },
     "cleaned":{
         "url":  id_to_url("1NBoO5CU4Dssya4IcWcjJ8Cx1rv-qiRuy"),
-        "output": dataset_dir+"posts_cleaned_27_6_2021.csv"
+        "output": dataset_dir+"_27_6_2021.csv"
     },
-    "liwc":{
+    "LIWC":{
         "url":  id_to_url("1lA8y_cto7vLYuBgTOkEn2lQueFVKHzSw"),
-        "output": dataset_dir+"liwc_posts_cleaned_27_6_2021.csv"
+        "output": dataset_dir+"LIWC_27_6_2021.csv"
     },
     "moral_foundations":{
         "url":  id_to_url("1Vu188cUbUWA6A8wSTeDJPXfYGR2sGNmU"),
-        "output": dataset_dir+"moral_foundations_posts_cleaned_27_6_2021.csv"
+        "output": dataset_dir+"moral_foundations_27_6_2021.csv"
     },
     "comments_raw":{
         "url": id_to_url("18qxC5bv2oGotWPVUYvvSHUWtrIob-QUA"),
         "output": dataset_dir+"comments_16_07_2021.csv"
-    }
+    },
+        "moral_foundations_title":{
+        "url":  id_to_url("121QNFJoLooNpsEFr58VauHsSQaMVlr7M"),
+        "output": dataset_dir+"moral_foundations_title_27_6_2021.csv"
+    }, 
+     "LIWC_title":{
+        "url":  id_to_url("12-D8MquT8jvuo489l718c5-hBaH82Qc9"),
+        "output": dataset_dir+"LIWC_title_27_6_2021.csv"
+    },
 
 }
 
