@@ -2,7 +2,6 @@
 Constants.py
 """
 import os
-import multiprocessing
 from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
@@ -14,7 +13,7 @@ ENFORCE_POST_REQUIREMENTS = True
 TITLE_AS_STANDALONE = False
 
 # TOPIC MODELING
-TOPICS_ABS = 30 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
+TOPICS_ABS = 300000000 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
 
 # PERCENTAGE TO MINIFY POSTS
 MINIFY_FRAC = 0.2
@@ -103,6 +102,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
         #(get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
+        #(check_wita, CS.POST_TEXT)
         
     ],
     "reactions":[

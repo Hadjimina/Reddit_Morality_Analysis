@@ -20,7 +20,7 @@ import helpers.df_visualisation as vis
 import helpers.globals_loader as globals_loader
 import parallel_process as p_process
 from feature_functions.topic_modeling import *
-from helpers.clean_txt import *
+from helpers.clean_text import *
 from helpers.helper_functions import *
 from helpers.process_helper import *
 from helpers.requirements import *
@@ -28,7 +28,9 @@ from helpers.requirements import *
 coloredlogs.install()
 
 def main():
-    """Iterate over all posts and create features dataframe"""
+    """ Iterate over all posts and create features dataframe 
+    
+    """
     df_posts = globals_loader.df_posts
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
 

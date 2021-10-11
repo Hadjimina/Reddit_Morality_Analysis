@@ -6,9 +6,8 @@ import logging as lg
 import constants as CS
 import pandas as pd
 import spacy
-from spacy.language import Language
+import sys
 from spacytextblob.spacytextblob import SpacyTextBlob
-from pprint import pprint
 
 def init():
     if CS.USE_MINIFIED_DATA:

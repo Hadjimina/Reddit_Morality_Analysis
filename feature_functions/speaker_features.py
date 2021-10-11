@@ -12,19 +12,21 @@ import helpers.globals_loader as globals_loader
 from helpers.helper_functions import *
 
 def get_author_info(account_name):
-    """ Get information about the post author. Namely get the author account age and account karma
+    """ Get information about the post author. Namely get the author account age and account karma (link & comment)
 
     Args:
         account_name: name of account for post
+
     Returns:
-        feature_list: list of features tuples e.g. [("account_age", age), ("account_karma", karma)]
+        feature_list: list of features tuples e.g. [("account_age", age), ("account_comment_karma", comment_karma)]
     """ 
     reddit = globals_loader.reddit
 
 
     feature_list = []
     age = 0
-    karma = 0
+    comment_karma = 0
+    link_karma = 0
     try:
         if account_name != "[deleted]":
             author = reddit.redditor(account_name)
@@ -36,9 +38,13 @@ def get_author_info(account_name):
                 time_created = datetime.fromtimestamp(created, tz=timezone.utc)
                 age = (time_now-time_created).days
         
-            #Get karma
+            #Get comment karma
             if "comment_karma" in vars(author):
-                karma = author.comment_karma
+                comment_karma = author.comment_karma
+
+            #Get comment karma
+            if "link_karma" in vars(author):
+                link_karma = author.link_karma
         else:
             lg.error("\n    Author '{0}' not found.\n".format(account_name))
 
@@ -52,7 +58,8 @@ def get_author_info(account_name):
         age = 5879
 
     feature_list += [("account_age", age)]
-    feature_list +=[("account_karma", karma)]
+    feature_list +=[("account_comment_karma", comment_karma)]
+    feature_list +=[("account_link_karma", link_karma)]
     return feature_list
 
 

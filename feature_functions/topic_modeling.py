@@ -1,5 +1,5 @@
 from re import T
-from helpers.clean_txt import *
+from helpers.clean_text import *
 from helpers.helper_functions import *
 from bertopic import BERTopic
 import constants as CS
@@ -23,7 +23,8 @@ def topic_modeling(posts_raw, post_ids):
         topic_prob_df: dataframe with the columns "post_id", "topic_nr", "topic_probability"
     """
     lg.info("Generating topics")
-    post_list_clean = [get_clean_txt(post,
+    post_list_clean = [get_clean_text(post,
+                            globals_loader.nlp,
                             remove_punctuation=False,
                             remove_stopwords=True,
                             do_lemmatization=False) 
@@ -50,7 +51,12 @@ def topic_modeling(posts_raw, post_ids):
     # chart of size per topic
     size_per_topic_dir = "{0}{1}_{2}{3}.png".format(CS.OUTPUT_DIR, "size_per_topic", get_date_str(),  "_mini" if CS.USE_MINIFIED_DATA else "")
     fig, ax = plt.subplots( nrows=1, ncols=1 )
+    
     ax.bar(x=topic_ids, height = topic_sizes)
+    invalid_nr = info_df.loc[0,"Count"]
+    total_nr = info_df["Count"].sum()
+    title = "Nr valid posts: {0}, Nr invalid posts:{1}".format(total_nr-invalid_nr, invalid_nr)
+    ax.set_title(title)
     fig.savefig(size_per_topic_dir)
 
     # Save dataframe with mapping from topic id to topic string

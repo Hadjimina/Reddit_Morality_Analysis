@@ -1,48 +1,83 @@
-from helpers.helper_functions import dict_to_feature_tuples
-import logging as lg
+#from helpers.helper_functions import dict_to_feature_tuples
 import re
 import coloredlogs
 import constants as CS
 import statistics as st
-import helpers.globals_loader as globals_loader
 import re
 from helpers.helper_functions import *
-from helpers.clean_txt import *
+import helpers.globals_loader as globals_loader
 
 from nrclex import NRCLex
 from better_profanity import profanity
 
 coloredlogs.install()
 
-def get_punctuation_count(post_text,**kwargs):
-    """ Count how many times certain punctuations syombols occur in text
+def get_punctuation_count(post_text):
+    """Count how many times certain punctuation symbols occur in text
 
     Args:
-        post_text: Full body text of r/AITA post
+        post_text (string): Full body text of an r/AITA post
 
     Returns:
-       tuple_list:  list of tuples e.g. [("!_count": 10), ("?_count":2),...]
-    """    
+        list: list of tuples e.g. [("!_count", 10), ("?_count", 2), ...]
+    """
 
     symbols = ["!",'"', "?"]
     symbol_dict = dict.fromkeys(symbols, 0)
 
     #filter out hyperlinks
-    post_text = re.sub(r'http\S+', '', post_text)
+    cleaned = get_clean_text(post_text,
+                    globals_loader.nlp,
+                    remove_URL=True,
+                    remove_punctuation=False,
+                    remove_newline=False,
+                    merge_whitespaces=False,
+                    do_lowercaseing=False,
+                    remove_stopwords=False,
+                    do_lemmatization=False)
+
+    post_text = re.sub(r'http\S+', '', cleaned)
     
     for i in range(len(symbol_dict.keys())):
         symbol = list(symbol_dict.keys())[i]
         symbol_dict[symbol] = post_text.count(symbol)
 
     tuple_list = dict_to_feature_tuples(symbol_dict, "_count")
-    #tuple_list = [("{0}_count".format(k), v) for k, v in symbol_dict.items()]
     return tuple_list
+
+
+def check_wita(post_text):
+    """ Check if this post is "Am I the asshole..." or "Would I be the asshole..."
+
+    Args:
+        post_text (string): Full body text of r/AITA post
+
+    Returns:
+       list:  list of tuples e.g. [("is_wita": 0),...]
+
+    """
+    # generate this list automatically (i.e. asshole, ah, a**hole etc)
+    # check other feature that uses a similar list and share the expressions
+    expressions_to_check = ["wita", "would i be the asshole", "would i be the ah"]
+    wita_flag = 0
+    post_text_clean = get_clean_txt(post_text, globals_loader.nlp, do_lemmatization=False)
+
+    for exp in expressions_to_check:
+        if len(exp.split() > 1):
+            wita_flag = exp in post_text_clean
+        else:
+            wita_flag = exp in post_text_clean.split()
+        if wita_flag:
+            break
+
+    return [("is_wita", int(wita_flag))]
+
 
 def get_feats_dict(morph_feats):
     """Generate dictionary from feature morphology (i.e. spit out Tense=past|Voice=... => to dict)
 
     Args:
-        morph_feats (str): Morphology features
+        morph_feats (string): Morphology features
 
     Returns:
         dict: dict with all features as key and corresponding values
@@ -67,7 +102,7 @@ def get_emotions(post_text):
         post_text (str): Full body text of r/AITA post
 
     Returns:
-         [(str, int)]:  e.g. [("joy_freq": 10), ("joy_abs": 0.10)]
+        list:  e.g. [("joy_freq": 10), ("joy_abs": 0.10)]
     """
 
     analysed_text = NRCLex(post_text)
@@ -94,7 +129,7 @@ def aita_location(post_text):
         post_text (str): Full body text of r/AITA post
 
     Returns:
-        [(str, int)]:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
+        list:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
     """    
 
     aita_strings = ["am i the asshole", "aita", "am i the", "wibta", "would i be the asshole"]
@@ -124,9 +159,10 @@ def get_sentiment_in_spacy(doc):
 
      Args:  spaCy doc:  object containing tokenized post text (see https://spacy.io/api/doc)
 
-     Return: int, int: polairty and subjectivity values
-                polarity[-1,1] = sentiment => -1 = negative sentance
-                subjectivity [-1,1] => -1 = unsubjective
+     Returns: 
+        int, int: polairty and subjectivity values
+        polarity[-1,1] = sentiment => -1 = negative sentance
+        subjectivity [-1,1] => -1 = unsubjective
     """
     return doc._.polarity, doc._.subjectivity
 
@@ -340,7 +376,7 @@ def get_spacy_features(post_text):
     Returns:
          [(str, int)]:  e.g. [("future_count": 10), ("future_perc": 0.10),...]
     """
-    doc = get_clean_txt(post_text)
+    doc = get_clean_text(post_text, globals_loader.nlp)
 
     # Dictionary setup
     tenses = ["past", "present", "future"]

@@ -1,25 +1,85 @@
 """
 helper_functions.py
 """
-import helpers.globals_loader as globals_loader
-import numpy as np
-import re
 from datetime import datetime
+import re
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+#import helpers.globals_loader as globals_loader
+import string
+
+#alternatively can be done using spacy? gensim?
+#TODO: add remove names option
+def get_clean_text(post_text,
+                    nlp,
+                    remove_URL=True,
+                    remove_punctuation=False,
+                    remove_newline=True,
+                    merge_whitespaces=True,
+                    do_lowercaseing=True,
+                    remove_stopwords=False,
+                    do_lemmatization=True):
+
+    """Function to clean text (i.e. remove urls, punctuation, newlines etc) and do lemmatizaion if needed
+
+    Args:
+        post_text (string): full body text of r/AITA posts
+        nlp (function): nlp function from the spacy object
+        remove_URL (bool, optional): Whether or not URLs should be removed. Defaults to True.
+        remove_punctuation (bool, optional): Whether or not punctuation should be removed. Defaults to False.
+        remove_newline (bool, optional): Whether or not newline characters should be removed. Defaults to True.
+        merge_whitespaces (bool, optional): Whether or not mulitple consecutive whitespace should be merged to one. Defaults to True.
+        do_lowercaseing (bool, optional): Whether or not text should be lowercased. Defaults to True.
+        remove_stopwords (bool, optional): Whether or not stopwords from nltk should be removed (includes here, than, myself, which, it....). Defaults to False.
+        do_lemmatization (bool, optional): Whether or not we should return the lemmatized post. Defaults to True.
+
+    Returns:
+        string/spacy doc: Cleaned string or cleaned & lemmatized spacy doc. Spacydoc can be iterated over just like one would a string
+    """
+
+
+    if remove_URL:
+        post_text = re.sub(r'^https?:\/\/.*[\r\n]*', '', str(post_text))
+
+    if remove_punctuation:
+        post_text = post_text.translate(str.maketrans(' ', ' ', string.punctuation))
+
+    # \n = newline & \r = carriage return
+    if remove_newline:
+        post_text = post_text.replace('\n', ' ').replace('\r', '')
+
+    if merge_whitespaces:
+        post_text = ' '.join(post_text.split())
+
+    if do_lowercaseing:
+        post_text = post_text.lower()
+
+    if remove_stopwords: # removes things like [i, me, my, myself, we, our, ours, ...
+        post_text = " ".join([word for word in post_text.split() if word not in stopwords.words('english')])
+        
+
+    if do_lemmatization:
+        return nlp(post_text) #spacy
+    else:
+        return post_text
 
 
 def get_ups_downs_from_ratio_score(r,s):
-    """ Given a ratio and a score, we will return individual number of upvotes and downvotes
+    """Given a ratio and a score, we will return individual number of upvotes and downvotes
         We have to do this since, reddit remove the possibility to check the exact amount of upvotes and downvotes a few years ago. 
         Also the ratio is rounded so we will not get completely accurate values.
 
         We get formula since we know that x-y=s and x/x+y = r
+
     Args:
-        ratio: upvote ratio from reddit
-        score: the current score of the post/comment
+        r (float): upvote ratio from reddit
+        s (int): the current score of the post/comment
 
     Returns:
-        ups, downs: ups = number of upvotes, downs = number of downvotes
+        list: list with first element being the number of upvotes and the second one the number of downvotes
     """
+    
 
     ups = round((s - r * s) / ( 2 * r - 1 ) + s) if r != 0.5 else 0 #if we have have a 50% upvote ratio we set the upvotes to 0
     downs = round(ups - s)
@@ -56,6 +116,7 @@ def prep_text_for_string_matching(text):
     Returns:
         str: text prepared for string matching
     """    
+    print("THIS FUNCTON IS DEPRECATED USE get_clean_text INSTEAD")
     text = text.lower()
     
     text = " ".join(text.split())
