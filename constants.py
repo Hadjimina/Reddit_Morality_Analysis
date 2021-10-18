@@ -13,7 +13,7 @@ ENFORCE_POST_REQUIREMENTS = True
 TITLE_AS_STANDALONE = False
 
 # TOPIC MODELING
-TOPICS_ABS = 300000000 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
+TOPICS_ABS = 30 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
 
 # PERCENTAGE TO MINIFY POSTS
 MINIFY_FRAC = 0.2

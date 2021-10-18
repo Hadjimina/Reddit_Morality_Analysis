@@ -30,13 +30,16 @@ def update_score_elem(do_posts=True, overwrite=True):
 
     
     if do_posts:
-        for submission in tqdm(reddit.info(ids), total=len(ids)):
+        for i in tqdm(range(len(ids))): #in tqdm(reddit.info(ids), total=len(ids)):
+            submission = reddit.info(ids[i])
+            #TODO
             scores.append(submission.score)
             ratios.append(submission.upvote_ratio)
             # see https://api.reddit.com/api/info/?id=t3_apcnyn
     else:
-        for comment in tqdm(reddit.info(ids), total=len(ids)):
-            
+        for i in tqdm(range(len(ids)))
+        #for comment in tqdm(reddit.info(ids), total=len(ids)):
+            comment = reddit.info(ids[i])   
             scores.append(comment.score)
             # comments do not have an upvote ratio
             # see https://api.reddit.com/api/info/?id=t1_eg7dfxx

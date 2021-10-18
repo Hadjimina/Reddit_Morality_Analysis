@@ -2,6 +2,7 @@
 helper_functions.py
 """
 from datetime import datetime
+from enum import Flag
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -19,7 +20,8 @@ def get_clean_text(post_text,
                     merge_whitespaces=True,
                     do_lowercaseing=True,
                     remove_stopwords=False,
-                    do_lemmatization=True):
+                    do_lemmatization=True,
+                    remove_am=False):
 
     """Function to clean text (i.e. remove urls, punctuation, newlines etc) and do lemmatizaion if needed
 
@@ -33,11 +35,14 @@ def get_clean_text(post_text,
         do_lowercaseing (bool, optional): Whether or not text should be lowercased. Defaults to True.
         remove_stopwords (bool, optional): Whether or not stopwords from nltk should be removed (includes here, than, myself, which, it....). Defaults to False.
         do_lemmatization (bool, optional): Whether or not we should return the lemmatized post. Defaults to True.
+        remove_am (bool, optional): Whether or not we should remove all "'m" and "am" in the post. Defaults to False
 
     Returns:
         string/spacy doc: Cleaned string or cleaned & lemmatized spacy doc. Spacydoc can be iterated over just like one would a string
     """
 
+    if remove_am:
+        post_text = post_text.replace("'m"," ").replace("am"," ")
 
     if remove_URL:
         post_text = re.sub(r'^https?:\/\/.*[\r\n]*', '', str(post_text))
@@ -179,3 +184,22 @@ def get_date_str():
     now = datetime.now()
     date_time = now.strftime("%d_%m_%Y")
     return date_time
+
+
+def contains_letters_numbers(str):
+    """Check if the given string contains letters and numbers. Must contain both to return True. 
+
+    Args:
+        str (string): string we want to check
+
+    Returns:
+        bool: Whether or not argument contains letters AND numbers
+    """
+
+    flag_digit = False
+    flag_letter = False
+    for i in str:
+        flag_digit = flag_digit | i.isdigit()
+        flag_letter = flag_letter | i.isalpha()
+    
+    return flag_digit & flag_letter

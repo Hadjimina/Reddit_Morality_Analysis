@@ -64,92 +64,63 @@ def get_author_info(account_name):
 
 
 def get_author_age_and_gender(post_text):
-    """ Extract age and gender from post text e.g. "I (24 M)" for post author
+    """Extract age and gender from post text e.g. "I (24 M)" for pos author
 
-        Args:
-            post_text (string):  full body of post on AITA
+    Args:
+        post_text (string): full body of post on AITA
 
-        Returns:
-           [(str, int)]:  e.g. [("author_age": 10), ("author_gender": 1),...] 
-
+    Returns:
+        list: tuple list e.g. e.g. [("author_age": 10), ("author_gender": 1),...] 
     """
-
-    cleaned_text = prep_text_for_string_matching(post_text) 
+    cleaned_text = get_clean_text(post_text, None, do_lemmatization=False, remove_am=True)
+    #cleaned_text = prep_text_for_string_matching(post_text) 
 
     # extract all ages
-    rgx_age_gender = re.compile(r"(\d{1,2}\s?(f|m|female|male)[^a-zA-Z0-9]{1})|([^a-zA-Z0-9]{1}(f|m|female|male)\s?\d{1,2})")
-    all_ages_genders_w_span = []
-    for match in rgx_age_gender.finditer(cleaned_text):
-        match_span = list(match.span())
-        match_str = match.group().replace(" ", "")
-        if match.group(0)[0] == " ":
-            match_span[0] = match_span[0]+1
-        if match.group(0)[-1] == " ":
-            match_span[1] = match_span[1]-1
-        match_span = (match_span[0], match_span[1])
-        all_ages_genders_w_span.append([match_span, match_str])
+    male_strings = ["m","male","mal"]
+    female_strings = ["f","fem","female"]
+    rgx_pronoun = "\\b("+"|".join(CS.PRONOUNS[0])+")\\b"
+    rgx_gap_aft_pronoun = "[^a-z0-9]{0,3}"
+    rgx_age = "(\\d{1,2})"
+    rgx_gap_btw_age_gender = "[^a-zA-Z0-9]{0,3}"
+    rgx_gender = "("+"|".join(male_strings+female_strings)+")"
+    rgx_string = (
+        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_age+rgx_gap_btw_age_gender+rgx_gender+")|"+         #i (23, f)
+        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_gender+rgx_gap_btw_age_gender+rgx_age+")|"+         #i (f, 23)
+        "("+rgx_gender+rgx_gap_btw_age_gender+rgx_age+rgx_gap_btw_age_gender+rgx_pronoun+")|"+      #(f, 23) i
+        "("+rgx_gender+rgx_gap_btw_age_gender+rgx_pronoun+rgx_gap_btw_age_gender+rgx_age+")|"+      #(23, f) i
+        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_age+")|"+                                           #i 23
+        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_gender+")"                                          #i f 
+    )
     
-    # create age, gender tuple list
-    age_gender_tpl = []
-    for span, age_gend_str in all_ages_genders_w_span:
-        age = []
-        gender = []
-        for c in age_gend_str:
-            if c.isdigit():
-                age.append(c)
-            elif c.isalpha():
-                gender.append(c)
-        age_int = int("".join(age))
-        if len(age)>0 and len(gender)>0:
-            age_gender_tpl.append([span,(age_int, gender[0])])
+    print("Cleaned "+cleaned_text)
+    age_gender_list = []
+    rgx = re.compile(r""+rgx_string)
     
-    if not len(age_gender_tpl) > 0:
-        return [("author_age",-1), ("author_gender", -1)]
-    #print(age_gender_tpl)
-    #print(cleaned_text)
-
-    # extract all pronouns
-    cleaned_text = re.sub('[^a-zA-Z0-9 \n\.]', " ", cleaned_text)
-
-    pronouns_flat = [e for sub in CS.PRONOUNS for e in sub]
-    pronouns_rgx_str = "|".join(pronouns_flat) #structure needs to be: 1 non alpha numeric char, pronoun 1 non alphnumeric char
-    pronouns_rgx_str = "[^a-zA-Z0-9]{1}("+pronouns_rgx_str+")[^a-zA-Z0-9]{1}" 
-    rgx_pronoun = re.compile(r""+pronouns_rgx_str)
-    pronouns_list = []
-    pronoun_keys = set({})
-    for match in rgx_pronoun.finditer(cleaned_text):
-        match_str = ""
-        for lst in CS.PRONOUNS:
-            match_group_str = match.group(0)
-            match_group_str = match_group_str.strip()
-            if match_group_str in lst:
-                match_str = lst[0]
-        if len(match_str) != 0:
-            pronoun_keys.add(match_str)
-            pronouns_list.append([match.span(), match_str])
-
-    pronoun_age_gender_dict = {}#dict.fromkeys(list(pronoun_keys), set())
-
-    for span_age_gender, age_gender in age_gender_tpl:
-        for span_pronoun, pronoun in pronouns_list:
-            sub_str = cleaned_text[span_pronoun[1]:span_age_gender[0]]
-            if len(sub_str) < CS.PRONOUN_AGE_GENDER_DIST and len(sub_str) > 0:
-                if not pronoun in pronoun_age_gender_dict:
-                    pronoun_age_gender_dict[pronoun] = [age_gender]
-                elif not age_gender in pronoun_age_gender_dict[pronoun]:
-                    pronoun_age_gender_dict[pronoun].append(age_gender)
-                #print(pronoun_age_gender_dict)
-                #print("---")
+    for match in rgx.findall(cleaned_text):
+        groups = list(filter(lambda x: (not contains_letters_numbers(x)) and len(str(x))>0, match))
+        groups_chunked = [groups[i:i+3] for i in range(0, len(groups), 3)] #split matches from whole list into chunks of 3 (b.c. we have 3 group for each regex "line")
+        for chunk in groups_chunked:
+            if len("".join(chunk))==0:
                 continue
-    
-    # TODO: should we only look at "i" pronoun or also others?
-    author_age = -1
-    author_gender = -1
-    if "i" in pronoun_age_gender_dict:
-        author_gender = int(pronoun_age_gender_dict["i"][0][1] == "f") # author_gender = 1 => author is a woman
-        author_age = pronoun_age_gender_dict["i"][0][0]
+            age = -1
+            gender = -1
+            for g in chunk:
+                if g.isnumeric():
+                    age = int(g)
+                if g in female_strings:
+                    gender = 1
+                if g in male_strings:
+                    gender = 0
+            if age != -1 or gender != -1:
+                age_gender_list.append((age, gender))
 
-    return [("author_age",author_age), ("author_gender", author_gender)]
+    print(age_gender_list)
+    if len(age_gender_list) > 1:
+        lg.warning("More than 1 age/gender found for poster.")
+    elif len(age_gender_list) < 1:
+        age_gender_list = [(-1,-1)] #-1 if nothing found
+    
+    return [("author_age",age_gender_list[0][0]), ("author_gender", age_gender_list[0][1])]
 
 
 

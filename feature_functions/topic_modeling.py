@@ -23,13 +23,17 @@ def topic_modeling(posts_raw, post_ids):
         topic_prob_df: dataframe with the columns "post_id", "topic_nr", "topic_probability"
     """
     lg.info("Generating topics")
+    
     post_list_clean = [get_clean_text(post,
                             globals_loader.nlp,
                             remove_punctuation=False,
                             remove_stopwords=True,
                             do_lemmatization=False) 
                         for post in posts_raw]
-    model = BERTopic(nr_topics="auto")
+
+    # min topic size?
+    #will get thousands of topics for big dataset
+    model = BERTopic(language="english", min_topic_size=300, nr_topics="auto")
     topics, probs = model.fit_transform(post_list_clean)
 
     actual_nr_topics = len(set(topics))
@@ -79,6 +83,9 @@ def topic_modeling(posts_raw, post_ids):
     fig_bar = model.visualize_barchart()
     fig_bar.write_html(visualsation_dir_bar)
 
+    visualsation_dir_hier  = "{0}{1}_{2}{3}.html".format(CS.OUTPUT_DIR, "topic_hierarchy", get_date_str(),  "_mini" if CS.USE_MINIFIED_DATA else "")
+    fig_hier = model.visualize_hierarchy()
+    fig_hier.write_html(visualsation_dir_hier)
 
 
     lg.info("    generated {0} topics".format(len(set(topics))))
