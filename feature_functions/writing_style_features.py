@@ -46,7 +46,7 @@ def get_punctuation_count(post_text):
     return tuple_list
 
 
-def check_wita(post_text):
+def check_wibta(post_text):
     """ Check if this post is "Am I the asshole..." or "Would I be the asshole..."
 
     Args:
@@ -56,21 +56,27 @@ def check_wita(post_text):
        list:  list of tuples e.g. [("is_wita": 0),...]
 
     """
-    # generate this list automatically (i.e. asshole, ah, a**hole etc)
-    # check other feature that uses a similar list and share the expressions
-    expressions_to_check = ["wita", "would i be the asshole", "would i be the ah"]
-    wita_flag = 0
-    post_text_clean = get_clean_txt(post_text, globals_loader.nlp, do_lemmatization=False)
+    expressions_to_check = string_matching_arr_append_ah(CS.WIBTA)
+    wibta_flag = 0
+    post_text_clean = get_clean_text(post_text, globals_loader.nlp, do_lemmatization=False, remove_punctuation=True )
 
-    for exp in expressions_to_check:
-        if len(exp.split() > 1):
-            wita_flag = exp in post_text_clean
-        else:
-            wita_flag = exp in post_text_clean.split()
-        if wita_flag:
-            break
+    regex = "\\b("+"|".join(expressions_to_check)+")\\b" 
+    print(regex)
+    if re.search(regex, post_text_clean):
+        print("match")
+        return [("is_wibta", 1)]
+    else:
+        return [("is_wibta", 0)]
 
-    return [("is_wita", int(wita_flag))]
+    #for exp in expressions_to_check:
+    #    if len(exp.split()) > 1: # expresssion more than one word (e.g. "would i be the ah", not "wibta")
+    #        wibta_flag = exp in post_text_clean
+    #    else:
+    #        wibta_flag = exp in post_text_clean.split()
+    #    if wibta_flag:
+    #        break
+
+    return [("is_wita", wibta_flag)]
 
 
 def get_feats_dict(morph_feats):
@@ -131,7 +137,7 @@ def aita_location(post_text):
     # single_words = ["aita", "wita", "wibta"]
     # aita_rgx = "(am i) ((\b(\w*\S\w*)\b) )?(the|a|an) (asshole)" # am i[potentially 1 word] the asshole (e.g. am i really the asshole)
 
-    aita_strings = ["am i the asshole", "aita", "wita", "wibta", "would i be the asshole"]
+    aita_strings = CS.AITA+CS.WIBTA
     aita_strings = string_matching_arr_append_ah(aita_strings)
 
     post_text = get_clean_text(post_text, None, remove_punctuation=False, do_lemmatization=False, remove_am=False)

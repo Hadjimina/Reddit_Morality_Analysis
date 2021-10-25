@@ -39,3 +39,20 @@ class writing_Style_Tests(unittest.TestCase):
             act = aita_location(texts[i])
             exp = expected[i]
             self.assertEqual(act, exp)  
+
+    def test_check_wibta(self):
+        texts_real = ['to have lives and hobbies outside of work, but I just think this is way too inappropriate to go unpunished. She can’t just run away from her poor and unprofessional behavior. If she’s going to be part of this profession, she should be more mindful of the content she puts on the internet. And I honestly don’t think other parents would be pleased to know that their kids have a teacher that shouts loudly on the internet about which anime character she wants to “toss her salad. WIBTA if I show her new school administration her twitch account?', "What the actual fuck. So i convinced myself to terminate the therapy process. Would i be the asshole if i do this?", "I was livid at my wife. This was the 5th interview that she ruined like this. I told her that I give up on trying to make her life easier and that I'm not ready to go looking for any more jobs since she doesn't even want to maintain silence during important interviews. I told her to start working again after the birth and that I am ok paying for a nanny/babysitter.She said that in being unreasonable in expecting perfect silence at home.AITA?", "When most of the relatives left, Amy’s parents came in my room and told me I was blowing things out of proportion (and apparently the relatives thought that too). Amy was on my side, but her parents were quite angry at me for several days, and almost got me kicked out of their house.So, tell me, WITAH?"]
+
+        texts = texts_real
+        expected = [ 
+            [("is_wibta",1)], 
+            [("is_wibta",1)], 
+            [("is_wibta",0)], 
+            [("is_wibta",1)], 
+        ]
+
+        for i in range(len(texts)):
+            print(texts[i])
+            act = check_wibta(texts[i])
+            exp = expected[i]
+            self.assertEqual(act, exp)     
