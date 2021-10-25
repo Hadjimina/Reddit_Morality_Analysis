@@ -9,6 +9,7 @@ import queue
 import sys
 from multiprocessing import Queue, set_start_method
 from os import walk
+from pathlib import Path
 
 import coloredlogs
 import numpy as np
@@ -34,6 +35,9 @@ def main():
     df_posts = globals_loader.df_posts
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
 
+    # setup output dir
+    Path(CS.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+    
     # Do multiprocessing
     processes = []
     q = Queue() 

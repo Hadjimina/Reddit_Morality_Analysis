@@ -31,7 +31,7 @@ TOPIC_PREFIX = "topic_"
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
 
 HOME_DIR = os.path.dirname(os.path.abspath(__file__))+"/"
-OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"
+OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"+output_dir_name()+"/"
 
 mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)

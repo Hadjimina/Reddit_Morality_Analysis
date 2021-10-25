@@ -1,9 +1,10 @@
 """
 helper_functions.py
 """
-from datetime import datetime
+from datetime import datetime, date
 from enum import Flag
 import re
+from humanfriendly.terminal import output
 import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
@@ -204,3 +205,11 @@ def contains_letters_numbers(str):
         flag_letter = flag_letter | i.isalpha()
     
     return flag_digit & flag_letter
+
+def output_dir_name():
+    """Return the name of the output directories parent folder
+    """
+
+    today = date.today()
+    ouput_folder = today.strftime("%d_%m_%Y")
+    return ouput_folder
