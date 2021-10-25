@@ -10,20 +10,21 @@ from matplotlib import pyplot as plt
 
 coloredlogs.install()
 
-def topic_modeling(posts_raw, post_ids):
+def topic_modelling(posts_raw, post_ids):
     """ Generate topics of all posts, return dataframe with each posts's topic id, and its probabilty. 
         Addtionnaly, save a dataframe in output directory that shows the mapping of each topic id to each topic string
         Lastly, save a visualisation of the topics
 
     Args:
-        posts_raw: list of all raw_post texts
-        post_ids: list of 
+        posts_raw (list): list of all raw_post texts
+        post_ids (list): list of 
 
     Returns:
         topic_prob_df: dataframe with the columns "post_id", "topic_nr", "topic_probability"
     """
     lg.info("Generating topics")
     
+    # lemmatize?
     post_list_clean = [get_clean_text(post,
                             globals_loader.nlp,
                             remove_punctuation=False,
@@ -32,8 +33,7 @@ def topic_modeling(posts_raw, post_ids):
                         for post in posts_raw]
 
     # min topic size?
-    #will get thousands of topics for big dataset
-    model = BERTopic(language="english", min_topic_size=300, nr_topics="auto")
+    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), nr_topics="auto")
     topics, probs = model.fit_transform(post_list_clean)
 
     actual_nr_topics = len(set(topics))

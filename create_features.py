@@ -19,7 +19,7 @@ import constants as CS
 import helpers.df_visualisation as vis
 import helpers.globals_loader as globals_loader
 import parallel_process as p_process
-from feature_functions.topic_modeling import *
+from feature_functions.topic_modelling import *
 from helpers.clean_text import *
 from helpers.helper_functions import *
 from helpers.process_helper import *
@@ -76,10 +76,10 @@ def main():
     feature_df = feature_df_multi.merge(feature_df_mono, left_on="post_id", right_on="post_id", validate="1:1")
 
     # Do topic modeling & merge
-    if CS.DO_TOPIC_MODELING:
+    if CS.DO_TOPIC_MODELLING:
         posts_raw = df_posts["post_text"].to_list()
         post_ids = df_posts["post_id"].to_list()
-        topic_df = topic_modeling(posts_raw, post_ids)   
+        topic_df = topic_modelling(posts_raw, post_ids)   
         feature_df = topic_df.merge(feature_df, left_on="post_id", right_on="post_id", validate="1:1")
 
     # Merge generate features with LIWC & Moral foundations

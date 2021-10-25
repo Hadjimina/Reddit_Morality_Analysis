@@ -9,6 +9,28 @@ from helpers import *
 import helpers.globals_loader as globals_loader
 coloredlogs.install()
 
+def check_crossposts(post_id):
+    """ Check if post has been crossposted to r/AmITheDevil or r/AmITheAngel, signifiying obvious wrong doing or correct behaviour respectively 
+
+    Args:
+        post_id (string): id of post
+
+    Returns:
+        feature_list: list of features tuples e.g. [("account_age", age), ("account_comment_karma", comment_karma)]
+    """ 
+    reddit = globals_loader.reddit
+    post = reddit.submission(post_id)
+    sub_list = []
+    in_devil = False 
+    in_angel = False
+    for duplicate in post.duplicates():
+        sub_list.append(duplicate.subreddit.display_name.lower())
+
+    is_devil = int("amithedevil" in sub_list)
+    is_angel = int("amitheangel" in sub_list)
+
+    feature_list = [("is_angel", is_angel), ("is_devil", is_devil)]
+    return feature_list
 
 def string_to_lower_alphanum(str):
     """ Convert any string to lowercase and only containing alphanumeric characters + whitespaces

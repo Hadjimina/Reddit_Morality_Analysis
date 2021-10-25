@@ -5,7 +5,8 @@ import os
 from feature_functions.reaction_features import *
 from feature_functions.speaker_features import *
 from feature_functions.writing_style_features import *
-from feature_functions.topic_modeling import *
+from feature_functions.topic_modelling import *
+import multiprocessing
 
 # Minification, requirements and title
 USE_MINIFIED_DATA = True
@@ -14,6 +15,7 @@ TITLE_AS_STANDALONE = False
 
 # TOPIC MODELING
 TOPICS_ABS = 30 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
+MIN_CLUSTER_PERC = 0.2
 
 # PERCENTAGE TO MINIFY POSTS
 MINIFY_FRAC = 0.2
@@ -87,12 +89,13 @@ PRONOUNS = [["i", "me", "my", "mine", "myself"],
 PRONOUN_AGE_GENDER_DIST = 3 # max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
 
 # EMO LEX EMOTIONS
-EMOTIONS = ['fear', 'anger', 'anticip', 'trust', 'surprise', 'positive', 'negative', 'sadness', 'disgust', 'joy', 'anticipation']
+EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness', 'disgust', 'joy', 'anticipation', 'positive', 'negative']
 
 #Feature Generation
 
 FEATURES_TO_GENERATE_MP = { #this is technically not a constant
     "speaker":[
+        
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
         #(get_author_info, CS.POST_AUTHOR),
         #(get_author_age_and_gender, CS.POST_TEXT)
@@ -106,6 +109,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
         
     ],
     "reactions":[
+        (check_crossposts, CS.POST_ID)  #slow
         #(get_judgement_labels, CS.POST_ID)
         
     ]
@@ -129,7 +133,7 @@ SPACY_FUNCTIONS = [
                     #get_profanity_self_vs_other_in_spacy,
                     ]
 
-DO_TOPIC_MODELING = True
+DO_TOPIC_MODELLING = True
 
 # Loading 
 LOAD_POSTS = True

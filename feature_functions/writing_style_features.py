@@ -96,31 +96,27 @@ def get_feats_dict(morph_feats):
 
 def get_emotions(post_text):
     """Analyse emotions contained within a text using NRC Word-Emotion Association Lexicon (aka EmoLex)
-       Frequencies => ratio to total number of words
+        Emotions: anger, fear, anticipation, trust, surprise, sadness, joy and disgust
+        Additionally: positive, negative
 
     Args:
         post_text (str): Full body text of r/AITA post
 
     Returns:
-        list:  e.g. [("joy_freq": 10), ("joy_abs": 0.10)]
+        tuple_list:  e.g. [("joy_norm": 10), ("joy_abs": 0.10)]
     """
-
     analysed_text = NRCLex(post_text)
     abs_affect = analysed_text.raw_emotion_scores
-    freq_affect = analysed_text.affect_frequencies # TODO: what exactly does freq do?
 
     # Initialize all emotions that have 0 raw count
-    key_set = set(CS.EMOTIONS+list(freq_affect.keys()))    
+    key_set = set(CS.EMOTIONS+list(abs_affect.keys()))    
     for key in key_set:
         if not key in abs_affect:
             abs_affect[key] = 0
-            freq_affect[key] = 0
 
-    abs_list = dict_to_feature_tuples(abs_affect, suffix="_abs")
-    freq_list = dict_to_feature_tuples(freq_affect, suffix="_freq")
-
-    ret_list = abs_list+freq_list
-    return ret_list
+    emo_dict = get_abs_and_norm_dict(abs_affect, len(post_text))
+    tuple_list = dict_to_feature_tuples(emo_dict)
+    return tuple_list
 
 def aita_location(post_text):
     """Get the location (in % of entire text) and the number of "aita?" questions the author asks.
@@ -129,15 +125,18 @@ def aita_location(post_text):
         post_text (str): Full body text of r/AITA post
 
     Returns:
-        list:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
+        ret_tuple_list:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
     """    
+    # TODO: should we match "am i really the asshole"
+    # single_words = ["aita", "wita", "wibta"]
+    # aita_rgx = "(am i) ((\b(\w*\S\w*)\b) )?(the|a|an) (asshole)" # am i[potentially 1 word] the asshole (e.g. am i really the asshole)
 
-    aita_strings = ["am i the asshole", "aita", "am i the", "wibta", "would i be the asshole"]
+    aita_strings = ["am i the asshole", "aita", "wita", "wibta", "would i be the asshole"]
     aita_strings = string_matching_arr_append_ah(aita_strings)
 
-    post_text = prep_text_for_string_matching(post_text)
+    post_text = get_clean_text(post_text, None, remove_punctuation=False, do_lemmatization=False, remove_am=False)
 
-    occurences = 0
+    occurences = 0  
     location_abs = []
     for aita_string in aita_strings:
         cur_occurences = post_text.count(aita_string)
@@ -151,7 +150,7 @@ def aita_location(post_text):
     mean_loc_ratio =  st.mean(location_ratio) if len(location_ratio) > 0 else -1 #TODO: mean might not be the best idea
     
     # if we have not found any matches the mean_loc_ratio is -1
-    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location_ratio",mean_loc_ratio)]
+    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location_ratio",round(mean_loc_ratio,6))]
     return ret_tuple_list
 
 def get_sentiment_in_spacy(doc):

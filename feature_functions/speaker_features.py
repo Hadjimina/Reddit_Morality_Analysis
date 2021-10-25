@@ -9,19 +9,19 @@ coloredlogs.install()
 
 # import global vars
 import helpers.globals_loader as globals_loader
-from helpers.helper_functions import *
+from helpers.helper_functions import *   
 
 def get_author_info(account_name):
     """ Get information about the post author. Namely get the author account age and account karma (link & comment)
 
     Args:
-        account_name: name of account for post
+        account_name (string): name of account for post
 
     Returns:
         feature_list: list of features tuples e.g. [("account_age", age), ("account_comment_karma", comment_karma)]
     """ 
+    # Here we are not able to use .info to aggregate
     reddit = globals_loader.reddit
-
 
     feature_list = []
     age = 0
@@ -57,6 +57,7 @@ def get_author_info(account_name):
         lg.warning("Author older than Reddit. Setting to max age")
         age = 5879
 
+    print(age)
     feature_list += [("account_age", age)]
     feature_list +=[("account_comment_karma", comment_karma)]
     feature_list +=[("account_link_karma", link_karma)]
@@ -72,27 +73,26 @@ def get_author_age_and_gender(post_text):
     Returns:
         list: tuple list e.g. e.g. [("author_age": 10), ("author_gender": 1),...] 
     """
-    cleaned_text = get_clean_text(post_text, None, do_lemmatization=False, remove_am=True)
+    cleaned_text = get_clean_text(post_text, None,remove_punctuation=False, do_lemmatization=False, remove_am=True)
     #cleaned_text = prep_text_for_string_matching(post_text) 
 
     # extract all ages
     male_strings = ["m","male","mal"]
     female_strings = ["f","fem","female"]
     rgx_pronoun = "\\b("+"|".join(CS.PRONOUNS[0])+")\\b"
-    rgx_gap_aft_pronoun = "[^a-z0-9]{0,3}"
+    rgx_gap = "[^a-z0-9]{0,3}"
     rgx_age = "(\\d{1,2})"
-    rgx_gap_btw_age_gender = "[^a-zA-Z0-9]{0,3}"
     rgx_gender = "("+"|".join(male_strings+female_strings)+")"
     rgx_string = (
-        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_age+rgx_gap_btw_age_gender+rgx_gender+")|"+         #i (23, f)
-        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_gender+rgx_gap_btw_age_gender+rgx_age+")|"+         #i (f, 23)
-        "("+rgx_gender+rgx_gap_btw_age_gender+rgx_age+rgx_gap_btw_age_gender+rgx_pronoun+")|"+      #(f, 23) i
-        "("+rgx_gender+rgx_gap_btw_age_gender+rgx_pronoun+rgx_gap_btw_age_gender+rgx_age+")|"+      #(23, f) i
-        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_age+")|"+                                           #i 23
-        "("+rgx_pronoun+rgx_gap_aft_pronoun+rgx_gender+")"                                          #i f 
+        "("+rgx_pronoun+rgx_gap+rgx_age+rgx_gap+rgx_gender+")|"+         #i (23, f)
+        "("+rgx_pronoun+rgx_gap+rgx_gender+rgx_gap+rgx_age+")|"+         #i (f, 23)
+        "("+rgx_gender+rgx_gap+rgx_age+rgx_gap+rgx_pronoun+")|"+      #(f, 23) i
+        "("+rgx_gender+rgx_gap+rgx_pronoun+rgx_gap+rgx_age+")|"+      #(23, f) i
+        "("+rgx_pronoun+rgx_gap+rgx_age+")|"+                                           #i 23
+        "("+rgx_pronoun+rgx_gap+rgx_gender+")"                                          #i f 
     )
     
-    print("Cleaned "+cleaned_text)
+    
     age_gender_list = []
     rgx = re.compile(r""+rgx_string)
     
@@ -114,7 +114,6 @@ def get_author_age_and_gender(post_text):
             if age != -1 or gender != -1:
                 age_gender_list.append((age, gender))
 
-    print(age_gender_list)
     if len(age_gender_list) > 1:
         lg.warning("More than 1 age/gender found for poster.")
     elif len(age_gender_list) < 1:

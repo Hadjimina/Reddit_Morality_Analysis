@@ -132,10 +132,10 @@ def string_matching_arr_append_ah(matching_list):
         Often users on AITA, do not write "asshole" but write "ah" instead. Thus we need to extend the matching list but replace all "asshole" occurences with "ah"
 
     Args:
-        matching_list ([str]): list of matching strings, these do not include any "ah" yet but only "asshole"
+        matching_list (list): list of matching strings, these do not include any "ah" yet but only "asshole"
 
     Returns:
-        [str]: list of matching strings extended to include "asshole" and "ah
+        matching_list: list of matching strings extended to include "asshole" and "ah
     """    
 
     asshole_str = "asshole"
@@ -144,8 +144,9 @@ def string_matching_arr_append_ah(matching_list):
     ah_to_post_pend = []
     for match_str in matching_list:
         if asshole_str in match_str:
-            ah_to_post_pend += match_str.replace(asshole_str, ah_str)
+            ah_to_post_pend += [match_str.replace(asshole_str, ah_str)]
 
+    matching_list += ah_to_post_pend
     return matching_list
 
 
@@ -153,12 +154,12 @@ def get_abs_and_norm_dict(abs_dict, out_off_ratio, append_abs=True, only_norm=Fa
     """Get a feature dictinoary containing only absolute values and extended it to include the normalised values aswell.
 
     Args:
-        abs_dict ({str: int}): dict of calucluated features with only absolute features
-        append_abs (bool): whether or not we should append the string "_abs" to the exisitng keys in abs_dict
-        only_norm (bool): whether or not we should return only the normalised values
+        abs_dict (dict): dict of calucluated features with only absolute features
+        append_abs (bool, optional): whether or not we should append the string "_abs" to the exisitng keys in abs_dict
+        only_norm (bool, optional): whether or not we should return only the normalised values
 
     Returns:
-        {str:int}: dict of calucluated features with absolute and normalised features
+        complete_dict: dict of calucluated features with absolute and normalised features
     """ 
     features = list(abs_dict.keys())
     #create abs and perc values

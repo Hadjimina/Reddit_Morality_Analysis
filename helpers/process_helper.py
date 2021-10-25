@@ -9,8 +9,15 @@ tqdm.pandas()
 
 
 def process_run(feat_to_gen, sub_df, id):
-    """ Apply all functions of "features_to_generate"
-        to each row of subsection of dataframe
+    """ Apply all functions of "features_to_generate" to each row of subsection of dataframe
+
+    Args:
+        feat_to_gen: list of which features should be generated. List consist of tuple, first being the feature function and the second being the argument said function requires
+        sub_df: Sub section of all posts. They are split up to allow for parallel processing.
+        id: Thread id
+
+    Returns:
+        feature_df_list: list of dataframes that contain the extracted features
     """  
 
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
@@ -52,34 +59,24 @@ def process_run(feat_to_gen, sub_df, id):
 
 
 def feature_to_df(id, category, column, funct):
-        """Generate dataframe out of return value of category name, column data and feature function
+    """Generate dataframe out of return value of category name, column data and feature function
 
-        returns : dataframe
-            dataframe with headers corresponding to category and feature function 
-            e.g "speaker" + "author_age" = "speaker_author_age",
-            values are int returned from feature function
+    Args:
+        category (string): Which feature category we are currently using
+        column  (string): dataframe column we apply the feature function to
+        function (any->any): feature function
+    Returns: 
+        dataframe: dataframe with headers corresponding to category and feature function. e.g "speaker" + "author_age" = "speaker_author_age", values are int returned from feature function
+    """
+    lg.info('Running "{0}" on thread {1}'.format(funct.__name__, id))
+    if id == "mono":
+        spacy_fn_names = [fn.__name__ for fn in CS.SPACY_FUNCTIONS]
+        lg.info ("  Spacy features: {0}".format(spacy_fn_names))
 
-        Parameters
-        ----------
-        category : str
-            Which feature category we are currently using
-
-        column: [str]
-            dataframe column we apply the feature function to
-
-        funct: str->[(str, count)]
-            feature function
-
-        """
-        lg.info('Running "{0}" on thread {1}'.format(funct.__name__, id))
-        if id == "mono":
-            spacy_fn_names = [fn.__name__ for fn in CS.SPACY_FUNCTIONS]
-            lg.info ("  Spacy features: {0}".format(spacy_fn_names))
-
-        temp_s = column.progress_apply(funct)
-        fst_value = temp_s.iat[0]
-        cols = ["{0}_{1}".format(category, tpl[0]) for tpl in fst_value]
-        temp_s = temp_s.apply(lambda x: [v for s,v in x])
-        df = pd.DataFrame(temp_s.to_list(), columns=cols)
-        
-        return df
+    temp_s = column.progress_apply(funct)
+    fst_value = temp_s.iat[0]
+    cols = ["{0}_{1}".format(category, tpl[0]) for tpl in fst_value]
+    temp_s = temp_s.apply(lambda x: [v for s,v in x])
+    df = pd.DataFrame(temp_s.to_list(), columns=cols)
+    
+    return df

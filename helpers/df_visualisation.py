@@ -35,7 +35,7 @@ def drop_non_feature_cols(df):
     # Drop all non feature columns
     foundation_prefix = [CS.FOUNDATIONS_PREFIX] if CS.LOAD_FOUNDATIONS else []
     liwc_prefix = [CS.LIWC_PREFIX] if CS.LOAD_LIWC else []
-    topic_prefix = [CS.TOPIC_PREFIX] if CS.DO_TOPIC_MODELING else []
+    topic_prefix = [CS.TOPIC_PREFIX] if CS.DO_TOPIC_MODELLING else []
     prefixes = set(list(CS.FEATURES_TO_GENERATE_MONO.keys()) +list(CS.FEATURES_TO_GENERATE_MP.keys())+foundation_prefix+liwc_prefix+topic_prefix)
 
     for c in df.columns:
