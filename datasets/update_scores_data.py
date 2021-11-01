@@ -34,7 +34,6 @@ def update_score_elem(do_posts=True, overwrite=True):
     if do_posts:
         for submission in tqdm(reddit.info(ids), total=len(ids)):
             #submission = reddit.info(ids[i])
-            #TODO
             updated = [post_idx,0,0]#id, score, ratio
             post_idx += 1
             updated[1] = submission.score
@@ -60,6 +59,8 @@ def update_score_elem(do_posts=True, overwrite=True):
         ups_downs = np.array(list(map(lambda s, r: helper_functions.get_ups_downs_from_ratio_score(r, s) , scores, ratios)))
         df[prefix+"_ups"] = ups_downs[:,0].tolist()
         df[prefix+"_downs"] = ups_downs[:,1].tolist()
+        df[prefix+"_ratio"] = ups_downs[:,2].tolist()
+        df[prefix+"_score"] = ups_downs[:,3].tolist()
     else:
         df["comment_score"] = scores
         

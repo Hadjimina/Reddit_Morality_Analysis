@@ -72,7 +72,7 @@ def get_clean_text(post_text,
 
 
 def get_ups_downs_from_ratio_score(r,s):
-    """Given a ratio and a score, we will return individual number of upvotes and downvotes
+    """Given a ratio and a score, we will return individual number of upvotes and downvotes & ratio, score
         We have to do this since, reddit remove the possibility to check the exact amount of upvotes and downvotes a few years ago. 
         Also the ratio is rounded so we will not get completely accurate values.
 
@@ -83,14 +83,13 @@ def get_ups_downs_from_ratio_score(r,s):
         s (int): the current score of the post/comment
 
     Returns:
-        list: list with first element being the number of upvotes and the second one the number of downvotes
+        list: list with first element being the number of upvotes and the second one the number of downvotes, followed by the upvote ratio and current score
     """
     
 
     ups = round((s - r * s) / ( 2 * r - 1 ) + s) if r != 0.5 else 0 #if we have have a 50% upvote ratio we set the upvotes to 0
     downs = round(ups - s)
-
-    return [ups, downs]
+    return [ups, downs, r, s]
 
 def dict_to_feature_tuples(dict, suffix=""):
     """ Take a dict at end of a feature function and converts it into the tuple format suitable for the dataframe
