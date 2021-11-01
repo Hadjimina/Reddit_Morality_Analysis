@@ -9,6 +9,7 @@ import pandas as pd
 from helpers import *
 from tqdm import tqdm
 import helpers.globals_loader as globals_loader
+import helpers.helper_functions as helper_functions
 coloredlogs.install()
 
 def update_score_elem(do_posts=True, overwrite=True):
@@ -26,25 +27,36 @@ def update_score_elem(do_posts=True, overwrite=True):
     elem_prefix = "t3" if do_posts else "t1"
     ids = [i if i.startswith(elem_prefix+"_") else f"{elem_prefix}_{i}" for i in ids]
     scores = []
-    ratios = []
 
+    post_idx = 0
+    comment_idx = 0
     
     if do_posts:
-        for i in tqdm(range(len(ids))): #in tqdm(reddit.info(ids), total=len(ids)):
-            submission = reddit.info(ids[i])
+        for submission in tqdm(reddit.info(ids), total=len(ids)):
+            #submission = reddit.info(ids[i])
             #TODO
-            scores.append(submission.score)
-            ratios.append(submission.upvote_ratio)
+            updated = [post_idx,0,0]#id, score, ratio
+            post_idx += 1
+            updated[1] = submission.score
+            updated[2] = submission.upvote_ratio
+            scores.append(updated)
             # see https://api.reddit.com/api/info/?id=t3_apcnyn
     else:
-        for i in tqdm(range(len(ids)))
-        #for comment in tqdm(reddit.info(ids), total=len(ids)):
-            comment = reddit.info(ids[i])   
-            scores.append(comment.score)
+        #for i in tqdm(range(len(ids))):
+        for comment in tqdm(reddit.info(ids), total=len(ids)):
+            #comment = reddit.info(ids[i])   
+            updated = [comment_idx,0] #id, score, ratio
+            comment_idx+=1
+            updated[1] = comment.score
+            scores.append(updated)
+            
             # comments do not have an upvote ratio
             # see https://api.reddit.com/api/info/?id=t1_eg7dfxx
 
+    scores_np = np.array(scores)
+    scores = scores_np[:,1]
     if do_posts:
+        ratios = scores_np[:,2]
         ups_downs = np.array(list(map(lambda s, r: helper_functions.get_ups_downs_from_ratio_score(r, s) , scores, ratios)))
         df[prefix+"_ups"] = ups_downs[:,0].tolist()
         df[prefix+"_downs"] = ups_downs[:,1].tolist()

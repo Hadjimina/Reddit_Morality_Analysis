@@ -9,13 +9,13 @@ from feature_functions.topic_modelling import *
 import multiprocessing
 
 # Minification, requirements and title
-USE_MINIFIED_DATA = True
+USE_MINIFIED_DATA = False
 ENFORCE_POST_REQUIREMENTS = True
 TITLE_AS_STANDALONE = False
 
 # TOPIC MODELING
-TOPICS_ABS = 30 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
-MIN_CLUSTER_PERC = 0.2
+TOPICS_ABS = 300000000000 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
+MIN_CLUSTER_PERC = 0.001
 
 # PERCENTAGE TO MINIFY POSTS
 MINIFY_FRAC = 0.2
@@ -101,7 +101,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
         #(get_author_age_and_gender, CS.POST_TEXT)
     ], 
     "writing_sty":[
-        #(get_punctuation_count, CS.POST_TEXT),
+        (get_punctuation_count, CS.POST_TEXT),
         #(get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
@@ -109,7 +109,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
         
     ],
     "reactions":[
-        (check_crossposts, CS.POST_ID)  #slow
+        #(check_crossposts, CS.POST_ID)  #slow
         #(get_judgement_labels, CS.POST_ID)
         
     ]
