@@ -128,27 +128,28 @@ def prep_text_for_string_matching(text):
     text = " ".join(text.split())
     return text
 
-def string_matching_arr_append_ah(matching_list):
+def string_matching_arr_append_ah(matches):
     """When performing string matching we sometimes manualy specific which words to match. Often these include the words "asshole".
         Often users on AITA, do not write "asshole" but write "ah" instead. Thus we need to extend the matching list but replace all "asshole" occurences with "ah"
 
     Args:
-        matching_list (list): list of matching strings, these do not include any "ah" yet but only "asshole"
+        matches (list): list of matching strings, these do not include any "ah" yet but only "asshole"
 
     Returns:
-        matching_list: list of matching strings extended to include "asshole" and "ah
+        matches_extended: list of matching strings extended to include "asshole" and "ah
     """    
 
     asshole_str = "asshole"
     ah_str = "ah"
 
     ah_to_post_pend = []
-    for match_str in matching_list:
+    for match_str in matches:
         if asshole_str in match_str:
             ah_to_post_pend += [match_str.replace(asshole_str, ah_str)]
 
-    matching_list += ah_to_post_pend
-    return matching_list
+    print(ah_to_post_pend)
+    matches_extended = matches + ah_to_post_pend
+    return matches_extended
 
 
 def get_abs_and_norm_dict(abs_dict, out_off_ratio, append_abs=True, only_norm=False):

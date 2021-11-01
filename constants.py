@@ -58,6 +58,8 @@ MAX_FEATURES_TO_DISPLAY = 25
 # JUDGEMENT LABELS
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
+AITA = ["am i the asshole", "aita", "aitah"]
+WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole"]
 
 # MULTITHREADING
 NR_THREADS = 1#multiprocessing.cpu_count()
@@ -78,6 +80,8 @@ SP_TENSE_FUTURE = "Fut"
 
 SP_FEATS_TENSE = "Tense"
 SP_FEATS_VOICE = "Voice"
+
+
 
 # list from https://www.lingographics.com/english/personal-pronouns/
 PRONOUNS = [["i", "me", "my", "mine", "myself"],
@@ -105,7 +109,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
         #(get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
-        #(check_wita, CS.POST_TEXT)
+        #(check_wibta, CS.POST_TEXT)
         
     ],
     "reactions":[
