@@ -38,7 +38,7 @@ def update_score_elem(do_posts=True, overwrite=True):
 
         scores = np.zeros((len(ids),3))
         scores[:,0] = range(len(ids))
-        scores = scores.to_list()
+        scores = scores.tolist()
 
         for submission in tqdm(reddit.info(ids), total=len(ids)):
             #submission = reddit.info(ids[i])
@@ -52,7 +52,7 @@ def update_score_elem(do_posts=True, overwrite=True):
         
         scores = np.zeros((len(ids),2))
         scores[:,0] = range(len(ids))
-        scores = scores.to_list()
+        scores = scores.tolist()
 
         for comment in tqdm(reddit.info(ids), total=len(ids)):
             #comment = reddit.info(ids[i])   
