@@ -318,7 +318,7 @@ def generate_report(df):
 
     """
     # Check if df contains NaNs
-    assert not df.isnull().values.any()
+    #assert not df.isnull().values.any()
     
     lg.info("Generating report")
     df_to_plots(df)

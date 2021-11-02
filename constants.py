@@ -105,7 +105,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
         #(get_author_age_and_gender, CS.POST_TEXT)
     ], 
     "writing_sty":[
-        (get_punctuation_count, CS.POST_TEXT),
+        #(get_punctuation_count, CS.POST_TEXT),
         #(get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
@@ -137,10 +137,10 @@ SPACY_FUNCTIONS = [
                     #get_profanity_self_vs_other_in_spacy,
                     ]
 
-DO_TOPIC_MODELLING = True
+DO_TOPIC_MODELLING = False
 
 # Loading 
 LOAD_POSTS = True
 LOAD_COMMENTS = get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = False
+LOAD_FOUNDATIONS = True
 LOAD_LIWC = False

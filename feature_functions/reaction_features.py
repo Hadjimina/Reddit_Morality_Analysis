@@ -36,9 +36,9 @@ def string_to_lower_alphanum(str):
     """ Convert any string to lowercase and only containing alphanumeric characters + whitespaces
 
     Args:
-        str: string to convert
+        str (string): string to convert
     Returns:
-        str: lowercase string with only alphanumeric characters + whitespaces
+        str (string): lowercase string with only alphanumeric characters + whitespaces
     """    
 
     # to lower case
@@ -87,7 +87,7 @@ def get_judgement_labels(post_id):
         post_id (int): Id of the reddit post
 
     Returns:
-        tupel list: e.g. [("NTA",10), ("YTA", 20),...]
+        tuple list (list): e.g. [("NTA",10), ("YTA", 20),...]
     """
 
     

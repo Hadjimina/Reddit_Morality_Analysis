@@ -36,7 +36,7 @@ def update_score_elem(do_posts=True, overwrite=True):
 
     if do_posts:
 
-        scores = np.zeros(len(ids),3)
+        scores = np.zeros((len(ids),3))
         scores[:,0] = range(len(ids))
         scores = scores.to_list()
 
@@ -50,7 +50,7 @@ def update_score_elem(do_posts=True, overwrite=True):
             # see https://api.reddit.com/api/info/?id=t3_apcnyn
     else:
         
-        scores = np.zeros(len(ids),2)
+        scores = np.zeros((len(ids),2))
         scores[:,0] = range(len(ids))
         scores = scores.to_list()
 
