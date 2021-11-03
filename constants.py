@@ -9,16 +9,16 @@ from feature_functions.topic_modelling import *
 import multiprocessing
 
 # Minification, requirements and title
-USE_MINIFIED_DATA = False
-ENFORCE_POST_REQUIREMENTS = True
+USE_MINIFIED_DATA = True
+ENFORCE_POST_REQUIREMENTS = False
 TITLE_AS_STANDALONE = False
 
 # TOPIC MODELING
 TOPICS_ABS = 300000000000 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
-MIN_CLUSTER_PERC = 0.001
+MIN_CLUSTER_PERC = 0.02
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.2
+MINIFY_FRAC = 0.01
 
 # Prefixes
 LIWC_PREFIX = "liwc_"
@@ -57,12 +57,19 @@ MAX_FEATURES_TO_DISPLAY = 25
 
 # JUDGEMENT LABELS
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
-JUDGMENT_LABEL = ["You're the Asshole", "Not the Asshole", "Everyone Sucks here", "No Assholes Here", "Not Enough Info"]
+JUDGEJMENT_DICT = {
+    "YTA": ["YTA", "You're the asshole", "You are the asshole"],
+    "NTA": ["NTA", "not the asshole"],
+    "INFO": ["INFO","Not enough info", "Not enough information"],
+    "ESH": ["ESH", "everyone sucks here", "everybody sucks here"],
+    "NAH": ["NAH", "No Assholes here", "No Asshole here", "no one sucks here"],
+} 
+BOT_STRINGS = ["automod", "i am a bot"]
 AITA = ["am i the asshole", "aita", "aitah"]
 WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole"]
 
 # MULTITHREADING
-NR_THREADS = 1#multiprocessing.cpu_count()
+NR_THREADS = multiprocessing.cpu_count()
 TMP_SAVE_DIR = OUTPUT_DIR+"feature_df_tmp"
 MONO_ID = "mono"
 
@@ -81,8 +88,6 @@ SP_TENSE_FUTURE = "Fut"
 SP_FEATS_TENSE = "Tense"
 SP_FEATS_VOICE = "Voice"
 
-
-
 # list from https://www.lingographics.com/english/personal-pronouns/
 PRONOUNS = [["i", "me", "my", "mine", "myself"],
             ["you", "your","yours", "yourself"], 
@@ -99,7 +104,6 @@ EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness', 'disgust', 'joy', '
 
 FEATURES_TO_GENERATE_MP = { #this is technically not a constant
     "speaker":[
-        
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
         #(get_author_info, CS.POST_AUTHOR),
         #(get_author_age_and_gender, CS.POST_TEXT)
@@ -115,13 +119,12 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
     "reactions":[
         #(check_crossposts, CS.POST_ID)  #slow
         #(get_judgement_labels, CS.POST_ID)
-        
     ]
 }
 
 FEATURES_TO_GENERATE_MONO = { #this is technically not a constant
     "writing_sty":[
-        #(get_spacy_features, CS.POST_TEXT), # => 4h for 10%
+        (get_spacy_features, CS.POST_TEXT), # => 4h for 10%
     ],
     "reactions":[
 
@@ -133,7 +136,7 @@ SPACY_FUNCTIONS = [
                     #get_voice_in_spacy,
                     #get_sentiment_in_spacy, 
                     #get_focus_in_spacy, 
-                    #get_emotions_self_vs_other_in_spacy,
+                    get_emotions_self_vs_other_in_spacy,
                     #get_profanity_self_vs_other_in_spacy,
                     ]
 
@@ -142,5 +145,5 @@ DO_TOPIC_MODELLING = False
 # Loading 
 LOAD_POSTS = True
 LOAD_COMMENTS = get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = True
+LOAD_FOUNDATIONS = False
 LOAD_LIWC = False

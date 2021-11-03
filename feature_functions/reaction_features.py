@@ -6,6 +6,7 @@ import coloredlogs
 import constants as CS
 import pandas as pd
 from helpers import *
+from helpers.helper_functions import *
 import helpers.globals_loader as globals_loader
 coloredlogs.install()
 
@@ -32,22 +33,7 @@ def check_crossposts(post_id):
     feature_list = [("is_angel", is_angel), ("is_devil", is_devil)]
     return feature_list
 
-def string_to_lower_alphanum(str):
-    """ Convert any string to lowercase and only containing alphanumeric characters + whitespaces
-
-    Args:
-        str (string): string to convert
-    Returns:
-        str (string): lowercase string with only alphanumeric characters + whitespaces
-    """    
-
-    # to lower case
-    str = str.lower()
-    # remove non alphanumeric characters (and whitespaces)
-    str = re.sub(r'[^A-Za-z0-9\s]+', '', str)
-    return str
-
-def count_label(comment, acronym, word_list):
+def count_label(comment, acronym):
     """Check if the judgemnt label (YTA, NTA, INFO, ESH, NAH) is contained in comment.
        We not only check for exact label match but also some minor text analysis
 
@@ -69,7 +55,7 @@ def count_label(comment, acronym, word_list):
     middle_index = len(comment)//2
     middle_dist = 0
     try:
-        dist_abs = abs(middle_index - word_list.index(acronym.lower()))
+        dist_abs = abs(middle_index - comment.index(acronym.lower()))
         middle_dist = dist_abs/(len(comment)/2)
         
     except ValueError as e:
@@ -81,7 +67,7 @@ def count_label(comment, acronym, word_list):
     return middle_dist
     
 def get_judgement_labels(post_id):
-    """Returns judgemnt label counts (YTA, NTA, INFO, ESH, NAH)
+    """Returns judgement label counts (YTA, NTA, INFO, ESH, NAH)
 
     Args:
         post_id (int): Id of the reddit post
@@ -90,59 +76,82 @@ def get_judgement_labels(post_id):
         tuple list (list): e.g. [("NTA",10), ("YTA", 20),...]
     """
 
-    
     df_comments = globals_loader.df_comments
     df_comments = df_comments.loc[df_comments["post_id"] == post_id]
     df_comments = df_comments[["comment_text", "comment_score"]]
-    #print(post_id)
-    #if  df_comments.empty:
-    #    print('DataFrame empty!')
-    # Create accumulation dict
+
     label_counter = CS.JUDGMENT_ACRONYM + ["weighted_"+s for s in CS.JUDGMENT_ACRONYM]
     label_counter = dict.fromkeys(label_counter,0)
     
     
     for i, comment_row in enumerate(df_comments.itertuples(), 1):
         _, comment_body, score = comment_row
-        comment_body = string_to_lower_alphanum(str(comment_body))
-        #print(comment_body)
-        # Check votes for each different label in one single comment
-        # Maybe somebody "votes twice" within one comment
-        cur_label_dist = {}
-        word_list = comment_body.split()
-        for i in range(len(CS.JUDGMENT_ACRONYM)):
-            acronym = CS.JUDGMENT_ACRONYM[i]
-            middle_dist = count_label(comment_body, acronym, word_list)
-            cur_label_dist[acronym] = middle_dist
-        #print(cur_label_dist)
-        # Only count vote of label furthest away from middle
-        #  (Sort dict by highest value)
-        cur_label_dist = dict(sorted(cur_label_dist.items(), key=lambda item: item[1], reverse=True))
-        
-        vote = list(cur_label_dist.keys())[0]
-        dist = list(cur_label_dist.values())[0]
+    
+        comment_body = get_clean_text(str(comment_body), None, do_lemmatization=False)
+        comment_body_no_punct = get_clean_text(str(comment_body), None, remove_punctuation=2, do_lemmatization=False)
 
-        if dist >= 0:
+        if any(list(map(lambda x: x.lower() in comment_body, CS.BOT_STRINGS))):
+            #print("___SKIPPED___")
+            continue
+
+
+        #print("---start---")
+        #print(comment_body)
+        labels_loc = {}
+
+        middle = max(len(comment_body)//2,1)
+        middle_simple = max(len(comment_body_no_punct.split())//2,1)
+        for k in CS.JUDGEJMENT_DICT.keys():
+            idxes = []              # "e.g. You are the asshole"
+            center_dist = []                 
+            idxes_simple = []       # e.g. "YTA"
+            center_dist_simple = []   
+            for x in string_matching_arr_append_ah(CS.JUDGEJMENT_DICT[k]):   
+                if len(x.split()) > 1: 
+                    idxes = find_all(comment_body, x.lower())
+                    idxes = list(filter(lambda x: x != -1, idxes))
+                    # No longer index but distance from center
+                    center_dist = list(map(lambda q: (abs(middle-q) / middle), idxes ))
+                    center_dist.sort(reverse=True)
+                else: 
+                    idxes_simple = [i for i,y in enumerate(comment_body_no_punct.split()) if y==x.lower()]
+                    # No longer index but distance from center
+                    center_dist_simple = list(map(lambda q: (abs(middle_simple-q) / middle_simple), idxes_simple ))
+                    center_dist_simple.sort(reverse=True)
+                
+            
+            # Order by distance
+            merged = center_dist + center_dist_simple
+            merged.sort(reverse=True)
+            labels_loc[k] = merged
+
+        # Check if more than one vote was detected
+        nr_votes = len(flatten_list(list(labels_loc.values())))
+        vote = ""
+        if nr_votes > 1:
+            # We remove info since this could often cause errors and we are not super interested in it
+            labels_loc.pop("INFO", None)
+            max_label = ""
+            max_value = 0
+            for k in labels_loc.keys():
+                if len(labels_loc[k]) > 0 and labels_loc[k][0] > max_value:
+                    max_value = labels_loc[k][0]
+                    max_label = k
+        
+            vote = max_label
+        else:
+            # Take first dict entry that contains some value
+            for k in labels_loc.keys():
+                if len(labels_loc[k]) > 0:
+                    vote = k
+    
+        #print(labels_loc)
+        #print(vote)
+        #print("___end___")
+        if vote != "":
             label_counter[vote.upper()] += 1
             label_counter["weighted_"+vote.upper()] += int(score)
     
-    ''' Calculate controversy score as a ratio of postive judgemnte to overall judgement count.
-         We want to see how big the diffeence in opinion is.
-         Score of 1 = 0.5, 0.5 vote ratio split => big controversy
-         Score of 0 = 0 or 1 pos_score ratio => no controversy
-    '''
-    # TODO: controversy score
-    """ pos_score = label_counter["NAH"]+label_counter["NTA"]
-    neg_score = label_counter["YTA"]+label_counter["ESH"]
-    pos_score_weighted = label_counter["weighted_NAH"]+label_counter["weighted_NTA"]
-    neg_score_weighted = label_counter["weighted_YTA"]+label_counter["weighted_ESH"]
-    if pos_score+neg_score >0:
-        label_counter["controversy"] = 1-2*abs(pos_score/(pos_score+neg_score)-0.5)
-    
-    if pos_score_weighted+neg_score_weighted > 0:
-        label_counter["weighted_controversy"] = 1-2*abs(pos_score_weighted/(pos_score_weighted+neg_score_weighted)-0.5)
-    """    
-    #print(label_counter)
     tuple_list =  dict_to_feature_tuples(label_counter) 
 
     return tuple_list

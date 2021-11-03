@@ -10,6 +10,10 @@ import sys
 from spacytextblob.spacytextblob import SpacyTextBlob
 
 def init():
+    """Load all required global variables such as dataframes.
+        Setup the post title either as a standalone feature that is treated the same way as post text or the post title is prepended ot the post text
+    """
+
     if CS.USE_MINIFIED_DATA:
         lg.warning("Using minified data (fraction: {0})".format(CS.MINIFY_FRAC))
     if not hasattr(globals(), 'reddit'):
@@ -53,7 +57,8 @@ def init():
     
 
 def load_reddit_settings():
-    # setup reddit settings
+    """Load the reddit settings
+    """
     global reddit
     reddit = praw.Reddit(
             client_id="ChMem9TZYJif1A",
@@ -62,14 +67,16 @@ def load_reddit_settings():
         )
 
 def load_comments():
-    # Load comments csv
+    """Load the comments csv
+    """
     global df_comments
     lg.info("Loading comments: "+CS.COMMENTS_RAW)
     df_comments = pd.read_csv(CS.COMMENTS_RAW, index_col=False)
 
 
 def load_posts():
-    # Load comments csv
+    """Load the posts csv
+    """
     global df_posts
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
     df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False)
@@ -83,6 +90,7 @@ def load_posts():
 
     if not CS.TITLE_AS_STANDALONE:
         # Here we modify the post_title column, but since we do not use post_title on its own in any feature this is ok
+        # => we want to have a space between the end of the post title and the start of the post text if the title is standalone (?)
         df_titles = df_posts["post_title"].str.strip()
         bool_dot = df_titles.str.endswith(".", na=False)
         bool_q = df_titles.str.endswith("?", na=False)
@@ -95,34 +103,40 @@ def load_posts():
 
 
 def load_foundations():
-    # Load foundations csv
+    """Load the moral foundations csv for the posts only
+    """
     global df_foundations
     lg.info("Loading foundations: "+CS.FOUNDATIONS)
     df_foundations = pd.read_csv(CS.FOUNDATIONS, index_col=False)
     df_foundations = df_foundations.add_prefix(CS.FOUNDATIONS_PREFIX)
 
 def load_foundations_title():
-    # Load foundations csv
+    """Load the moral foundations csv for only the titles
+    """
     global df_foundations_title
     lg.info("Loading foundations: "+CS.FOUNDATIONS_TITLE)
     df_foundations_title = pd.read_csv(CS.FOUNDATIONS_TITLE, index_col=False)
     df_foundations_title = df_foundations_title.add_prefix(CS.FOUNDATIONS_TITLE_PREFIX)
 
 def load_liwc():
-    # Load foundations csv
+    """ Load the liwc csv for the posts only
+    """
     global df_liwc
     lg.info("Loading liwc: "+CS.LIWC)
     df_liwc = pd.read_csv(CS.LIWC, index_col=False)
     df_liwc = df_liwc.add_prefix(CS.LIWC_PREFIX)
 
 def load_liwc_title():
-    # Load foundations csv
+    """Load the liwc csv for the titles only
+    """
     global df_liwc_title
     lg.info("Loading liwc: "+CS.LIWC_TITLE)
     df_liwc_title = pd.read_csv(CS.LIWC_TITLE, index_col=False)
     df_liwc_title = df_liwc_title.add_prefix(CS.LIWC_TITLE_PREFIX)
 
 def load_spacy():
+    """Setup the spacy pipeline
+    """
     global nlp
     lg.info("Loading spacy")
     nlp = spacy.load('en_core_web_trf')

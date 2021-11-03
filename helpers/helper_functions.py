@@ -16,7 +16,7 @@ import string
 def get_clean_text(post_text,
                     nlp,
                     remove_URL=True,
-                    remove_punctuation=False,
+                    remove_punctuation=0,
                     remove_newline=True,
                     merge_whitespaces=True,
                     do_lowercaseing=True,
@@ -30,7 +30,7 @@ def get_clean_text(post_text,
         post_text (string): full body text of r/AITA posts
         nlp (function): nlp function from the spacy object
         remove_URL (bool, optional): Whether or not URLs should be removed. Defaults to True.
-        remove_punctuation (bool, optional): Whether or not punctuation should be removed. Defaults to False.
+        remove_punctuation (int, optional): Whether or not punctuation should be removed. Defaults to False.
         remove_newline (bool, optional): Whether or not newline characters should be removed. Defaults to True.
         merge_whitespaces (bool, optional): Whether or not mulitple consecutive whitespace should be merged to one. Defaults to True.
         do_lowercaseing (bool, optional): Whether or not text should be lowercased. Defaults to True.
@@ -48,8 +48,11 @@ def get_clean_text(post_text,
     if remove_URL:
         post_text = re.sub(r'^https?:\/\/.*[\r\n]*', '', str(post_text))
 
-    if remove_punctuation:
+    if remove_punctuation == 1:
         post_text = post_text.translate(str.maketrans(' ', ' ', string.punctuation))
+    elif remove_punctuation == 2:
+        post_text = post_text.translate(str.maketrans(string.punctuation, ' '*len(string.punctuation)))
+
 
     # \n = newline & \r = carriage return
     if remove_newline:
@@ -146,7 +149,6 @@ def string_matching_arr_append_ah(matches):
         if asshole_str in match_str:
             ah_to_post_pend += [match_str.replace(asshole_str, ah_str)]
 
-    print(ah_to_post_pend)
     matches_extended = matches + ah_to_post_pend
     return matches_extended
 
@@ -213,3 +215,31 @@ def output_dir_name():
     today = date.today()
     ouput_folder = today.strftime("%d_%m_%Y")
     return ouput_folder
+
+def flatten_list(lst):
+    """Flattens a list to only 1 dimension
+
+    Args:
+        lst (list): Any type of list    
+
+    Returns:
+        flattened list: Flat list of the original list
+    """
+    return [item for sublist in lst for item in sublist]
+
+def find_all(a_str, sub):
+    """Find all substring occurences (non overlapping)
+
+    Args:
+        a_str (string): some string
+        sub (string): some substring we want to find within a_str
+
+    Yields:
+        list: list of indices
+    """
+    start = 0
+    while True:
+        start = a_str.find(sub, start)
+        if start == -1: return
+        yield start
+        start += len(sub) 

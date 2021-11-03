@@ -224,7 +224,7 @@ def find_focus_str(pronoun):
         pronoun (str): String which we want to map onto the pronouns list
 
     Returns:
-        str: e.g. "focus_i" or "focus_he" or "focus_you_pl"
+        str (string, None): e.g. "focus_i" or "focus_he" or "focus_you_pl"
     
     """
     # list from https://www.lingographics.com/english/personal-pronouns/
@@ -241,16 +241,16 @@ def find_focus_str(pronoun):
     return None
 
 def get_profanity_count(post_text):
-    """ Count how many profane words appear in text and also normalise that value by the number of words
+    """Count how many profane words appear in text and also normalise that value by the number of words
 
     Args:
         post_text (str): Full body text of r/AITA post
 
     Returns:
-         [(str, int)]:  e.g. [("profanity_abs": 10), ("profanity_norm", 0.1)]
+        tuple list:  e.g. [("profanity_abs": 10), ("profanity_norm", 0.1)]
     """
 
-    words = post_text.split() #TODO: should we do this with split or use the tokens from spaCy
+    words = post_text.split()
     profanity_abs = 0
     for w in words:
         profanity_abs += profanity.contains_profanity(w)
@@ -285,7 +285,7 @@ def get_focus_in_spacy(token, count_possesive_pronouns=True):
     elif token.dep_ == "iobj" or token.dep_ == "dobj": # Indirect or direct object 
         weight = 1
     elif token.dep_ == "poss" and count_possesive_pronouns:
-        weight = 2
+        weight = 1
             
     if weight != 0: # If weight is set, we know that token is either subject or object
         focus_str = find_focus_str(token_str)
@@ -306,64 +306,73 @@ def get_profanity_self_vs_other_in_spacy(sentence):
     Returns:
          ret_dict (dict): dictioanry with profanity values normalised by sentence length. Prefixed with either belonging to "self_" or "other_" focus
     """
-    sent_subjects = [token for token in sentence if (token.dep_ == "nsubj") ] # TODO: should we only check subject?
-    profanity_abs = 0
-    ret_dict = {"self_prof":0, "other_prof":0}
 
-    if len(sent_subjects) > 0:
-        focus_str = find_focus_str(str(sent_subjects[0]))
+    ret_dict = {}
+    sent_subjects = [token for token in sentence if (token.dep_ == "nsubj") ] #TODO: should we only check subject?
+    profanity_abs = 0
+
+    if len(sent_subjects)>0:
+        for w in str(sentence).split():
+            profanity_abs += profanity.contains_profanity(w)
+
+    for subj in sent_subjects:
+        # break once we have values for self and other
+        if any("self" in str for str in list(ret_dict.keys())) and any("other" in str for str in list(ret_dict.keys())):
+            break
+        
+        focus_str = find_focus_str(str(subj))
 
         if not focus_str is None:
-            for w in str(sentence).split():
-                #print(w)
-                profanity_abs += profanity.contains_profanity(w)
-                #if profanity.contains_profanity(w):
-                #    print(sentence)
-
             prefix = "self_" if focus_str == "focus_i" else "other_"
-            ret_dict[prefix+"prof"] = profanity_abs
-            #print(ret_dict)
-            return ret_dict  
 
-    elif len(sent_subjects) > 1:
-        print(sent_subjects)
-        print("MULTIPLE SUBECTS")
-    # sent_object = [token for token in sentence if (token.dep_ == "iobj" or tokken.dep_ == "dobj") ]
-    return {}
+            if any(prefix in str for str in list(ret_dict.keys())):
+                continue
+
+            ret_dict[prefix+"prof"] = profanity_abs
+
+    return ret_dict 
+
 
 def get_emotions_self_vs_other_in_spacy(sentence):
     """ Iterate over text and
-        1. Determine for each sentance if it is about the self (i.e. subject) or about other people 
-        2. Sum all raw emotion scores for all sentances for each type of emotions up. Distinguish between subject I and subject other people
+        1. Determine for each sentence if it is about the self (i.e. if the subject is a first person pronoun) or about other people (i.e. subject not first person pronoun)
+        2. Sum all raw emotion scores for all sentences for each type of emotions up. 
         Returns empty dictionary if subject is not in pronouns list
         
      Args:
-        sentence (spaCy doc sentence):  object containing tokenized post text (see https://spacy.io/api/doc)
+        sentence (spaCy doc sentence): object containing tokenized post text (see https://spacy.io/api/doc)
 
     Returns:
-         ret_dict (dict): dictioanry with raw emotion values. Prefixed with either belonging to "self_" or "other_" focus
+         ret_dict (dictionary): dictionary with raw emotion values. Prefixed with either belonging to "self_" or "other_" focus
     """
-    sent_subjects = [token for token in sentence if (token.dep_ == "nsubj") ] # TODO: should we only check subject?
-    if len(sent_subjects) > 0:
-        focus_str = find_focus_str(str(sent_subjects[0]))
+    ret_dict = {}
+    sent_subjects = [token for token in sentence if (token.dep_ == "nsubj") ] #TODO: should we only check subject?
+    analysed_text = NRCLex(str(sentence))
+    abs_affect = analysed_text.raw_emotion_scores 
+    for subj in sent_subjects:
+        # break once we have values for self and other
+        if any("self" in str for str in list(ret_dict.keys())) and any("other" in str for str in list(ret_dict.keys())):
+            break
+        
+        focus_str = find_focus_str(str(subj))
 
         if not focus_str is None:
-            analysed_text = NRCLex(str(sentence))
-            abs_affect = analysed_text.raw_emotion_scores 
-            #TODO: should we use raw emotions scores or normalize them by length of sentence?
-            # Right now we normalize at end with length of post
-            #norm_values = [v/len(sentence) for v in list(abs_affect.values())]
-
             prefix = "self_" if focus_str == "focus_i" else "other_"
-            keys = [prefix+k for k in list(abs_affect.keys())]
-            ret_dict = dict(zip(keys, list(abs_affect.values())))
-            return ret_dict  
+            if any(prefix in str for str in list(ret_dict.keys())):
+                continue
 
-    elif len(sent_subjects) > 1:
-        print(sent_subjects)
-        print("MULTIPLE SUBECTS")
-    # sent_object = [token for token in sentence if (token.dep_ == "iobj" or tokken.dep_ == "dobj") ]
-    return {}
+            keys = [prefix+k for k in list(abs_affect.keys())]
+            tmp_dict = dict(zip(keys, list(abs_affect.values())))
+
+            # Sum up values
+            for k in tmp_dict.keys():
+                if k in ret_dict:
+                    # TODO: remove this
+                    print("ERROR")
+                else:
+                    ret_dict[k] = tmp_dict[k]
+
+    return ret_dict 
 
 
 def get_spacy_features(post_text):
@@ -379,7 +388,7 @@ def get_spacy_features(post_text):
         post_text (str): Full body text of r/AITA post
 
     Returns:
-         [(str, int)]:  e.g. [("future_count": 10), ("future_perc": 0.10),...]
+        tuple list ( [(str, int)] ):  e.g. [("future_count": 10), ("future_perc": 0.10),...]
     """
     doc = get_clean_text(post_text, globals_loader.nlp)
 

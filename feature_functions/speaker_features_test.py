@@ -6,7 +6,7 @@ import helpers.globals_loader as globals_loader
 class speaker_Features_Tests(unittest.TestCase):
     globals_loader.load_spacy()  
     
-    def test_get_author_age_and_gender(self):
+    def get_judgement_labels(self):
         texts_synthetic = ["I'm 20 F","my boyfriend (21, F)","my (22, F)","I'm 23, f","I'm f, 24","I'm 25","I'm 1, f"]
         texts_real = ["I (27f) have been dating my boyfriend (30m) for ", "I(45M) and my wife(46F) got married in December of 2019. I have a daughter Cheryl(16F)", "I am 35m" ]
 

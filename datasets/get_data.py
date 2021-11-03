@@ -24,8 +24,8 @@ files = {
         "url":  id_to_url("1Vu188cUbUWA6A8wSTeDJPXfYGR2sGNmU"),
         "output": dataset_dir+"moral_foundations_27_6_2021.csv"
     },
-    "comments_raw":{
-        "url": id_to_url("18qxC5bv2oGotWPVUYvvSHUWtrIob-QUA"),
+    "comments_raw_updated":{
+        "url": id_to_url("12sJW2bnmOlXrmbIVPe00Zt2UQHSK7nd9"),
         "output": dataset_dir+"comments_16_07_2021.csv"
     },
         "moral_foundations_title":{
