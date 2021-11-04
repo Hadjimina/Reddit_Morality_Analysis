@@ -89,8 +89,8 @@ def get_ups_downs_from_ratio_score(r,s):
         list: list with first element being the number of upvotes and the second one the number of downvotes, followed by the upvote ratio and current score
     """
     
-
-    ups = round((s - r * s) / ( 2 * r - 1 ) + s) if r != 0.5 else 0 #if we have have a 50% upvote ratio we set the upvotes to 0
+    
+    ups = round((r * s) / ( 2 * r - 1 )) if r != 0.5 else 0 #if we have have a 50% upvote ratio we set the upvotes to 0
     downs = round(ups - s)
     return [ups, downs, r, s]
 
