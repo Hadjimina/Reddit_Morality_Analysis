@@ -33,18 +33,18 @@ def topic_modelling(posts_raw, post_ids):
                         for post in posts_raw]
 
     # min topic size?
-    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), nr_topics="auto")
-    topics, probs = model.fit_transform(post_list_clean)
+    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), nr_topics="auto", low_memory=True, calculate_probabilities=False)
+    topics, _ = model.fit_transform(post_list_clean)
 
     actual_nr_topics = len(set(topics))
     desired_nr_topics = int(CS.TOPICS_ABS)
-    if actual_nr_topics > int(CS.TOPICS_ABS):
-        topics, probs = model.reduce_topics(post_list_clean, topics, probabilities=probs, nr_topics=desired_nr_topics)
+    #if actual_nr_topics > int(CS.TOPICS_ABS):
+    #    topics, probs = model.reduce_topics(post_list_clean, topics, probabilities=probs, nr_topics=desired_nr_topics)
 
     # get dataframe to return
     info_df = model.get_topic_info()
     topic_prob_df = pd.DataFrame(
-        data = list(zip(post_ids, topics, probs)),
+        data = list(zip(post_ids, topics)), #data = list(zip(post_ids, topics, probs)),
         columns = ["post_id", "topic_nr", "topic_probability"])
 
     print(info_df.head(3))

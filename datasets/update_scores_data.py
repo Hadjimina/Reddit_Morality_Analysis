@@ -31,14 +31,14 @@ def update_score_elem(do_posts=True, overwrite=True):
     post_idx = 0
     comment_idx = 0
     
-    print(df.shape)
-    print(len(ids))
 
     if do_posts:
 
         scores = np.zeros((len(ids),3))
         scores[:,0] = range(len(ids))
         scores = scores.tolist()
+        
+        scores_lst = []
 
         for submission in tqdm(reddit.info(ids), total=len(ids)):
             #submission = reddit.info(ids[i])
@@ -46,6 +46,8 @@ def update_score_elem(do_posts=True, overwrite=True):
             updated[1] = submission.score
             updated[2] = submission.upvote_ratio
             scores[post_idx] = updated
+            
+            scores_lst.append(updated)
             post_idx += 1
             # see https://api.reddit.com/api/info/?id=t3_apcnyn
     else:
@@ -53,20 +55,23 @@ def update_score_elem(do_posts=True, overwrite=True):
         scores = np.zeros((len(ids),2))
         scores[:,0] = range(len(ids))
         scores = scores.tolist()
+        
+        scores_lst = []
 
         for comment in tqdm(reddit.info(ids), total=len(ids)):
             #comment = reddit.info(ids[i])   
-            print(comment_idx)
+
             updated = [comment_idx,0] #id, score, ratio
             updated[1] = comment.score
             scores[comment_idx] = updated
+            scores_lst.append(updated)
             comment_idx+=1
             
             # comments do not have an upvote ratio
             # see https://api.reddit.com/api/info/?id=t1_eg7dfxx
 
 
-    scores_np = np.array(scores)
+    scores_np = np.array(scores_lst)
     scores = scores_np[:,1]
     if do_posts:
         ratios = scores_np[:,2]
