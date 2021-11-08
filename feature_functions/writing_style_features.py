@@ -177,9 +177,9 @@ def get_sentiment_in_spacy(doc):
     return doc._.polarity, doc._.subjectivity
 
 def get_voice_in_spacy(sentence):
-    """We get the voice of a specific token
+    """We get the voice of a specific sentence
 
-     Args:  token: spacy token
+     Args:  sentence: sentence analysed by spacy
 
      Return: str: string value of the voice
     """
@@ -193,35 +193,34 @@ def get_voice_in_spacy(sentence):
             
     return sentence_voice
 
-def get_tense_in_spacy(token):
-    """We get the tense of a specific token
+def get_tense_in_spacy(sentence):
+    """We return the tense of a sentence
 
-     Args:  token: spacy token
+     Args:  sentence: sentence analysed by spacy
 
-     Return: str, int: string value of tense and whether this token was a verb or not (0,1)
+     Return: str : string value of tense
     """
+    # https://github.com/explosion/spaCy/blob/master/spacy/glossary.py    
+    future_flag = False   
+    present_flag = False   
+    for token in sentence:
+        # Sentence is in past if it contains a token with POS (Parts-of-speech) tag equal to  vbd (verb, past tense) or vbn (verb, past participle)
+        if token.pos_ in ["VBD", "VBN"]:
+            return "past"
+        # https://github.com/explosion/spaCy/discussions/2767 
+        # VB (verb base form)
+        elif future_flag and token.tag_ == "VB":
+            return "future"
+        
+        future_flag = token.dep_ == 'aux' and token.text in ['will', 'shall']
+        
+        present_flag = present_flag or token.pos_ in ["VBG", "VBP", "VBZ", "VB"] # VBG (verb, gerund or present participle), VBP (verb, non-3rd person singular present), VBZ (verb, 3rd person singular present), VB (verb, base form)
+        
+    if present_flag:
+        return "present"   
+        
+    return ""
 
-    verb_increment = 0
-    sentence_tense = ""
-
-    # "will" & "shall" are not actually verbs
-    if token.lemma_ in ["will", "shall"] and token.dep_ == "aux" : #From: https://github.com/explosion/spaCy/discussions/2767 
-            sentence_tense = "future"
-            verb_increment = 1
-
-    if token.pos_ == CS.SP_VERB:
-        feat_dict = get_feats_dict(str(token.morph))
-        if len(sentence_tense) == 0 and CS.SP_FEATS_TENSE in feat_dict:
-            verb_increment = 1
-            tense = feat_dict[CS.SP_FEATS_TENSE]
-            
-            if tense == CS.SP_TENSE_PAST:
-                sentence_tense = "past"
-            elif tense == CS.SP_TENSE_PRESENT:
-                sentence_tense = "present"
-            
-            
-    return sentence_tense, verb_increment
 
 def find_focus_str(pronoun):
     """ Create focus string to determine internal or external focus. It can determine of different types of pronouns
@@ -265,7 +264,7 @@ def get_profanity_count(post_text):
     return [("profanity_abs", profanity_abs), ("profanity_norm",profanity_norm)]
 
 def get_focus_in_spacy(token, count_possesive_pronouns=True):
-    """ Count personal and possesive pronouns in text. 
+    """ Count pronouns in text. 
         For personal pronouns, if it was the subject of the sentence we give it a higher weight than if it was the object.
         Possesive always have the same weight
 
@@ -418,13 +417,23 @@ def get_spacy_features(post_text):
     # 5. Get emotions in sentence about self vs other    
     emo_self_vs_oth_dict_keys = ["self_"+k for k in CS.EMOTIONS] + ["other_"+k for k in CS.EMOTIONS]
     emo_self_vs_oth_dict = dict.fromkeys(emo_self_vs_oth_dict_keys,0)
-    verb_count = 0
 
     # 6. Get profanity in sentence about self vs other 
     prof_self_vs_oth_dict = {"self_prof":0, "other_prof":0}
     
     for sentence in doc.sents:
 
+        # 1. Get tense
+        if get_tense_in_spacy in CS.SPACY_FUNCTIONS:
+            tense = get_tense_in_spacy(sentence)
+            if tense != "":
+                tense_dict[tense] += 1
+
+        # 2. Get voice
+        if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
+            sentence_voice  = get_voice_in_spacy(sentence)
+            if not sentence_voice == "":
+                    voice_dict[sentence_voice] += 1
          
         # 5. Get self/other emotions
         if get_emotions_self_vs_other_in_spacy in CS.SPACY_FUNCTIONS:
@@ -440,24 +449,20 @@ def get_spacy_features(post_text):
             for key in tmp_self_oth_prof.keys():
                 prof_self_vs_oth_dict[key] += tmp_self_oth_prof[key]
             
-        # 2. Get voice
-        if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
-            sentence_voice  = get_voice_in_spacy(sentence)
-            if not sentence_voice == "":
-                    voice_dict[sentence_voice] += 1
+        
                 
         #voice_flag = False
         for token in sentence:
 
-            print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
-            token.shape_, token.is_alpha, token.is_stop)
+            #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
+            #token.shape_, token.is_alpha, token.is_stop)
             # 1. Get tense
             # TODO: this should be done on a per sentence level, not per token
-            if get_tense_in_spacy in CS.SPACY_FUNCTIONS:
-                tense, verb_increment = get_tense_in_spacy(token)
-                if tense != "":
-                    tense_dict[tense] += 1
-                verb_count +=verb_increment
+            #if get_tense_in_spacy in CS.SPACY_FUNCTIONS:
+            #    tense, verb_increment = get_tense_in_spacy(token)
+            #    if tense != "":
+            #        tense_dict[tense] += 1
+            #    verb_count +=verb_increment
 
             # 2. Get voice 
             # We only set voice value once per sentence
@@ -484,7 +489,7 @@ def get_spacy_features(post_text):
     post_length = len(post_text)
     
     # 1. Get tense in tuple list
-    tense_dict = get_abs_and_norm_dict(tense_dict, out_off_ratio=verb_count)
+    tense_dict = get_abs_and_norm_dict(tense_dict, out_off_ratio=nr_sentences)
     to_return += dict_to_feature_tuples(tense_dict)
 
     # 2. Get voice in tuple list       
