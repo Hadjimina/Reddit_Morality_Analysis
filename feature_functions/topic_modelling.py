@@ -1,5 +1,6 @@
 from re import T
 
+import helpers.globals_loader as globals_loader
 from helpers.helper_functions import *
 from bertopic import BERTopic
 import constants as CS

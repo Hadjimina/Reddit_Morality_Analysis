@@ -14,7 +14,7 @@ files = {
     },
     "cleaned":{
         "url":  id_to_url("1NBoO5CU4Dssya4IcWcjJ8Cx1rv-qiRuy"),
-        "output": dataset_dir+"_27_6_2021.csv"
+        "output": dataset_dir+"posts_cleaned_27_6_2021.csv"
     },
     "LIWC":{
         "url":  id_to_url("1lA8y_cto7vLYuBgTOkEn2lQueFVKHzSw"),

@@ -125,7 +125,8 @@ def get_emotions(post_text):
     return tuple_list
 
 def aita_location(post_text):
-    """Get the location (in % of entire text) and the number of "aita?" questions the author asks.
+    """Get the location (in % of entire text) and the number of "aita?" questions the author asks. 
+        Get first, last, average location and number of occurences.
 
     Args:
         post_text (str): Full body text of r/AITA post
@@ -153,10 +154,14 @@ def aita_location(post_text):
 
     post_length = len(post_text)
     location_ratio = list(map(lambda x: x/post_length, location_abs))
+    location_ratio.sort()
+
+    lst = location_ratio[-1] if len(location_ratio) > 0 else -1
+    fst = location_ratio[0] if len(location_ratio) > 0 else -1
     mean_loc_ratio =  st.mean(location_ratio) if len(location_ratio) > 0 else -1 #TODO: mean might not be the best idea
     
     # if we have not found any matches the mean_loc_ratio is -1
-    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location_ratio",round(mean_loc_ratio,6))]
+    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location",round(mean_loc_ratio,6)), ("aita_fst_location", fst), ("aita_lst_location", lst)]
     return ret_tuple_list
 
 def get_sentiment_in_spacy(doc):
@@ -166,24 +171,26 @@ def get_sentiment_in_spacy(doc):
 
      Returns: 
         int, int: polairty and subjectivity values
-        polarity[-1,1] = sentiment => -1 = negative sentance
+        polarity[-1,1] = sentiment => -1 = negative sentence
         subjectivity [-1,1] => -1 = unsubjective
     """
     return doc._.polarity, doc._.subjectivity
 
-def get_voice_in_spacy(token):
+def get_voice_in_spacy(sentence):
     """We get the voice of a specific token
 
      Args:  token: spacy token
 
      Return: str: string value of the voice
     """
-
     sentence_voice = ""
-    if "nsubjpass" == token.dep_:
-        sentence_voice = "passive"
-    elif "nsubj" == token.dep_:
-        sentence_voice = "active"
+    
+    for token in sentence:
+        if "nsubjpass" == token.dep_:
+           return "passive"
+        elif "nsubj" == token.dep_:
+           return "active"
+            
     return sentence_voice
 
 def get_tense_in_spacy(token):
@@ -227,7 +234,6 @@ def find_focus_str(pronoun):
         str (string, None): e.g. "focus_i" or "focus_he" or "focus_you_pl"
     
     """
-    # list from https://www.lingographics.com/english/personal-pronouns/
     pronouns = CS.PRONOUNS
 
     for lst in pronouns:
@@ -260,7 +266,7 @@ def get_profanity_count(post_text):
 
 def get_focus_in_spacy(token, count_possesive_pronouns=True):
     """ Count personal and possesive pronouns in text. 
-        For personal pronouns, if it was the subject of the sentance we give it a higher weight than if it was the object.
+        For personal pronouns, if it was the subject of the sentence we give it a higher weight than if it was the object.
         Possesive always have the same weight
 
     Args:
@@ -296,8 +302,8 @@ def get_focus_in_spacy(token, count_possesive_pronouns=True):
 
 def get_profanity_self_vs_other_in_spacy(sentence):
     """ Iterate over text and
-        1. Determine for each sentance if it is about the self (i.e. subject) or about other people 
-        2. Sum all raw profanity scores for all sentances. Distinguish between subject I and subject other people
+        1. Determine for each sentence if it is about the self (i.e. subject) or about other people 
+        2. Sum all raw profanity scores for all sentences. Distinguish between subject I and subject other people
         Returns empty dictionary if subject is not in pronouns list
         
     Args:
@@ -390,6 +396,8 @@ def get_spacy_features(post_text):
     Returns:
         tuple list ( [(str, int)] ):  e.g. [("future_count": 10), ("future_perc": 0.10),...]
     """
+    
+    #post_text = "I am going home. I went home. I will go home."
     doc = get_clean_text(post_text, globals_loader.nlp)
 
     # Dictionary setup
@@ -417,6 +425,7 @@ def get_spacy_features(post_text):
     
     for sentence in doc.sents:
 
+         
         # 5. Get self/other emotions
         if get_emotions_self_vs_other_in_spacy in CS.SPACY_FUNCTIONS:
             tmp_self_oth_emo = get_emotions_self_vs_other_in_spacy(sentence)
@@ -431,12 +440,19 @@ def get_spacy_features(post_text):
             for key in tmp_self_oth_prof.keys():
                 prof_self_vs_oth_dict[key] += tmp_self_oth_prof[key]
             
+        # 2. Get voice
+        if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
+            sentence_voice  = get_voice_in_spacy(sentence)
+            if not sentence_voice == "":
+                    voice_dict[sentence_voice] += 1
                 
-        voice_flag = False
+        #voice_flag = False
         for token in sentence:
 
+            print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
+            token.shape_, token.is_alpha, token.is_stop)
             # 1. Get tense
-            # TODO: this should be done on a per sentance level, not per token
+            # TODO: this should be done on a per sentence level, not per token
             if get_tense_in_spacy in CS.SPACY_FUNCTIONS:
                 tense, verb_increment = get_tense_in_spacy(token)
                 if tense != "":
@@ -446,14 +462,14 @@ def get_spacy_features(post_text):
             # 2. Get voice 
             # We only set voice value once per sentence
             # TODO: This is definetly not perfect. Naive implementation only https://stackoverflow.com/questions/19495967/getting-additional-information-active-passive-tenses-from-a-tagger
-            if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
-                if voice_flag:
-                    continue
-
-                sentence_voice  = get_voice_in_spacy(token)
-                if not sentence_voice == "":
-                    voice_flag = True
-                    voice_dict[sentence_voice] += 1
+            #if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
+            #    if voice_flag:
+            #        continue
+            #
+            #    sentence_voice  = get_voice_in_spacy(token)
+            #    if not sentence_voice == "":
+            #        voice_flag = True
+            #        voice_dict[sentence_voice] += 1
 
             # 4. Get focus 
             if get_focus_in_spacy in CS.SPACY_FUNCTIONS:
@@ -463,7 +479,7 @@ def get_spacy_features(post_text):
 
 
     to_return = []
-    nr_sentances = len(list(doc.sents))
+    nr_sentences = len(list(doc.sents))
     nr_words = len(post_text.split())
     post_length = len(post_text)
     
@@ -472,7 +488,7 @@ def get_spacy_features(post_text):
     to_return += dict_to_feature_tuples(tense_dict)
 
     # 2. Get voice in tuple list       
-    voice_dict = get_abs_and_norm_dict(voice_dict, out_off_ratio=nr_sentances)
+    voice_dict = get_abs_and_norm_dict(voice_dict, out_off_ratio=nr_sentences)
     to_return += dict_to_feature_tuples(voice_dict)
 
     # 3. Get sentiment in tuple list
@@ -487,175 +503,12 @@ def get_spacy_features(post_text):
     to_return += dict_to_feature_tuples(focus_int_ext)
     
     # 5. Get self/other emotions in tuple list
-    emo_self_vs_oth_dict = get_abs_and_norm_dict(emo_self_vs_oth_dict, out_off_ratio=post_length, only_norm=True)
+    emo_self_vs_oth_dict = get_abs_and_norm_dict(emo_self_vs_oth_dict, out_off_ratio=nr_words, only_norm=True)
     to_return += dict_to_feature_tuples(emo_self_vs_oth_dict)
 
     # 6. Get self/other profanity in tuple list
-    prof_self_vs_oth_dict = get_abs_and_norm_dict(prof_self_vs_oth_dict, out_off_ratio=post_length, only_norm=True)
+    prof_self_vs_oth_dict = get_abs_and_norm_dict(prof_self_vs_oth_dict, out_off_ratio=nr_words, only_norm=True)
     to_return += dict_to_feature_tuples(prof_self_vs_oth_dict)
 
     return to_return
     
-
-# Calculate absolute profanity
-#prof_dict["profanity_perc"] = prof_dict["profanity_abs"]/max(token_count,1)
-    
-                        
-# Merge & get percentage values for tense and voice
-""" merged_dict = {**tense_dict, **voice_dict,}
-
-mrg_keys = [s + "_perc" for s in merged_dict.keys()]
-
-mrg_values = list(map(lambda x: x/max(verb_count,1), merged_dict.values()))
-perc_dict = dict(zip(mrg_keys, mrg_values))
-
-
-abs_features = dict_to_feature_tuples(merged_dict, suffix= "_abs")
-perc_features = dict_to_feature_tuples(perc_dict)
-sent_features = dict_to_feature_tuples(sent_dict) """
-
-#prof_features = dict_to_feature_tuples(prof_dict)
-#print(prof_features)
-
-"""  feat_list = abs_features+perc_features+sent_features#+prof_features
-
-return feat_list """
-    
-    
-# TOO SLOW
-#def get_tokenized_features(post_text):
-#    return_list = []
-#    for fn in CS.TOKENIZED_FUNCTIONS:
-#        return_list += fn(post_text)
-#    return return_list
-#
-
-#
-#    return ret_list
-#
-#def get_sentiment(post_text):
-#    """Iterate through text and 
-#       check if post_text sentiment is postitive or negative => only checked on per text level (not individual sentances)
-#
-#    Args:
-#        post_text (str): Full body text of r/AITA post
-#
-#    Returns:
-#         [(str, int)]: [("sent_polarity": 10), ("past_perc": 0.10)]
-#    """
-#    doc = do_tokenization(post_text)
-#    # polarity[-1,1] = sentiment => -1 = negative sentance, subjectivity [-1,1] => -1 = unsubjective
-#    sent_dict = {"sent_polarity":doc._.polarity, "sent_subjectivity": doc._.subjectivity} 
-#    ret = dict_to_feature_tuples(sent_dict)
-#    return ret
-#
-#def get_tense(post_text):
-#    """Iterate through text and 
-#       Count how many verbs are in past, present or future tense and get absolute values and as ratio of number of verbs
-#        TODO: should this be changed to count sentances? => harder
-#
-#    Args:
-#        post_text (str): Full body text of r/AITA post
-#
-#    Returns:
-#         [(str, int)]:  e.g. [("past_abs": 10), ("past_perc": 0.10),...]
-#    """
-#    doc = do_tokenization(post_text)
-#
-#    tenses = ["past", "present", "future"]
-#    tense_dict = dict.fromkeys(tenses, 0)
-#
-#    verb_count = 0
-#    
-#    for sentence in doc.sents:
-#        sentence_tense = ""
-#
-#        for token in sentence:
-#            # For tense and voice we only look at verbs
-#            if token.pos_ == CS.SP_VERB:
-#                feat_dict = get_feats_dict(str(token.morph))
-#                # Do tense
-#                if CS.SP_FEATS_TENSE in feat_dict:
-#                    verb_count +=1
-#
-#                    tense = feat_dict[CS.SP_FEATS_TENSE]
-#                    
-#                    if tense == CS.SP_TENSE_PAST:
-#                        sentence_tense = "past"
-#                    elif tense == CS.SP_TENSE_PRESENT:
-#                        sentence_tense = "present"
-#                    elif tense == CS.SP_TENSE_FUTURE: #does not work
-#                        sentence_tense = "future"
-#                    tense_dict[sentence_tense] += 1
-#    
-#    ret = get_abs_and_norm_dict(tense_dict, out_off_ratio=verb_count)
-#    ret = dict_to_feature_tuples(ret)
-#    return ret
-#    
-#
-#
-#
-#def get_voice(post_text):
-#    """Iterate through text and 
-#       Count how many sentances are in active/passive voice and get absolute values and as ratio of number of sentances
-#
-#    Args:
-#        post_text (str): Full body text of r/AITA post
-#
-#    Returns:
-#         [(str, int)]:  e.g. [("active_voice_abs": 10), ("active_voice_perc": 0.10),...]
-#    """
-#
-#    voices = ["active", "passive"]
-#    voice_dict = dict.fromkeys(voices, 0)
-#    
-#    doc = do_tokenization(post_text)
-#
-#    for sentence in doc.sents:
-#        sentence_voice = ""
-#
-#        voice_flag = False
-#        for token in sentence:
-#
-#            # TODO: This is definetly not perfect. Naive implementation only https://stackoverflow.com/questions/19495967/getting-additional-information-active-passive-tenses-from-a-tagger
-#            if voice_flag:
-#                continue
-#
-#            if "nsubjpass" == token.dep_:
-#                sentence_voice = "passive"
-#            elif "nsubj" == token.dep_:
-#                sentence_voice = "active"
-#
-#            if not sentence_voice == "":
-#                voice_flag = True
-#                voice_dict[sentence_voice] += 1
-#    
-#    ret = get_abs_and_norm_dict(voice_dict, out_off_ratio=len(list(doc.sents)))
-#    ret = dict_to_feature_tuples(ret)
-#
-#    return ret
-#    
-#    
-#
-#def do_tokenization(post_text):
-#    """ Tokenize post text using spacy
-#
-#    Args:
-#        post_text (str): Full body text of r/AITA post
-#    
-#    Returns:
-#         spaCy doc:  object containing tokenized post text (see https://spacy.io/api/doc)
-#    """
-#    global tokenized_post
-#
-#    to_tokenize_flag = False
-#    #Tokenize post at first time or if tokenized text is not the same as post_text
-#    if tokenized_post is None: 
-#        tokenized_post = globals_loader.nlp(post_text)
-#    else:
-#        #N = max(10, len(tokenized_post))
-#        if tokenized_post != post_text:
-#            tokenized_post = globals_loader.nlp(post_text)
-#    
-#    return tokenized_post
-#    

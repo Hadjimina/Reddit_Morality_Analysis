@@ -11,7 +11,7 @@ class writing_Style_Tests(unittest.TestCase):
 
         texts = texts_real
         expected = [ 
-            [("!_count",2),('"_count',1),("?_count",1)], 
+            [("!_count",1),('"_count',1),("?_count",1)], 
             [("!_count",2),('"_count',4),("?_count",4)], 
             [("!_count",1),('"_count',2),("?_count",1)] 
         ]
