@@ -11,12 +11,12 @@ class writing_Style_Tests(unittest.TestCase):
 
         texts = texts_real
         expected = [ 
-            [("!_count",1),('"_count',1),("?_count",1)], 
+            [("!_count",2),('"_count',1),("?_count",1)], 
             [("!_count",2),('"_count',4),("?_count",4)], 
             [("!_count",1),('"_count',2),("?_count",1)] 
         ]
 
-        print(globals_loader.nlp)
+
         for i in range(len(texts)):
             print(texts[i])
             act = get_punctuation_count(texts[i])
@@ -55,4 +55,20 @@ class writing_Style_Tests(unittest.TestCase):
             print(texts[i])
             act = check_wibta(texts[i])
             exp = expected[i]
-            self.assertEqual(act, exp)     
+            self.assertEqual(act, exp)    
+            
+    def test_get_profanity_count(self):
+        texts_synth = ["asshole, ass, ah, hole, bitch", "I think YTA", "am I the asshole"]
+        
+        texts = texts_synth
+        expected = [
+            [("profanity_abs", 3),("profanity_norm",3/5)],
+            [("profanity_abs", 0),("profanity_norm",0)],
+            [("profanity_abs", 1),("profanity_norm",1/4)],
+        ]
+        
+        for i in range(len(texts)):
+            print(texts[i])
+            act = get_profanity_count(texts[i])
+            exp = expected[i]
+            self.assertEqual(act, exp)

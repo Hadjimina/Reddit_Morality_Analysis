@@ -49,6 +49,11 @@ def update_score_elem(do_posts=True, overwrite=True):
             
             scores_lst.append(updated)
             post_idx += 1
+            
+            if len(scores_lst)!=post_idx:
+                print("No long correct post size: "+str(post_idx))
+                raise ValueError
+            
             # see https://api.reddit.com/api/info/?id=t3_apcnyn
     else:
         
@@ -66,6 +71,10 @@ def update_score_elem(do_posts=True, overwrite=True):
             scores[comment_idx] = updated
             scores_lst.append(updated)
             comment_idx+=1
+            
+            if len(scores_lst)!=comment_idx:
+                print("No long correct comment size: "+str(comment_idx))
+                raise ValueError
             
             # comments do not have an upvote ratio
             # see https://api.reddit.com/api/info/?id=t1_eg7dfxx

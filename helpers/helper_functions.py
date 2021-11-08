@@ -7,7 +7,7 @@ import re
 from humanfriendly.terminal import output
 import nltk
 from nltk.corpus import stopwords
-nltk.download('stopwords')
+nltk.download('stopwords', quiet=True)
 #import helpers.globals_loader as globals_loader
 import string
 
