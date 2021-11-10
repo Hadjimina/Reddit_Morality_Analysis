@@ -12,7 +12,7 @@ import helpers.globals_loader as globals_loader
 import helpers.helper_functions as helper_functions
 coloredlogs.install()
 
-def update_score_elem(do_posts=True, overwrite=True):
+def update_score_and_flair_elem(do_posts=True, overwrite=True):
     """ Iterate over all post ids and append the upvotes and downvotes to the dataframe
 
     Args:
@@ -42,9 +42,10 @@ def update_score_elem(do_posts=True, overwrite=True):
         
         for submission in tqdm(reddit.info(ids), total=len(ids)):
             #submission = reddit.info(ids[i])
-            updated = [post_idx,0,0] #id, score, ratio
+            updated = [post_idx,0,0,""] #id, score, ratio
             updated[1] = submission.score
             updated[2] = submission.upvote_ratio
+            updated[3] = submission.link_flair_text
             scores[post_idx] = updated
             
             scores_lst.append(updated)
@@ -97,8 +98,9 @@ def update_score_elem(do_posts=True, overwrite=True):
         df[prefix+"_downs"] = ups_downs[:,1].tolist()
         df[prefix+"_ratio"] = ups_downs[:,2].tolist()
         df[prefix+"_score"] = ups_downs[:,3].tolist()
+        df[prefix+"_flair"] = scores_np[:,3].tolist()
     else:
-        df["comment_score"] = scores
+        df[prefix+"_score"] = scores
         
     # Remove "None" values
     df = df.dropna()
@@ -120,7 +122,7 @@ def update_comments():
     CS.LOAD_LIWC = False
     globals_loader.init()
 
-    update_score_elem(do_posts=False)
+    update_score_and_flair_elem(do_posts=False)
 
 def update_posts():
     """ Add post_ups and post_downs column to the posts dataframe by getting the new data from reddit.
@@ -133,7 +135,7 @@ def update_posts():
     CS.LOAD_LIWC = False
     globals_loader.init()
 
-    update_score_elem()
+    update_score_and_flair_elem()
 
 if __name__ == "__main__":
     

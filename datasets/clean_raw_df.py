@@ -23,13 +23,21 @@ def clean(posts=True):
     after_na_drop = df.shape[0]
 
     # Remove strings
-    str_to_remove = ["[removed]", "[deleted]"]
+    entries_to_remove = ["[removed]", "[deleted]"]
     cols_to_clean = ["post_text", "post_title"] if posts else ["comment_text"]
+    strs_to_clean = ["i am a bot"] # Mainly used for comment filtering
     for col in cols_to_clean:
-        for to_remove in str_to_remove:
-            df = df[df[col] != to_remove]
+        for entry_to_remove in entries_to_remove:
+            df = df[df[col] != entry_to_remove]
+        for str_to_remove in strs_to_clean:
+            df = df[~df[col].str.lower().contains(str_to_remove)]
     after_string_drop = df.shape[0]
 
+    # remove flair
+    if "posts" in raw_csv_name:
+        #TODO: remove all posts with certain flair
+        a = 1
+        
     # Print dropped info
     lg.info("Dropped {0} Nans, {1} bad stringsm from {3} => {2} remaining".format(orig_length-after_na_drop, after_na_drop-after_string_drop, after_string_drop, raw_csv_name))
 

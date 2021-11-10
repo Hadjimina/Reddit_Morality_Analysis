@@ -5,7 +5,7 @@ import helpers.globals_loader as globals_loader
 
 class speaker_Features_Tests(unittest.TestCase):
     
-    def test_get_judgement_labels(self):
+    def test_get_aurhor_age_and_gender(self):
         texts = ["I'm 20 F",
                  "my boyfriend (21, F)",
                  "my (22, F)",
