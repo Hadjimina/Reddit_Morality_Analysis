@@ -46,7 +46,7 @@ def topic_modelling(posts_raw, post_ids):
     info_df = model.get_topic_info()
     topic_prob_df = pd.DataFrame(
         data = list(zip(post_ids, topics)), #data = list(zip(post_ids, topics, probs)),
-        columns = ["post_id", "topic_nr", "topic_probability"])
+        columns = ["post_id", "topic_nr"]) #columns = ["post_id", "topic_nr", "topic_probability"])
 
     print(info_df.head(3))
 

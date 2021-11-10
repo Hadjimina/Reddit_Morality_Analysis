@@ -73,19 +73,30 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
             # comments do not have an upvote ratio
             # see https://api.reddit.com/api/info/?id=t1_eg7dfxx
 
-    #iterate over ids and check which ids are not in updated => for those we set the scores to None
+    # iterate over ids and check which ids are not in updated => for those we set the scores to None
     # we check updated but modify updated_new
     print("Original scores lst size {0}, ids size {1} => need to add {2} entries".format(len(scores_lst), len(ids), abs(len(scores_lst)-len(ids))))
-    scores_lst_new = scores_lst.copy()
+    #scores_lst_new = scores_lst.copy()
+    insertion_idxs = []
     if len(scores_lst) != len(ids):
         for i in range(len(ids)):
-            id_orig = ids[i]
-            id_updated = scores_lst[i][0]
-            if id_orig != id_updated:
-                empty_insert = [None] * len(scores_lst[i])
-                empty_insert[0] = ids[i]
-                scores_lst_new.insert(empty_insert, i)
+            if i < len(scores_lst):
+                id_orig = ids[i]
+                id_updated = scores_lst[i][0]
+                if id_orig != id_updated:
+                    insertion_idxs.append(i)
+                    #empty_insert = [None] * len(scores_lst[i])
+                    #empty_insert[0] = ids[i]
+                    #scores_lst_new.insert(i, empty_insert)
+            else:
+                insertion_idxs.append(i)
         
+        scores_lst_new = scores_lst.copy()
+        for i in insertion_idxs:
+            empty_insert = [None] * len(scores_lst[i])
+            empty_insert[0] = ids[i]
+            scores_lst_new.insert(i+insertion_idxs.index(i), empty_insert)
+            
         assert len(scores_lst_new) == len(ids)
         
 

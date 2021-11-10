@@ -54,8 +54,8 @@ class writing_Style_Tests(unittest.TestCase):
             
     def test_get_profanity_count(self):
         texts = ["asshole, ass, ah, hole, bitch", 
-                       "I think YTA", 
-                       "am I the asshole"]
+                 "I think YTA", 
+                 "am I the asshole"]
         
         expected = [
             [("profanity_abs", 3),("profanity_norm",3/5)],
@@ -64,13 +64,207 @@ class writing_Style_Tests(unittest.TestCase):
         ]
         
         self.checker(texts, expected, get_profanity_count)
-        
     
-    def checker(self, texts, expected, fn):
-        for i in range(len(texts)):
-            print(texts[i])
-            act = fn(texts[i])
-            exp = expected[i]
-            self.assertEqual(act, exp)
+    def test_get_focus_in_spacy(self):
+        texts = ["I should get together with him and together we can talk.", 
+                 "We told him that. They will never give mine back.",
+                 "You said we had to wait until she gives it to us." ,
+                 "How are you doing yourself?",
+                 "How are you doing yourselves?",
+                    ]
+        
+        generated = []
+            
+        focus = ["focus_i", "focus_you_sg", "focus_he", "focus_we", "focus_you_pl","focus_they"]
+        for t in texts:
+            focus_dict_raw = dict.fromkeys(focus, 0)            
+            doc = get_clean_text(t, globals_loader.nlp)
+
+            for sentence in doc.sents:
+                for token in sentence:
+                    #print(token, token.dep_)
+                    focus_str, weight = get_focus_in_spacy(token)
+                    if focus_str in focus_dict_raw.keys():
+                        focus_dict_raw[focus_str] += 1*weight
+                        #print(focus_dict_raw)
+                
+            generated.append(focus_dict_raw)
+            
+        expected = [{
+                        "focus_i":2, 
+                        "focus_you_sg":0, 
+                        "focus_he":1, 
+                        "focus_we":2, 
+                        "focus_you_pl":0,
+                        "focus_they":0
+                    },
+                    {
+                        "focus_i":1, 
+                        "focus_you_sg":0, 
+                        "focus_he":1, 
+                        "focus_we":2, 
+                        "focus_you_pl":0,
+                        "focus_they":2
+                    },
+                    {
+                        "focus_i":0, 
+                        "focus_you_sg":2, #5
+                        "focus_he": 2+1, 
+                        "focus_we":2+1, 
+                        "focus_you_pl":0,
+                        "focus_they":0
+                    },
+                    {
+                        "focus_i":0, 
+                        "focus_you_sg":2+1, 
+                        "focus_he":0, 
+                        "focus_we":0, 
+                        "focus_you_pl":0,
+                        "focus_they":0
+                    },
+                    {
+                        "focus_i":0, 
+                        "focus_you_sg":2, 
+                        "focus_he":0, 
+                        "focus_we":0, 
+                        "focus_you_pl":1,
+                        "focus_they":0
+                    },
+                    ]
+        
+        self.checker(generated, expected, None)
+
+    def test_get_tense_in_spacy(self):
+        #TODO: More checks here
+        texts = ["I went. I go. I will go.", 
+                
+                ]
+        
+        generated = []
+            
+    
+        tenses = ["past", "present", "future"]
+        for t in texts:
+            tense_dict = dict.fromkeys(tenses, 0)
+            doc = get_clean_text(t, globals_loader.nlp)
+
+            for sentence in doc.sents:
+                tense = get_tense_in_spacy(sentence)
+                if tense != "":
+                    tense_dict[tense] += 1
+                
+            generated.append(tense_dict)
+            
+        expected = [{
+                    "past":1,
+                    "present":1,
+                    "future":1
+                     }
+                    ]
+        self.checker(generated, expected, None)
+        
+    def test_get_profanity_self_vs_other_in_spacy(self):
+        texts = [
+                "You can go fuck yourself", 
+                "You can go fuck yourselves",
+                "We will fuck shit up.",
+                "Well, fuck me I guess.",
+                "Me and you will shit on the floor and get schwifty.",
+                    ]
+        
+        generated = []
+            
+        profanity = ["self_prof", "other_prof",]
+        for t in texts:
+            prof_self_vs_oth_dict = dict.fromkeys(profanity, 0)            
+            doc = get_clean_text(t, globals_loader.nlp)
+            
+            for sentence in doc.sents:
+                tmp_self_oth_prof = get_profanity_self_vs_other_in_spacy(sentence)
+                for key in tmp_self_oth_prof.keys():
+                    prof_self_vs_oth_dict[key] += tmp_self_oth_prof[key]
+                    
+                generated.append(prof_self_vs_oth_dict)
+          
+                  
+        expected = [{
+                        "self_prof":0, 
+                        "other_prof":1, 
+                    },
+                    {
+                        "self_prof":0, 
+                        "other_prof":1, 
+                    },
+                    {
+                        "self_prof":0, 
+                        "other_prof":2, 
+                    },
+                    {
+                        "self_prof":1, 
+                        "other_prof":0, 
+                    },
+                    {
+                        "self_prof":1, 
+                        "other_prof":0, 
+                    },
+                    ]
+        
+        self.checker(generated, expected, None)   
+        
+    def test_get_voice_in_spacy(self):
+        texts = [
+                "The thief is going to be caught by the police.", #This is wrong, this should be passive
+                "The spider was killed by the boy. The thief is going to be caught by the police. A kite is being made by the boy. The dog was frightened by the sudden noise. The light bulb was invented by Edison. A very remarkable discovery will be made by him. He was betrayed by his own brother. My old car has been sold. The store was opened only last month. Smoking in the kitchen isn't permitted.",
+                "My husband can help you if you need him. Two boys broke the window with a ball. They should study the new lesson a bit harder. People is admining Paul's paintings lately. She was cleaning the house all afternoon. Luka will have finihsed the unit by Monday. Yenia has passed the last two exams with a grea mark.  They make this car in Japan. Mike has been learning a new language for three years. Who wrote Hamlet?",
+                "The spider was killed by the boy and I went home.",
+                ]
+        
+        generated = []
+        
+        voices = ["active", "passive"]
+        for t in texts:
+            voice_dict = dict.fromkeys(voices, 0)
+            doc = get_clean_text(t, globals_loader.nlp)
+            
+            for sentence in doc.sents:
+                sentence_voice  = get_voice_in_spacy(sentence)
+                if not sentence_voice == "":
+                    voice_dict[sentence_voice] += 1
+                    #print(voice_dict)
+                    
+            generated.append(voice_dict)
+    
+        expected = [{
+                        "active":1, #This is wrong, this should be passive.
+                        "passive":0
+                    },
+                    {
+                        "active":1,
+                        "passive":9
+                    },
+                    {
+                        "active":10,
+                        "passive":0
+                    },
+                    {
+                        "active":0,
+                        "passive":1
+                    },
+                    ]
+    
+        self.checker(generated, expected, None)  
+        
+    def checker(self, a, expected, fn):
+        if fn == None:
+            for i in range(len(a)):
+                print(i)
+                print(a[i])
+                self.assertEqual(a[i], expected[i])
+        else: 
+            for i in range(len(a)):
+                print(a[i])
+                act = fn(a[i])
+                exp = expected[i]
+                self.assertEqual(act, exp)
             
    

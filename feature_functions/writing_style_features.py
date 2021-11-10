@@ -179,24 +179,20 @@ def get_sentiment_in_spacy(doc):
     return doc._.polarity, doc._.subjectivity
 
 def get_voice_in_spacy(sentence):
-    """We get the voice of a specific sentence
+    """We get the voice of a specific sentence. 
+       If we have active and passive voice in one sentence we check if "nsubj" or "nsubjpass" comes first and consider it as active or passive respecitively.
 
      Args:  sentence: sentence analysed by spacy
 
      Return: str: string value of the voice
     """
-    sentence_voice = ""
+    filtered = list(filter(lambda x: x.dep_ == "nsubjpass" or x.dep_ == "nsubj", sentence))
+    filtered = list(map(lambda x: "passive" if x.dep_ == "nsubjpass" else "active", filtered))
+    return filtered[0] if len(filtered) > 0 else ""
     
-    for token in sentence:
-        if "nsubjpass" == token.dep_:
-           return "passive"
-        elif "nsubj" == token.dep_:
-           return "active"
-            
-    return sentence_voice
 
 def get_tense_in_spacy(sentence):
-    """We return the tense of a sentence
+    """We return the tense of a sentence (past, present or future)
 
     Args:  
         sentence: sentence analysed by spacy
@@ -209,7 +205,7 @@ def get_tense_in_spacy(sentence):
     present_flag = False   
     for token in sentence:
         # Sentence is in past if it contains a token with POS (Parts-of-speech) tag equal to  vbd (verb, past tense) or vbn (verb, past participle)
-        if token.pos_ in ["VBD", "VBN"]:
+        if token.tag_ in ["VBD", "VBN"]:
             return "past"
         # https://github.com/explosion/spaCy/discussions/2767 
         # VB (verb base form)
@@ -218,7 +214,7 @@ def get_tense_in_spacy(sentence):
         
         future_flag = token.dep_ == 'aux' and token.text in ['will', 'shall']
         
-        present_flag = present_flag or token.pos_ in ["VBG", "VBP", "VBZ", "VB"] # VBG (verb, gerund or present participle), VBP (verb, non-3rd person singular present), VBZ (verb, 3rd person singular present), VB (verb, base form)
+        present_flag = present_flag or token.tag_ in ["VBG", "VBP", "VBZ", "VB"] # VBG (verb, gerund or present participle), VBP (verb, non-3rd person singular present), VBZ (verb, 3rd person singular present), VB (verb, base form)
         
     if present_flag:
         return "present"   
@@ -243,8 +239,9 @@ def find_focus_str(pronoun):
         if pronoun in lst:
             focus_str = "focus_"+lst[0]
             lst_idx = pronouns.index(lst)
-            focus_str += "sg" if lst_idx == 1 else ""
-            focus_str += "pl" if lst_idx == 4 else ""
+            focus_str += "_sg" if lst_idx == 1 else ""
+            focus_str += "_pl" if lst_idx == 4 else ""
+            focus_str = focus_str.replace("rselves", "") #slightly hacky
             return focus_str
     
     return None
@@ -268,10 +265,8 @@ def get_profanity_count(post_text):
     return [("profanity_abs", profanity_abs), ("profanity_norm",profanity_norm)]
 
 def get_focus_in_spacy(token, count_possesive_pronouns=True):
-    """ Count pronouns in text. 
-        For personal pronouns, if it was the subject of the sentence we give it a higher weight than if it was the object.
-        Possesive always have the same weight
-
+    """ Count pronouns in the text if they are subjects, objects or possesive pronouns (optional). 
+        If it was the subject of the sentence we give it a higher weight than if it was the object.
     Args:
         token (spaCy token): token we got from analysing the entire post text using spaCy
 
@@ -288,16 +283,17 @@ def get_focus_in_spacy(token, count_possesive_pronouns=True):
 
     # 1. Figure out if token is object or subject
     # Subject
-    # print(token.dep_)
     if token.dep_ == "nsubj":
         weight = 2 #TODO: check if these weights make sense
-    elif token.dep_ == "iobj" or token.dep_ == "dobj": # Indirect or direct object 
+    elif token.dep_ in ["iobj", "dobj", "pobj", "dative"]: # Indirect or direct object 
         weight = 1
     elif token.dep_ == "poss" and count_possesive_pronouns:
         weight = 1
-            
+    
+    #print(token, weight)
     if weight != 0: # If weight is set, we know that token is either subject or object
         focus_str = find_focus_str(token_str)
+        #print(token, focus_str)
         if not focus_str is None:
             return focus_str, weight
 
@@ -392,6 +388,8 @@ def get_spacy_features(post_text):
         4. Get internal/external focus -> get_focus_in_spacy()
         5. Get self/oth emotions -> get_emotions_self_vs_other_in_spacy()
         6. Get self/oth profanity -> get_profanity_self_vs_other_in_spacy()
+        
+        Some use spacy strings listed on https://github.com/explosion/spaCy/blob/master/spacy/glossary.py
        
     Args:
         post_text (str): Full body text of r/AITA post
@@ -415,8 +413,11 @@ def get_spacy_features(post_text):
     focus_int_ext = {"internal_focus":0, "external_focus":0}
 
     # 3. Get Sentiment & Polarity
-    pol, subj = get_sentiment_in_spacy(doc)
-    sent_dict = {"sent_polarity":pol, "sent_subjectivity": subj} 
+    sent_dict = {"sent_polarity":0, "sent_subjectivity": 0} 
+    if get_sentiment_in_spacy in CS.SPACY_FUNCTIONS:
+        pol, subj = get_sentiment_in_spacy(doc)
+        sent_dict = {"sent_polarity":pol, "sent_subjectivity": subj} 
+        
 
     # 5. Get emotions in sentence about self vs other    
     emo_self_vs_oth_dict_keys = ["self_"+k for k in CS.EMOTIONS] + ["other_"+k for k in CS.EMOTIONS]

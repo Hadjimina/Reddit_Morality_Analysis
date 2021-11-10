@@ -62,7 +62,7 @@ JUDGEJMENT_DICT = {
     "YTA": ["YTA", "You're the asshole", "You are the asshole"],
     "NTA": ["NTA", "not the asshole"],
     "INFO": ["INFO","Not enough info", "Not enough information"],
-    "ESH": ["ESH", "everyone sucks here", "everybody sucks here"],
+    "ESH": ["ESH", "everyone sucks here", "everybody sucks here", "ETA", "everyone's the asshole"],
     "NAH": ["NAH", "No Assholes here", "No Asshole here", "no one sucks here"],
 } 
 BOT_STRINGS = ["automod", "i am a bot"]

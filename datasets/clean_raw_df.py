@@ -24,8 +24,8 @@ def clean(posts=True):
 
     # Remove strings
     entries_to_remove = ["[removed]", "[deleted]"]
+    strs_to_clean = ["m a bot", "automod"] # Mainly used for comment filtering
     cols_to_clean = ["post_text", "post_title"] if posts else ["comment_text"]
-    strs_to_clean = ["i am a bot"] # Mainly used for comment filtering
     for col in cols_to_clean:
         for entry_to_remove in entries_to_remove:
             df = df[df[col] != entry_to_remove]
@@ -39,7 +39,7 @@ def clean(posts=True):
         a = 1
         
     # Print dropped info
-    lg.info("Dropped {0} Nans, {1} bad stringsm from {3} => {2} remaining".format(orig_length-after_na_drop, after_na_drop-after_string_drop, after_string_drop, raw_csv_name))
+    lg.info("Dropped {0} Nans, {1} bad strings & flairs from {3} => {2} remaining".format(orig_length-after_na_drop, after_na_drop-after_string_drop, after_string_drop, raw_csv_name))
 
     # save
     save_name = raw_csv_name.replace("raw", "cleaned")
