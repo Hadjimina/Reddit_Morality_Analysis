@@ -39,7 +39,7 @@ def update_score_elem(do_posts=True, overwrite=True):
         scores = scores.tolist()
         
         scores_lst = []
-
+        
         for submission in tqdm(reddit.info(ids), total=len(ids)):
             #submission = reddit.info(ids[i])
             updated = [post_idx,0,0] #id, score, ratio
@@ -49,10 +49,6 @@ def update_score_elem(do_posts=True, overwrite=True):
             
             scores_lst.append(updated)
             post_idx += 1
-            
-            if len(scores_lst)!=post_idx:
-                print("No long correct post size: "+str(post_idx))
-                raise ValueError
             
             # see https://api.reddit.com/api/info/?id=t3_apcnyn
     else:
@@ -72,15 +68,27 @@ def update_score_elem(do_posts=True, overwrite=True):
             scores_lst.append(updated)
             comment_idx+=1
             
-            if len(scores_lst)!=comment_idx:
-                print("No long correct comment size: "+str(comment_idx))
-                raise ValueError
             
             # comments do not have an upvote ratio
             # see https://api.reddit.com/api/info/?id=t1_eg7dfxx
 
+    #iterate over ids and check which ids are not in updated => for those we set the scores to None
+    # we check updated but modify updated_new
+    print("Original scores lst size {0}, ids size {1} => need to add {2} entries".format(len(scores_lst), len(ids), abs(len(scores_lst)-len(ids))))
+    scores_lst_new = scores_lst.copy()
+    if len(scores_lst) != len(ids):
+        for i in range(len(ids)):
+            id_orig = ids[i]
+            id_updated = scores_lst[i][0]
+            if id_orig != id_updated:
+                empty_insert = [None] * len(scores_lst[i])
+                empty_insert[0] = ids[i]
+                scores_lst_new.insert(empty_insert, i)
+        
+        assert len(scores_lst_new) == len(ids)
+        
 
-    scores_np = np.array(scores_lst)
+    scores_np = np.array(scores_lst_new)
     scores = scores_np[:,1]
     if do_posts:
         ratios = scores_np[:,2]
@@ -92,7 +100,7 @@ def update_score_elem(do_posts=True, overwrite=True):
     else:
         df["comment_score"] = scores
         
-    save_dir = CS.POSTS_CLEAN if do_posts else CS.COMMENTS_RAW
+    save_dir = CS.POSTS_CLEAN if do_posts else CS.COMMENTS_CLEAN
     if not overwrite:
         save_dir = save_dir.replace(".", "_updated.")
     lg.info(f"Saving updated {prefix}s to {save_dir}")
@@ -131,8 +139,9 @@ if __name__ == "__main__":
     elif "-posts" in sys.argv:
         update_posts()
     else:
-        update_comments()
         update_posts()
+        update_comments()
+        
         
     
 

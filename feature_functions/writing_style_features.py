@@ -196,9 +196,11 @@ def get_voice_in_spacy(sentence):
 def get_tense_in_spacy(sentence):
     """We return the tense of a sentence
 
-     Args:  sentence: sentence analysed by spacy
+    Args:  
+        sentence: sentence analysed by spacy
 
-     Return: str : string value of tense
+    Return: 
+        str : string value of tense
     """
     # https://github.com/explosion/spaCy/blob/master/spacy/glossary.py    
     future_flag = False   

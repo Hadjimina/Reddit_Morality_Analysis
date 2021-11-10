@@ -6,16 +6,15 @@ def id_to_url(id):
 
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/data/"
 
-
 files = {
-    "raw":{
-        "url": id_to_url("17fvcKWGNHyxZFIU9kV-bZokhMSd4fEvt"),
-        "output": dataset_dir+"posts_raw_27_6_2021.csv"
-    },
-    "cleaned":{
-        "url":  id_to_url("1NBoO5CU4Dssya4IcWcjJ8Cx1rv-qiRuy"),
-        "output": dataset_dir+"posts_cleaned_27_6_2021.csv"
-    },
+    #"post_raw":{
+    #    "url": id_to_url("17fvcKWGNHyxZFIU9kV-bZokhMSd4fEvt"),
+    #    "output": dataset_dir+"posts_raw_27_6_2021.csv"
+    #},
+    #"posts_cleaned":{
+    #    "url":  id_to_url("1NBoO5CU4Dssya4IcWcjJ8Cx1rv-qiRuy"),
+    #    "output": dataset_dir+"posts_cleaned_27_6_2021.csv"
+    #},
     "LIWC":{
         "url":  id_to_url("1lA8y_cto7vLYuBgTOkEn2lQueFVKHzSw"),
         "output": dataset_dir+"LIWC_27_6_2021.csv"
@@ -24,9 +23,13 @@ files = {
         "url":  id_to_url("1Vu188cUbUWA6A8wSTeDJPXfYGR2sGNmU"),
         "output": dataset_dir+"moral_foundations_27_6_2021.csv"
     },
-    "comments_raw_updated":{
+    "comments_clean":{
+        "url": id_to_url("15m_Kl7VScZgEaeyJyB3crdMB-9GeK-44"),
+        "output": dataset_dir+"comments_clean_16_07_2021.csv"
+    },
+    "comments_raw":{
         "url": id_to_url("12sJW2bnmOlXrmbIVPe00Zt2UQHSK7nd9"),
-        "output": dataset_dir+"comments_16_07_2021.csv"
+        "output": dataset_dir+"comments_raw_16_07_2021.csv"
     },
         "moral_foundations_title":{
         "url":  id_to_url("121QNFJoLooNpsEFr58VauHsSQaMVlr7M"),

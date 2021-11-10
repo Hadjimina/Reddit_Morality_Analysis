@@ -9,9 +9,12 @@ import spacy
 import sys
 from spacytextblob.spacytextblob import SpacyTextBlob
 
-def init():
+def init(do_load_spacy=True):
     """Load all required global variables such as dataframes.
         Setup the post title either as a standalone feature that is treated the same way as post text or the post title is prepended ot the post text
+        
+        Args: 
+            do_load_spacy (bool, optional): whether or not we load the spacy library, defaults to True.
     """
 
     if CS.USE_MINIFIED_DATA:
@@ -48,7 +51,7 @@ def init():
             lg.warning("Skipping loading foundations...")
 
     if not hasattr(globals(), 'nlp'):
-        if  len([item for sublist in CS.FEATURES_TO_GENERATE_MONO["writing_sty"] for item in sublist]) > 0 or CS.DO_TOPIC_MODELLING:
+        if  do_load_spacy and len([item for sublist in CS.FEATURES_TO_GENERATE_MONO["writing_sty"] for item in sublist]) > 0 or CS.DO_TOPIC_MODELLING:
             load_spacy()
 
     if CS.TITLE_AS_STANDALONE:
@@ -70,8 +73,8 @@ def load_comments():
     """Load the comments csv
     """
     global df_comments
-    lg.info("Loading comments: "+CS.COMMENTS_RAW)
-    df_comments = pd.read_csv(CS.COMMENTS_RAW, index_col=False)
+    lg.info("Loading comments: "+CS.COMMENTS_CLEAN)
+    df_comments = pd.read_csv(CS.COMMENTS_CLEAN, index_col=False)
 
 
 def load_posts():

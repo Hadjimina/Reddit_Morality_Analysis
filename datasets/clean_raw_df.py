@@ -9,31 +9,42 @@ import sys
 sys.path.append('..')
 import constants as CS
 
-raw_csv_name  = "posts_raw_27_6_2021.csv"
-full_path = CS.dataset_dir+raw_csv_name
-lg.info("Cleaning {0} at {1}".format(raw_csv_name, full_path))
+def clean(posts=True):
+    raw_csv_name  = "posts_raw_27_6_2021.csv" if posts else "comments_raw_16_07_2021.csv"
+    full_path = CS.dataset_dir+raw_csv_name
+    lg.info("Cleaning {0} at {1}".format(raw_csv_name, full_path))
 
-# read csv 
-df = pd.read_csv(full_path)
-orig_length = df.shape[0]
+    # read csv 
+    df = pd.read_csv(full_path)
+    orig_length = df.shape[0]
 
-# Drop NANs
-df = df.dropna()
-after_na_drop = df.shape[0]
+    # Drop NANs
+    df = df.dropna()
+    after_na_drop = df.shape[0]
 
-# Remove strings
-str_to_remove = ["[removed]", "[deleted]"]
-cols_to_clean = ["post_text", "post_title", "post_author_id"]
-for col in cols_to_clean:
-    for to_remove in str_to_remove:
-        df = df[df[col] != to_remove]
-after_string_drop = df.shape[0]
+    # Remove strings
+    str_to_remove = ["[removed]", "[deleted]"]
+    cols_to_clean = ["post_text", "post_title"] if posts else ["comment_text"]
+    for col in cols_to_clean:
+        for to_remove in str_to_remove:
+            df = df[df[col] != to_remove]
+    after_string_drop = df.shape[0]
 
-# Print dropped info
-lg.info("Dropped {0} Nans, {1} bad strings => {2} remaining".format(orig_length-after_na_drop, after_na_drop-after_string_drop, after_string_drop))
+    # Print dropped info
+    lg.info("Dropped {0} Nans, {1} bad stringsm from {3} => {2} remaining".format(orig_length-after_na_drop, after_na_drop-after_string_drop, after_string_drop, raw_csv_name))
 
-# save
-save_name = raw_csv_name.replace("raw", "cleaned")
-full_path = CS.dataset_dir+save_name
-lg.info("Saving {0} to {1}".format(save_name, full_path))
-df.to_csv(full_path, index=False)
+    # save
+    save_name = raw_csv_name.replace("raw", "cleaned")
+    full_path = CS.dataset_dir+save_name
+    lg.info("Saving {0} to {1}".format(save_name, full_path))
+    df.to_csv(full_path, index=False)
+
+if __name__ == "__main__":
+    
+    if "-comments" in sys.argv or "-com" in sys.argv:
+        clean(posts=False)
+    elif "-posts" in sys.argv:
+        clean()
+    else:
+        clean()
+        clean(posts=False)
