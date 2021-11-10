@@ -66,7 +66,7 @@ JUDGEJMENT_DICT = {
     "NAH": ["NAH", "No Assholes here", "No Asshole here", "no one sucks here"],
 } 
 BOT_STRINGS = ["automod", "i am a bot"]
-AITA = ["am i the asshole", "aita", "aitah"]
+AITA = ["am i the asshole", "aita", "aitah", "am i an asshole"]
 WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole"]
 
 # MULTITHREADING
@@ -112,7 +112,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
     "writing_sty":[
         #(get_punctuation_count, CS.POST_TEXT),
         #(get_emotions, CS.POST_TEXT),
-        (aita_location, CS.POST_TEXT),
+        #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
         #(check_wibta, CS.POST_TEXT)
         
@@ -125,7 +125,7 @@ FEATURES_TO_GENERATE_MP = { #this is technically not a constant
 
 FEATURES_TO_GENERATE_MONO = { #this is technically not a constant
     "writing_sty":[
-        (get_spacy_features, CS.POST_TEXT), # => 4h for 10%
+        #(get_spacy_features, CS.POST_TEXT), # => 4h for 10%
     ],
     "reactions":[
 
@@ -134,7 +134,7 @@ FEATURES_TO_GENERATE_MONO = { #this is technically not a constant
 
 SPACY_FUNCTIONS = [  
                     #get_tense_in_spacy,
-                    get_voice_in_spacy,
+                    #get_voice_in_spacy,
                     #get_sentiment_in_spacy, 
                     #get_focus_in_spacy, 
                     #get_emotions_self_vs_other_in_spacy,

@@ -160,8 +160,10 @@ def aita_location(post_text):
     fst = location_ratio[0] if len(location_ratio) > 0 else -1
     mean_loc_ratio =  st.mean(location_ratio) if len(location_ratio) > 0 else -1 #TODO: mean might not be the best idea
     
+    print(occurences)
+    print(location_abs)
     # if we have not found any matches the mean_loc_ratio is -1
-    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location",round(mean_loc_ratio,6)), ("aita_fst_location", fst), ("aita_lst_location", lst)]
+    ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location",mean_loc_ratio), ("aita_fst_location", fst), ("aita_lst_location", lst)]
     return ret_tuple_list
 
 def get_sentiment_in_spacy(doc):
