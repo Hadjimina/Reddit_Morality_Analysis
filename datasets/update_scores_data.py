@@ -100,6 +100,9 @@ def update_score_elem(do_posts=True, overwrite=True):
     else:
         df["comment_score"] = scores
         
+    # Remove "None" values
+    df = df.dropna()
+    
     save_dir = CS.POSTS_CLEAN if do_posts else CS.COMMENTS_CLEAN
     if not overwrite:
         save_dir = save_dir.replace(".", "_updated.")
