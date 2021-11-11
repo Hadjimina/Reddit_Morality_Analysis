@@ -134,7 +134,6 @@ def aita_location(post_text):
     Returns:
         ret_tuple_list:  [("aita_count": 10), ("aita_avg_location_ratio": 0.10)]
     """    
-    # TODO: should we match "am i really the asshole"
     # single_words = ["aita", "wita", "wibta"]
     # aita_rgx = "(am i) ((\b(\w*\S\w*)\b) )?(the|a|an) (asshole)" # am i[potentially 1 word] the asshole (e.g. am i really the asshole)
 
@@ -158,10 +157,8 @@ def aita_location(post_text):
 
     lst = location_ratio[-1] if len(location_ratio) > 0 else -1
     fst = location_ratio[0] if len(location_ratio) > 0 else -1
-    mean_loc_ratio =  st.mean(location_ratio) if len(location_ratio) > 0 else -1 #TODO: mean might not be the best idea
+    mean_loc_ratio =  st.mean(location_ratio) if len(location_ratio) > 0 else -1 
     
-    print(occurences)
-    print(location_abs)
     # if we have not found any matches the mean_loc_ratio is -1
     ret_tuple_list =  [("aita_count",occurences), ("aita_avg_location",mean_loc_ratio), ("aita_fst_location", fst), ("aita_lst_location", lst)]
     return ret_tuple_list
@@ -285,7 +282,7 @@ def get_focus_in_spacy(token, count_possesive_pronouns=True):
     # Subject
     if token.dep_ == "nsubj":
         weight = 2 #TODO: check if these weights make sense
-    elif token.dep_ in ["iobj", "dobj", "pobj", "dative"]: # Indirect or direct object 
+    elif token.dep_ in ["iobj", "dobj", "pobj", "dative"]: # object 
         weight = 1
     elif token.dep_ == "poss" and count_possesive_pronouns:
         weight = 1
@@ -443,44 +440,18 @@ def get_spacy_features(post_text):
         # 5. Get self/other emotions
         if get_emotions_self_vs_other_in_spacy in CS.SPACY_FUNCTIONS:
             tmp_self_oth_emo = get_emotions_self_vs_other_in_spacy(sentence)
-            #TODO: only return emotions that are nonzero
             for key in tmp_self_oth_emo.keys():
                 emo_self_vs_oth_dict[key] += tmp_self_oth_emo[key]
 
         # 6. Get self/other profanity
         if get_profanity_self_vs_other_in_spacy in CS.SPACY_FUNCTIONS:
             tmp_self_oth_prof = get_profanity_self_vs_other_in_spacy(sentence)
-            #TODO: only return profanity (self,other) that are nonzero
             for key in tmp_self_oth_prof.keys():
                 prof_self_vs_oth_dict[key] += tmp_self_oth_prof[key]
             
         
                 
-        #voice_flag = False
         for token in sentence:
-
-            #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
-            #token.shape_, token.is_alpha, token.is_stop)
-            # 1. Get tense
-            # TODO: this should be done on a per sentence level, not per token
-            #if get_tense_in_spacy in CS.SPACY_FUNCTIONS:
-            #    tense, verb_increment = get_tense_in_spacy(token)
-            #    if tense != "":
-            #        tense_dict[tense] += 1
-            #    verb_count +=verb_increment
-
-            # 2. Get voice 
-            # We only set voice value once per sentence
-            # TODO: This is definetly not perfect. Naive implementation only https://stackoverflow.com/questions/19495967/getting-additional-information-active-passive-tenses-from-a-tagger
-            #if get_voice_in_spacy in CS.SPACY_FUNCTIONS:
-            #    if voice_flag:
-            #        continue
-            #
-            #    sentence_voice  = get_voice_in_spacy(token)
-            #    if not sentence_voice == "":
-            #        voice_flag = True
-            #        voice_dict[sentence_voice] += 1
-
             # 4. Get focus 
             if get_focus_in_spacy in CS.SPACY_FUNCTIONS:
                 focus_str, weight = get_focus_in_spacy(token)

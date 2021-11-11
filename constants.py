@@ -94,7 +94,7 @@ PRONOUNS = [["i", "me", "my", "mine", "myself"],
             ["you", "your","yours", "yourself"], 
             ["he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself"],
             ["we", "us", "our", "ours", "ourselves"], 
-            ["yourselves"], # TODO: 2nd Person plurar & singular is almost identical
+            ["yourselves"], 
             ["they", "them", "their", "theirs", "themselves"]]
 PRONOUN_AGE_GENDER_DIST = 3 # max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
 

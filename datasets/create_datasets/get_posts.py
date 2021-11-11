@@ -75,7 +75,7 @@ if __name__ == "__main__":
     FIRST_EPOCH = 1595994600
     LAST_EPOCH = round(time.time()) 
 
-    #TODO: crossposts
+
     # possible pushshift keys:
     # ['author', 'author_created_utc', 'author_flair_css_class', 'author_flair_text', 'author_fullname', 'created_utc', 'domain', 'full_link', 'gilded', 'id',
     # 'is_self', 'link_flair_css_class', 'link_flair_text', 'media_embed', 'mod_reports', 'num_comments', 'over_18', 'permalink', 'retrieved_on', 'score', 

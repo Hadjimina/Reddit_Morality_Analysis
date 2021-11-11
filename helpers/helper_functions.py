@@ -12,7 +12,6 @@ nltk.download('stopwords', quiet=True)
 import string
 
 #alternatively can be done using spacy? gensim?
-#TODO: add remove names option
 def get_clean_text(post_text,
                     nlp,
                     remove_URL=True,
