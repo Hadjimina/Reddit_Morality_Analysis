@@ -146,5 +146,5 @@ DO_TOPIC_MODELLING = False
 # Loading 
 LOAD_POSTS = True
 LOAD_COMMENTS = get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = False
-LOAD_LIWC = False
+LOAD_FOUNDATIONS = True
+LOAD_LIWC = True
