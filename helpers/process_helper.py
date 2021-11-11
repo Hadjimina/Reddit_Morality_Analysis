@@ -6,8 +6,6 @@ from tqdm import tqdm
 
 tqdm.pandas()
 
-
-
 def process_run(feat_to_gen, sub_df, id):
     """ Apply all functions of "features_to_generate" to each row of subsection of dataframe
 

@@ -57,26 +57,14 @@ def check_wibta(post_text):
 
     """
     expressions_to_check = string_matching_arr_append_ah(CS.WIBTA)
-    wibta_flag = 0
     post_text_clean = get_clean_text(post_text, globals_loader.nlp, do_lemmatization=False, remove_punctuation=True )
 
     regex = "\\b("+"|".join(expressions_to_check)+")\\b" 
-    print(regex)
     if re.search(regex, post_text_clean):
-        print("match")
         return [("is_wibta", 1)]
     else:
         return [("is_wibta", 0)]
 
-    #for exp in expressions_to_check:
-    #    if len(exp.split()) > 1: # expresssion more than one word (e.g. "would i be the ah", not "wibta")
-    #        wibta_flag = exp in post_text_clean
-    #    else:
-    #        wibta_flag = exp in post_text_clean.split()
-    #    if wibta_flag:
-    #        break
-
-    return [("is_wita", wibta_flag)]
 
 
 def get_feats_dict(morph_feats):

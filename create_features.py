@@ -28,7 +28,7 @@ from helpers.requirements import *
 
 coloredlogs.install()
 
-def main():
+def create_features():
     """ Iterate over all posts and create features dataframe 
     
     """
@@ -110,15 +110,14 @@ def main():
     # Create histogram and sample texts as png
     vis.generate_report(feature_df)
 
-    
-if __name__ == "__main__":
-    
-    if "-vis" in sys.argv:
+def main(args):
+    if "-vis" in args:
         
         filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2]  # [] if no file
         filenames = list(filter(lambda x: ".csv" in x and "features_output" in x, filenames))
         filenames = sorted(filenames, reverse=True)
 
+        print(filenames)
         lg.info("Only generating report from "+filenames[0])
         df = pd.read_csv(CS.OUTPUT_DIR+filenames[0], index_col=False)
         globals_loader.load_posts()
@@ -139,4 +138,8 @@ if __name__ == "__main__":
             lg.warning(lg_str[:-1]+"!")
         else:
             lg.info(lg_str)
-        main()
+        create_features()
+         
+if __name__ == "__main__":
+    main(sys.argv)
+    

@@ -15,7 +15,7 @@ class parallel_process (Process):
             threadID (int): id i.e. number of thread
             start_id (int): start index of subsection of post dataframe for this thread (inclusive)
             end_id (int): end index of subsection of post dataframe for this thread (exclusive)
-            features_to_generate ({ string: [ ((int)->Dataframe, int) ]}): Dictionary wich contains function, 
+            features_to_generate ({ string: [ ((int)->Dataframe, int) ]}): Dictionary which contains function, 
                 argument tuples
 
         """        

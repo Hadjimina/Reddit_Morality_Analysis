@@ -22,10 +22,13 @@ def check_crossposts(post_id):
     reddit = globals_loader.reddit
     post = reddit.submission(post_id)
     sub_list = []
-    in_devil = False 
-    in_angel = False
+    
     for duplicate in post.duplicates():
-        sub_list.append(duplicate.subreddit.display_name.lower())
+        try:
+            sub_list.append(duplicate.subreddit.display_name.lower())
+        except e:
+            print("Error in check_crossposts...continuing")
+            continue
 
     is_devil = int("amithedevil" in sub_list)
     is_angel = int("amitheangel" in sub_list)

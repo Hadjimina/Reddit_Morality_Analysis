@@ -14,7 +14,8 @@ ENFORCE_POST_REQUIREMENTS = False
 TITLE_AS_STANDALONE = False
 
 # TOPIC MODELING
-TOPICS_ABS = 300000000000 #TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
+# TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
+TOPICS_ABS = 300000000000
 MIN_CLUSTER_PERC = 0.02
 
 # PERCENTAGE TO MINIFY POSTS
@@ -27,21 +28,26 @@ FOUNDATIONS_PREFIX = "foundations_"
 FOUNDATIONS_TITLE_PREFIX = "foundations_title_"
 TOPIC_PREFIX = "topic_"
 
-#directories
+# directories
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
 
 HOME_DIR = os.path.dirname(os.path.abspath(__file__))+"/"
-OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"+output_dir_name()+"/"
+OUTPUT_DIR = os.path.dirname(os.path.abspath(
+    __file__))+"/output/"+output_dir_name()+"/"
 
 mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(dataset_dir, mini_str)
+COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(
+    dataset_dir, mini_str)
+COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(
+    dataset_dir, mini_str)
 LIWC = "{0}LIWC_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_TITLE = "{0}LIWC_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(
+    dataset_dir, mini_str)
+FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(
+    dataset_dir, mini_str)
 
 # COLUMN INDICES
 #INDEX = 0
@@ -61,10 +67,10 @@ JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 JUDGEJMENT_DICT = {
     "YTA": ["YTA", "You're the asshole", "You are the asshole"],
     "NTA": ["NTA", "not the asshole"],
-    "INFO": ["INFO","Not enough info", "Not enough information"],
+    "INFO": ["INFO", "Not enough info", "Not enough information"],
     "ESH": ["ESH", "everyone sucks here", "everybody sucks here", "ETA", "everyone's the asshole"],
     "NAH": ["NAH", "No Assholes here", "No Asshole here", "no one sucks here"],
-} 
+}
 BOT_STRINGS = ["automod", "i am a bot"]
 AITA = ["am i the asshole", "aita", "aitah", "am i an asshole"]
 WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole"]
@@ -76,7 +82,8 @@ MONO_ID = "mono"
 
 # FEATURE DF POSTPEND
 # post_id,post_text,post_title,post_author_id,post_score,post_created_utc,post_num_comments
-POST_PEND = ["post_id", "post_text", "post_num_comments", ] #"post_ups", "post_downs"
+# "post_ups", "post_downs"
+POST_PEND = ["post_id", "post_text", "post_num_comments", ]
 POST_PEND_MONO = ["post_id"]
 
 # SPACY STRINGS
@@ -91,60 +98,60 @@ SP_FEATS_VOICE = "Voice"
 
 # list from https://www.lingographics.com/english/personal-pronouns/
 PRONOUNS = [["i", "me", "my", "mine", "myself"],
-            ["you", "your","yours", "yourself"], 
-            ["he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself"],
-            ["we", "us", "our", "ours", "ourselves"], 
-            ["yourselves"], 
+            ["you", "your", "yours", "yourself"],
+            ["he", "him", "his", "himself", "she", "her",
+                "hers", "herself", "it", "its", "itself"],
+            ["we", "us", "our", "ours", "ourselves"],
+            ["yourselves"],
             ["they", "them", "their", "theirs", "themselves"]]
-PRONOUN_AGE_GENDER_DIST = 3 # max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
+# max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
+PRONOUN_AGE_GENDER_DIST = 3
 
 # EMO LEX EMOTIONS
-EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness', 'disgust', 'joy', 'anticipation', 'positive', 'negative']
+EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness',
+            'disgust', 'joy', 'anticipation', 'positive', 'negative']
 
-#Feature Generation
+# Feature Generation
 
-FEATURES_TO_GENERATE_MP = { #this is technically not a constant
-    "speaker":[
+FEATURES_TO_GENERATE_MP = {
+    "speaker": [
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
         (get_author_info, CS.POST_AUTHOR),
         (get_author_age_and_gender, CS.POST_TEXT)
-    ], 
-    "writing_sty":[
+    ],
+    "writing_sty": [
         (get_punctuation_count, CS.POST_TEXT),
         (get_emotions, CS.POST_TEXT),
         (aita_location, CS.POST_TEXT),
         (get_profanity_count, CS.POST_TEXT),
         (check_wibta, CS.POST_TEXT)
-        
+
     ],
-    "reactions":[
-        (check_crossposts, CS.POST_ID),  #slow
+    "reactions": [
+        (check_crossposts, CS.POST_ID),  # slow
         (get_judgement_labels, CS.POST_ID)
     ]
 }
 
-FEATURES_TO_GENERATE_MONO = { #this is technically not a constant
-    "writing_sty":[
-        (get_spacy_features, CS.POST_TEXT), # => 4h for 10%
+FEATURES_TO_GENERATE_MONO = {
+    "writing_sty": [
+        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
-    "reactions":[
-
-    ]
 }
 
-SPACY_FUNCTIONS = [  
-                    get_tense_in_spacy,
-                    get_voice_in_spacy,
-                    get_sentiment_in_spacy, 
-                    get_focus_in_spacy, 
-                    get_emotions_self_vs_other_in_spacy,
-                    get_profanity_self_vs_other_in_spacy,
-                    ]
+SPACY_FUNCTIONS = [
+    get_tense_in_spacy,
+    get_voice_in_spacy,
+    get_sentiment_in_spacy,
+    get_focus_in_spacy,
+    get_emotions_self_vs_other_in_spacy,
+    get_profanity_self_vs_other_in_spacy,
+]
 
 DO_TOPIC_MODELLING = False
 
-# Loading 
+# Loading
 LOAD_POSTS = True
-LOAD_COMMENTS = get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
 LOAD_FOUNDATIONS = True
 LOAD_LIWC = True
