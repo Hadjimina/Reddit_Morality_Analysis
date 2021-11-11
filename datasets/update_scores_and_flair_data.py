@@ -93,7 +93,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
         
         scores_lst_new = scores_lst.copy()
         for i in insertion_idxs:
-            empty_insert = [None] * len(scores_lst[i])
+            empty_insert = [None] * len(scores_lst[0])
             empty_insert[0] = ids[i]
             scores_lst_new.insert(i+insertion_idxs.index(i), empty_insert)
             
