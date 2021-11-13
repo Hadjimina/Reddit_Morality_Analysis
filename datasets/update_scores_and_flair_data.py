@@ -92,6 +92,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
                 insertion_idxs.append(i)
         
         scores_lst_new = scores_lst.copy()
+        
         for i in insertion_idxs:
             empty_insert = [None] * len(scores_lst[0])
             empty_insert[0] = ids[i]
@@ -104,7 +105,8 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
     scores = scores_np[:,1]
     if do_posts:
         ratios = scores_np[:,2]
-        ups_downs = np.array(list(map(lambda s, r: helper_functions.get_ups_downs_from_ratio_score(r, s) , scores, ratios)))
+        ups_downs = list(map(lambda s, r: get_ups_downs_from_ratio_score(r, s) , scores, ratios))
+        ups_downs = np.array(ups_downs)
         df[prefix+"_ups"] = ups_downs[:,0].tolist()
         df[prefix+"_downs"] = ups_downs[:,1].tolist()
         df[prefix+"_ratio"] = ups_downs[:,2].tolist()
@@ -113,9 +115,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
     else:
         df[prefix+"_score"] = scores
         
-    # Remove "None" values
-    df = df.dropna()
-    
+
     save_dir = CS.POSTS_CLEAN if do_posts else CS.COMMENTS_CLEAN
     if not overwrite:
         save_dir = save_dir.replace(".", "_updated.")

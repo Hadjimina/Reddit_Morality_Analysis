@@ -3,7 +3,8 @@ import pandas as pd
 import constants as CS
 import logging as lg
 from tqdm import tqdm
-
+import socket
+from helpers.helper_functions import *
 tqdm.pandas()
 
 def process_run(feat_to_gen, sub_df, id):
@@ -28,6 +29,9 @@ def process_run(feat_to_gen, sub_df, id):
                 funct = feature_tuple[0]
                 idx = feature_tuple[1]
                 
+                msg = "Started {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
+                if CS.NOTIFY_TELEGRAM and id == 0:
+                    sent_telegram_notification(msg)
                 if idx == i:
                     col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
                     tmp_cat = "title_"+category if CS.TITLE_AS_STANDALONE and idx == CS.POST_TITLE else category

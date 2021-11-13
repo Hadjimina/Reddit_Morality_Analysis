@@ -32,7 +32,11 @@ def enforce_requirements(df):
         lg.warning("Minium number of votes not enforces")
 
     # Requirement 2: Post must have 3 upvotes at least
-    # TODO
+    # TODO & not "None" in score, ratio, upvotes or downvotes
+    
+    # Requirement 3: filter by post_flair
+    # TODO: filter it & discard
+
 
     new_df_size = df.shape[0]
     new_size = round(new_df_size/old_df_size,3)*100

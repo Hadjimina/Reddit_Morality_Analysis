@@ -4,12 +4,17 @@ helper_functions.py
 from datetime import datetime, date
 from enum import Flag
 import re
+import os
+import sys
+import requests
+import shutil
 from humanfriendly.terminal import output
 import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords', quiet=True)
 #import helpers.globals_loader as globals_loader
 import string
+import json
 
 #alternatively can be done using spacy? gensim?
 def get_clean_text(post_text,
@@ -87,9 +92,9 @@ def get_ups_downs_from_ratio_score(r,s):
     Returns:
         list: list with first element being the number of upvotes and the second one the number of downvotes, followed by the upvote ratio and current score
     """
-    
     if r is None or s is None:
-        return None
+        print("NONE")
+        return [None, None, None, None]
     
     ups = round((r * s) / ( 2 * r - 1 )) if r != 0.5 else 0 #if we have have a 50% upvote ratio we set the upvotes to 0
     downs = round(ups - s)
@@ -180,14 +185,16 @@ def get_abs_and_norm_dict(abs_dict, out_off_ratio, append_abs=True, only_norm=Fa
         complete_dict[v+"_norm"] = curr_value/max(out_off_ratio,1)
     return complete_dict
 
-def get_date_str():
-    """ Get current date in format dd_mm_YYYY
+def get_date_str(minified=False):
+    """ Get current date in format dd_mm_YYYY or dd_mm_YYYY
 
+    Args:
+        minified (bool, optional): whether we only want day and month
     Returns:
         date_time: date string
     """
     now = datetime.now()
-    date_time = now.strftime("%d_%m_%Y")
+    date_time = now.strftime("%d_%m_%Y") if not minified else now.strftime("%d_%m")
     return date_time
 
 
@@ -244,3 +251,20 @@ def find_all(a_str, sub):
         if start == -1: return
         yield start
         start += len(sub) 
+        
+def sent_telegram_notification(msg):
+    """Send a telegram notification for progress updates.
+
+    Args:
+        msg (string): message we would like to send
+    """
+    path = sys.path[0]+"/secrets/telegram.json"
+    file = open(path)
+    data = json.load(file)
+    url = "https://api.telegram.org/bot{secret}/sendMessage".format(secret=data["secret"])
+    data = {"chat_id": data["chat_id"], "text":msg}
+    requests.post(url, data)
+    
+
+    
+

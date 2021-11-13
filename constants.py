@@ -9,9 +9,11 @@ from feature_functions.topic_modelling import *
 import multiprocessing
 
 # Minification, requirements and title
-USE_MINIFIED_DATA = True
+# Modified in create_features.set_featueres_to_run_dist => so no longer const
+USE_MINIFIED_DATA = False
 ENFORCE_POST_REQUIREMENTS = False
 TITLE_AS_STANDALONE = False
+NOTIFY_TELEGRAM = False
 
 # TOPIC MODELING
 # TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
@@ -32,22 +34,18 @@ TOPIC_PREFIX = "topic_"
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
 
 HOME_DIR = os.path.dirname(os.path.abspath(__file__))+"/"
-OUTPUT_DIR = os.path.dirname(os.path.abspath(
-    __file__))+"/output/"+output_dir_name()+"/"
+OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"+output_dir_name()+"/"
+OUTPUT_DIR_ZIPS = os.path.dirname(os.path.abspath(__file__))+"/output/zips/"
 
 mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(
-    dataset_dir, mini_str)
-COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(
-    dataset_dir, mini_str)
+COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(dataset_dir, mini_str)
+COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC = "{0}LIWC_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_TITLE = "{0}LIWC_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(
-    dataset_dir, mini_str)
-FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(
-    dataset_dir, mini_str)
+FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 
 # COLUMN INDICES
 #INDEX = 0
@@ -113,45 +111,50 @@ EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness',
 
 # Feature Generation
 
+# Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MP = {
     "speaker": [
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
-        (get_author_info, CS.POST_AUTHOR),
-        (get_author_age_and_gender, CS.POST_TEXT)
+        #(get_author_info, CS.POST_AUTHOR),
+        #(get_author_age_and_gender, CS.POST_TEXT)
     ],
     "writing_sty": [
         (get_punctuation_count, CS.POST_TEXT),
-        (get_emotions, CS.POST_TEXT),
-        (aita_location, CS.POST_TEXT),
-        (get_profanity_count, CS.POST_TEXT),
-        (check_wibta, CS.POST_TEXT)
+        #(get_emotions, CS.POST_TEXT),
+        #(aita_location, CS.POST_TEXT),
+        #(get_profanity_count, CS.POST_TEXT),
+        #(check_wibta, CS.POST_TEXT)
 
     ],
     "reactions": [
-        (check_crossposts, CS.POST_ID),  # slow
-        (get_judgement_labels, CS.POST_ID)
+        #(check_crossposts, CS.POST_ID),  # slow
+        #(get_judgement_labels, CS.POST_ID)
     ]
 }
 
+# Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MONO = {
     "writing_sty": [
-        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+        #(get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
 }
 
+# Modified in create_features.set_featueres_to_run_dist => so no longer const...
 SPACY_FUNCTIONS = [
-    get_tense_in_spacy,
-    get_voice_in_spacy,
-    get_sentiment_in_spacy,
-    get_focus_in_spacy,
-    get_emotions_self_vs_other_in_spacy,
-    get_profanity_self_vs_other_in_spacy,
+    #get_tense_in_spacy,
+    #get_voice_in_spacy,
+    #get_sentiment_in_spacy,
+    #get_focus_in_spacy,
+    #get_emotions_self_vs_other_in_spacy,
+    #get_profanity_self_vs_other_in_spacy,
 ]
 
+# Modified in create_features.set_featueres_to_run_dist => so no longer const...
 DO_TOPIC_MODELLING = False
 
 # Loading
+# Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
-LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = True
-LOAD_LIWC = True
+LOAD_COMMENTS = False #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+LOAD_FOUNDATIONS = False
+LOAD_LIWC = False

@@ -51,7 +51,7 @@ def init(do_load_spacy=True):
             lg.warning("Skipping loading foundations...")
 
     if not hasattr(globals(), 'nlp'):
-        if  do_load_spacy and len([item for sublist in CS.FEATURES_TO_GENERATE_MONO["writing_sty"] for item in sublist]) > 0 or CS.DO_TOPIC_MODELLING:
+        if  do_load_spacy:  #and len([item for sublist in CS.FEATURES_TO_GENERATE_MONO["writing_sty"] for item in sublist]) > 0 or CS.DO_TOPIC_MODELLING:
             load_spacy()
 
     if CS.TITLE_AS_STANDALONE:
