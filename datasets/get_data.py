@@ -23,7 +23,7 @@ files = {
         "url":  id_to_url("1Vu188cUbUWA6A8wSTeDJPXfYGR2sGNmU"),
         "output": dataset_dir+"moral_foundations_27_6_2021.csv"
     },
-    "comments_clean":{
+    "comments_cleaned":{
         "url": id_to_url("15m_Kl7VScZgEaeyJyB3crdMB-9GeK-44"),
         "output": dataset_dir+"comments_clean_16_07_2021.csv"
     },

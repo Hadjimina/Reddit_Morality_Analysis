@@ -30,7 +30,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
 
     post_idx = 0
     comment_idx = 0
-    
+
 
     if do_posts:
 
@@ -42,7 +42,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
         
         for submission in tqdm(reddit.info(ids), total=len(ids)):
             #submission = reddit.info(ids[i])
-            updated = [post_idx,0,0,""] #id, score, ratio
+            updated = [ids[post_idx],0,0,""] #id, score, ratio
             updated[1] = submission.score
             updated[2] = submission.upvote_ratio
             updated[3] = submission.link_flair_text
@@ -63,7 +63,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
         for comment in tqdm(reddit.info(ids), total=len(ids)):
             #comment = reddit.info(ids[i])   
 
-            updated = [comment_idx,0] #id, score, ratio
+            updated = [ids[comment_idx],0] #id, score, ratio
             updated[1] = comment.score
             scores[comment_idx] = updated
             scores_lst.append(updated)
@@ -76,7 +76,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
     # iterate over ids and check which ids are not in updated => for those we set the scores to None
     # we check updated but modify updated_new
     print("Original scores lst size {0}, ids size {1} => need to add {2} entries".format(len(scores_lst), len(ids), abs(len(scores_lst)-len(ids))))
-    #scores_lst_new = scores_lst.copy()
+    scores_lst_new = scores_lst.copy()
     insertion_idxs = []
     if len(scores_lst) != len(ids):
         for i in range(len(ids)):
@@ -91,7 +91,7 @@ def update_score_and_flair_elem(do_posts=True, overwrite=True):
             else:
                 insertion_idxs.append(i)
         
-        scores_lst_new = scores_lst.copy()
+        
         
         for i in insertion_idxs:
             empty_insert = [None] * len(scores_lst[0])
