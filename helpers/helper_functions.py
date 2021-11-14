@@ -2,13 +2,10 @@
 helper_functions.py
 """
 from datetime import datetime, date
-from enum import Flag
 import re
 import os
 import sys
 import requests
-import shutil
-from humanfriendly.terminal import output
 import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords', quiet=True)

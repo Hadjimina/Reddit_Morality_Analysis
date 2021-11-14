@@ -322,4 +322,4 @@ def generate_report(df):
     
     lg.info("Generating report")
     df_to_plots(df)
-    df_to_text_png(df)
+    #df_to_text_png(df)

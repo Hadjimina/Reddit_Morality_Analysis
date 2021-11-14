@@ -21,6 +21,7 @@ def process_run(feat_to_gen, sub_df, id):
 
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
     feature_df_list = []
+    sent_msgs =[]
     for category in feat_to_gen:
         # We iterate over every column in dataset s.t. we first use all columns that use e.g. "post_author", before moving on
         for i in range(len(sub_df.columns)):
@@ -28,10 +29,11 @@ def process_run(feat_to_gen, sub_df, id):
                 
                 funct = feature_tuple[0]
                 idx = feature_tuple[1]
-                
                 msg = "Started {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
-                if CS.NOTIFY_TELEGRAM and id == 0:
+                if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
                     sent_telegram_notification(msg)
+                    sent_msgs.append(msg)
+                    
                 if idx == i:
                     col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
                     tmp_cat = "title_"+category if CS.TITLE_AS_STANDALONE and idx == CS.POST_TITLE else category
@@ -48,6 +50,11 @@ def process_run(feat_to_gen, sub_df, id):
                 #    #tmp_df.index = sub_df.index
                 #    #tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
 
+                
+                msg = "Finished {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
+                if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
+                    sent_telegram_notification(msg)
+                    sent_msgs.append(msg)
     
     # Post pends some post specific information
     if id == CS.MONO_ID:

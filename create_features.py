@@ -18,6 +18,7 @@ from better_profanity import profanity
 import socket
 import json
 import subprocess
+import shutil
 
 import constants as CS
 import distributed_configuration as dist_conf
@@ -169,30 +170,54 @@ def setup():
     profanity.load_censor_words()
     thread_print()
 
+def refresh_token(gdrive_json):
+    """Update bearer token such that we can upload the output zip to gdrive. Othwerise, credentials would have expired
 
+    Args:
+        gdrive_json (dict): dictionary of gdrive secrets
+    """
+    client_id = gdrive_json["client_id"]
+    client_secret = gdrive_json["client_secret"]
+    refresh_token = gdrive_json["refresh_token"]
+    refresh_token_cmd = "curl https://www.googleapis.com/oauth2/v4/token \
+                            -d client_id={id} \
+                            -d client_secret={secret} \
+                            -d refresh_token={refresh} \
+                            -d grant_type=refresh_token".format(id=client_id, secret=client_secret, refresh=refresh_token)
+    p = subprocess.Popen(refresh_token_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+    
+    
 def upload_output_dir():
     """Uploads generated output to personal google drive folder. Only used when running distributed
     """
     hostname = socket.gethostname()
     filename = "{date}_{hostname}_{title}".format(hostname=hostname, date=get_date_str(
         True), title=("standalone" if CS.CS.TITLE_AS_STANDALONE else "prepend"))
-    lg.info("Generating zip in output dir: {0}".format(filename))
+    lg.info("Generating zip in output dir: {0}".format(CS.OUTPUT_DIR_ZIPS+filename))
     shutil.make_archive(CS.OUTPUT_DIR_ZIPS+filename, 'zip', CS.OUTPUT_DIR)
     
     path = sys.path[0]+"/secrets/gdrive.json"
     file = open(path)
     data = json.load(file)
+    refresh_token(data)
+    
     bearer = data["bearer"]
     folder_id = data["folder_id"]
+    link = data["link"]
     upload_to_gdrive_cmd = "curl -X POST -L \
             -H \"Authorization: Bearer {bearer}\" \
             -F \"metadata={{name : '{filename}', parents: ['{folder_id}'] }};type=application/json;charset=UTF-8\" \
             -F \"file=@{file};type=application/zip\" \
             \"https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart\"".format(filename=filename, bearer=bearer, folder_id=folder_id, file=CS.OUTPUT_DIR_ZIPS+filename+".zip")
         
-    print(upload_to_gdrive_cmd)
-    lg.info("Uploading zip to Google drive")    
-    subprocess.Popen(upload_to_gdrive_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()            
+    lg.info("Uploading zip to Google drive")  
+    p = subprocess.Popen(upload_to_gdrive_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+    
+    if CS.NOTIFY_TELEGRAM:
+        msg = "Uploaded {filename} from {host} to GDrive.\n    {link}".format(filename=filename, host=socket.gethostname(), link=link)
+        sent_telegram_notification(msg)
 
 
 def main(args):
@@ -223,13 +248,16 @@ def main(args):
             for title_as_standalone in [False, True]:
                 set_features_to_run_dist(title_as_standalone)
                 create_features()
+                upload_output_dir()
         else:
             set_features_to_run_dist(bool(title_handling))
             create_features()
+            upload_output_dir()
     else:
         setup()
         create_features()
         upload_output_dir()
+        
 
 
 if __name__ == "__main__":

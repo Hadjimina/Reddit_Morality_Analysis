@@ -2,6 +2,9 @@
 *.Identifier
 secrets/
 telegram.json
+gdrive.json
+*.zip
+ouptut/zips/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
