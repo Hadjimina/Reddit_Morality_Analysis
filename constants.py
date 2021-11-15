@@ -12,7 +12,7 @@ import multiprocessing
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 USE_MINIFIED_DATA = True
 ENFORCE_POST_REQUIREMENTS = False
-TITLE_AS_STANDALONE = False
+TITLE_AS_STANDALONE = True
 NOTIFY_TELEGRAM = False
 REDDIT_INSTANCE_IDX = 1
 
@@ -22,13 +22,15 @@ TOPICS_ABS = 300000000000
 MIN_CLUSTER_PERC = 0.02
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.05
+MINIFY_FRAC = 0.15
 
 # Prefixes
 LIWC_PREFIX = "liwc_"
 LIWC_TITLE_PREFIX = "liwc_title_"
+LIWC_MERGED_PREFIX = "liwc_merged_"
 FOUNDATIONS_PREFIX = "foundations_"
 FOUNDATIONS_TITLE_PREFIX = "foundations_title_"
+FOUNDATIONS_MERGED_PREFIX = "foundations_merged_"
 TOPIC_PREFIX = "topic_"
 
 # directories
@@ -46,8 +48,10 @@ COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(dataset_dir, mini_str)
 COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC = "{0}LIWC_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_TITLE = "{0}LIWC_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+LIWC_MERGED = "{0}LIWC_merged_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+FOUNDATIONS_MERGED = "{0}moral_foundations_merged_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 
 # COLUMN INDICES
 #INDEX = 0
@@ -152,11 +156,11 @@ SPACY_FUNCTIONS = [
 ]
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
-DO_TOPIC_MODELLING = False
+DO_TOPIC_MODELLING = True
 
 # Loading
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
 LOAD_COMMENTS = False #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = False
-LOAD_LIWC = False
+LOAD_FOUNDATIONS = True
+LOAD_LIWC = True

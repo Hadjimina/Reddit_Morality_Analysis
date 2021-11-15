@@ -66,5 +66,5 @@ for name in filenames:
     df_cur.to_csv(min_name, index=False)
 
     
-lg.warning("Remember to update the scores if applicable")
+#lg.warning("Remember to update the scores if applicable")
     

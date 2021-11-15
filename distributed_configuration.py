@@ -11,6 +11,7 @@ feature_functions = {
     "hosts":
         {
             "phdesktop": {
+                "skip": True,
                 "username": "philipp",
                 "host_address": "main",
                 "path": "/home/philipp/Documennts/Coding",
@@ -21,7 +22,7 @@ feature_functions = {
                         #(get_author_age_and_gender, CS.POST_TEXT)
                     ],
                     "writing_sty": [
-                        #(get_punctuation_count, CS.POST_TEXT),
+                        (get_punctuation_count, CS.POST_TEXT),
                         #(get_emotions, CS.POST_TEXT),
                         #(aita_location, CS.POST_TEXT),
                         #(get_profanity_count, CS.POST_TEXT),
@@ -53,34 +54,35 @@ feature_functions = {
                 "foundations": False,
                 "liwc": False,
             },
-            # "104-171-200-227": {
-            #    "username": "ubuntu",
-            #    "host_address": "104.171.200.227",
-            #    "path": "/home/ubuntu",
-            #    "upload": True,
-            #    "mp": {
-            #        "speaker": [
-            #        ],
-            #        "writing_sty": [
-            #
-            #        ],
-            #        "reactions": [
-            #        ]
-            #    },
-            #    "mono": {
-            #        "writing_sty": [
-            #        ],
-            #        "reactions": [
-            #        ]
-            #    },
-            #    "spacy": [
-            #    ],
-            #    "topic": True,
-            #    "foundations": False,
-            #    "liwc": False,
-            #    "reddit_instance_idx": 0
-            # },
+             "104-171-200-113": {
+                "username": "ubuntu",
+                "host_address": "104.171.200.113",
+                "path": "/home/ubuntu",
+                "upload": False,
+                "mp": {
+                    "speaker": [
+                    ],
+                    "writing_sty": [
+            
+                    ],
+                    "reactions": [
+                    ]
+                },
+                "mono": {
+                    "writing_sty": [
+                    ],
+                    "reactions": [
+                    ]
+                },
+                "spacy": [
+                ],
+                "topic": True,
+                "foundations": False,
+                "liwc": False,
+                "reddit_instance_idx": 0
+             },
             "DigitalOcean-1": {
+                "skip":True,
                 "username": "root",
                 "host_address": "64.227.39.41",
                 "path": "/home/root/",
@@ -89,8 +91,8 @@ feature_functions = {
                     "speaker": [
                         (get_author_info, CS.POST_AUTHOR),  # slow
                     ],
-                    "writing_sty": [
-
+                    "writing_sty": [#
+            
                     ],
                     "reactions": [
                         # (check_crossposts, CS.POST_ID),  # slow
@@ -110,6 +112,7 @@ feature_functions = {
                 "reddit_instance_idx": 0
             },
             "DigitalOcean-2": {
+                "skip":True,
                 "username": "root",
                 "host_address": "157.245.44.115",
                 "path": "/home/root/",

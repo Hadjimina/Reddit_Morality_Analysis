@@ -35,7 +35,7 @@ class parallel_process (Process):
     def run(self):
         """Apply all functions of "features_to_generate"
             to each row of subsection of dataframe
-        """                
+        """         
         feature_df_list = process_run(self.features_to_generate, self.sub_df, self.thread_id)
         self.df = pd.concat(feature_df_list, axis=1, join="inner")
         self.df.index = self.sub_df.index

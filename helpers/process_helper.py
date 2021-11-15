@@ -21,6 +21,7 @@ def process_run(feat_to_gen, sub_df, id):
 
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
     feature_df_list = []
+    standalone_ft_collector = []
     sent_msgs =[]
     for category in feat_to_gen:
         # We iterate over every column in dataset s.t. we first use all columns that use e.g. "post_author", before moving on
@@ -34,23 +35,13 @@ def process_run(feat_to_gen, sub_df, id):
                     sent_telegram_notification(msg)
                     sent_msgs.append(msg)
                     
+                
                 if idx == i:
                     col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
-                    tmp_cat = "title_"+category if CS.TITLE_AS_STANDALONE and idx == CS.POST_TITLE else category
-                    feature_df_list.append(feature_to_df(id, tmp_cat, col, funct)) 
-                    #tmp_df = pd.concat(feature_df_list, axis=1)                
-                    #tmp_df.index = sub_df.index
-                    #tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
-
-                # Make standalone title feature for each feature on post text
-                #if CS.TITLE_AS_STANDALONE and idx == CS.POST_TEXT:
-                #    col = sub_df.iloc[:,CS.POST_TITLE] #TODO: change this to use column text (e.g. "post_text") instead of index
-                #    feature_df_list.append(feature_to_df(id, "title_"+category, col, funct))
-                #    #tmp_df = pd.concat(feature_df_list, axis=1)                
-                #    #tmp_df.index = sub_df.index
-                #    #tmp_df.to_csv(CS.TMP_SAVE_DIR+"/thread_{0}_tmp.csv".format(id))
-
-                
+                    if not category in standalone_ft_collector: 
+                        feature_df_list.append(feature_to_df(id, category, col, funct))
+                        standalone_ft_collector.append(category)
+                    
                 msg = "Finished {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
                 if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
                     sent_telegram_notification(msg)

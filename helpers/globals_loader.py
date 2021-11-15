@@ -35,19 +35,23 @@ def init(do_load_spacy=True):
         else:
             lg.warning("Skipping loading comments...")
 
-    if not hasattr(globals(), 'df_liwc'):
+    if not hasattr(globals(), 'df_liwc') and not hasattr(globals(), 'df_liwc_merged'):
         if CS.LOAD_LIWC:
-            load_liwc()
             if CS.TITLE_AS_STANDALONE:
+                load_liwc()
                 load_liwc_title()
+            else:
+                load_liwc_merged()
         else:
             lg.warning("Skipping loading liwc...")
 
-    if not hasattr(globals(), 'df_foundations'):
+    if not hasattr(globals(), 'df_foundations') and not hasattr(globals(), 'df_foundations_merged'):
         if CS.LOAD_FOUNDATIONS:
-            load_foundations()
             if CS.TITLE_AS_STANDALONE:
+                load_foundations()
                 load_foundations_title()
+            else:
+                load_foundations_merged()
         else:
             lg.warning("Skipping loading foundations...")
 
@@ -128,21 +132,38 @@ def load_foundations_title():
     df_foundations_title = pd.read_csv(CS.FOUNDATIONS_TITLE, index_col=False)
     df_foundations_title = df_foundations_title.add_prefix(CS.FOUNDATIONS_TITLE_PREFIX)
 
+def load_foundations_merged():
+    """Load the moral foundations csv for the posts with title preprended
+    """
+    global df_foundations_merged
+    lg.info("Loading foundations: "+CS.FOUNDATIONS_MERGED)
+    df_foundations_merged = pd.read_csv(CS.FOUNDATIONS_MERGED, index_col=False)
+    df_foundations_merged = df_foundations_merged.add_prefix(CS.FOUNDATIONS_MERGED_PREFIX)
+
 def load_liwc():
     """ Load the liwc csv for the posts only
     """
     global df_liwc
-    lg.info("Loading liwc: "+CS.LIWC)
+    lg.info("Loading liwc posts: "+CS.LIWC)
     df_liwc = pd.read_csv(CS.LIWC, index_col=False)
     df_liwc = df_liwc.add_prefix(CS.LIWC_PREFIX)
+    
 
 def load_liwc_title():
     """Load the liwc csv for the titles only
     """
     global df_liwc_title
-    lg.info("Loading liwc: "+CS.LIWC_TITLE)
+    lg.info("Loading liwc titles: "+CS.LIWC_TITLE)
     df_liwc_title = pd.read_csv(CS.LIWC_TITLE, index_col=False)
     df_liwc_title = df_liwc_title.add_prefix(CS.LIWC_TITLE_PREFIX)
+    
+def load_liwc_merged():
+    """ Load the liwc csv for the posts with title preprended
+    """
+    global df_liwc_merged
+    lg.info("Loading liwc merged: "+CS.LIWC_MERGED)
+    df_liwc_merged = pd.read_csv(CS.LIWC_MERGED, index_col=False)
+    df_liwc_merged = df_liwc_merged.add_prefix(CS.LIWC_MERGED_PREFIX)
 
 def load_spacy():
     """Setup the spacy pipeline

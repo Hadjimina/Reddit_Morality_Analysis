@@ -9,6 +9,7 @@ import os
 import sys
 import requests
 import nltk
+import socket
 from nltk.corpus import stopwords
 nltk.download('stopwords', quiet=True)
 #import helpers.globals_loader as globals_loader
@@ -289,7 +290,7 @@ def dist_conf_to_function_list_str(dist_conf):
     """
 
     function_list_str = ""
-    hostname = socket.gethostname()
+    hostname = socket.gethostname().lower()
 
     def ff_to_string(x): return "  "+str(x.__name__)+"\n"
 

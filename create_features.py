@@ -101,8 +101,14 @@ def create_features():
             break
 
     # fix "uniquely valued index object"
-    for df in multi_feature_df_list:
-        df.reset_index(inplace=True, drop=True)
+    #for df in multi_feature_df_list:
+        
+        #print(df.index.duplicated().sum())
+        #print(df.columns)
+        #df = df.reset_index(inplace=True, drop=True)
+        #df = df.loc[~df.index.duplicated(keep='first')]
+    
+    
     feature_df_multi = pd.concat(multi_feature_df_list, axis=0, join="inner")
     lg.info("Finished Multiprocessing")
 
@@ -138,11 +144,21 @@ def create_features():
            msg = "Start {fn} on {host}".format(fn ="LIWC merge", host=socket.gethostname())
            sent_telegram_notification(msg)
             
-        feature_df = feature_df.merge(
-            globals_loader.df_liwc, left_on="post_id", right_on=CS.LIWC_PREFIX+"post_id", validate="1:1")
+        #feature_df = feature_df.merge(
+        #    globals_loader.df_liwc, left_on="post_id", right_on=CS.LIWC_PREFIX+"post_id", validate="1:1")
+        
         if CS.TITLE_AS_STANDALONE:
+            # load post liwc
             feature_df = feature_df.merge(
-                globals_loader.df_liwc_title, left_on="post_id", right_on=CS.LIWC_TITLE_PREFIX+"post_id", validate="1:1")
+                globals_loader.df_liwc, left_on="post_id", right_on=CS.LIWC_PREFIX+"post_id", validate="1:1", suffixes=("", "_posts"))
+            # load title liwc
+            feature_df = feature_df.merge(
+                globals_loader.df_liwc_title, left_on="post_id", right_on=CS.LIWC_TITLE_PREFIX+"post_id", validate="1:1", suffixes=("", "_title"))
+        else:
+            # load merged liwc
+            feature_df = feature_df.merge(
+                globals_loader.df_liwc_merged, left_on="post_id", right_on=CS.LIWC_MERGED_PREFIX+"post_id", validate="1:1")
+            
             
         if CS.NOTIFY_TELEGRAM:
            msg = "Finished {fn} on {host}".format(fn ="LIWC merge", host=socket.gethostname())
@@ -152,12 +168,20 @@ def create_features():
         if CS.NOTIFY_TELEGRAM:
            msg = "Started {fn} on {host}".format(fn ="Foundations merge", host=socket.gethostname())
            sent_telegram_notification(msg)
-            
-        feature_df = feature_df.merge(globals_loader.df_foundations, left_on="post_id",
-                                      right_on=CS.FOUNDATIONS_PREFIX+"post_id", validate="1:1")
+         
+         
         if CS.TITLE_AS_STANDALONE:
-            feature_df = feature_df.merge(globals_loader.df_foundations_title,
-                                          left_on="post_id", right_on=CS.FOUNDATIONS_TITLE+"post_id", validate="1:1")
+            # load post liwc
+            feature_df = feature_df.merge(
+                globals_loader.df_foundations, left_on="post_id", right_on=CS.FOUNDATIONS_PREFIX+"post_id", validate="1:1", suffixes=("", "_posts"))
+            # load title liwc
+            feature_df = feature_df.merge(
+                globals_loader.df_foundations_title, left_on="post_id", right_on=CS.FOUNDATIONS_TITLE_PREFIX+"post_id", validate="1:1", suffixes=("", "_title"))
+        else:
+            # load merged liwc
+            feature_df = feature_df.merge(
+                globals_loader.df_foundations_merged, left_on="post_id", right_on=CS.FOUNDATIONS_MERGED_PREFIX+"post_id", validate="1:1")
+               
 
         if CS.NOTIFY_TELEGRAM:
            msg = "Finished {fn} on {host}".format(fn ="Foundations merge", host=socket.gethostname())
@@ -250,8 +274,10 @@ def upload_output_dir():
             \"https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart\"".format(filename=filename, bearer=bearer, folder_id=folder_id, file=CS.OUTPUT_DIR_ZIPS+filename+".zip")
         
     lg.info("Uploading zip to Google drive")  
-    p = subprocess.Popen(upload_to_gdrive_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.wait()
+    p = str(subprocess.check_output(upload_to_gdrive_cmd, shell=True)).replace('\\n', '\n').replace('\\t', '\t')
+    if len(p) > 3:
+        print(p)
+    
     
     if CS.NOTIFY_TELEGRAM:
         msg = "Uploaded {filename} from {host} to GDrive.\n\n{function_list_str}\n{link}".format(

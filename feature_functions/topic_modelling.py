@@ -26,13 +26,14 @@ def topic_modelling(posts_raw, post_ids):
     lg.info("Generating topics")
     
     # lemmatize?
-    post_list_clean = [get_clean_text(post,
-                            globals_loader.nlp,
-                            remove_punctuation=False,
-                            remove_stopwords=True,
-                            do_lemmatization=False) 
-                        for post in posts_raw]
+    # post_list_clean = [get_clean_text(post,
+    #                        globals_loader.nlp,
+    #                        remove_punctuation=False,
+    #                        remove_stopwords=True,
+    #                        do_lemmatization=False) 
+    #                    for post in posts_raw]
 
+    post_list_clean = posts_raw
     # min topic size?
     model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), nr_topics="auto", low_memory=True, calculate_probabilities=False)
     topics, _ = model.fit_transform(post_list_clean)

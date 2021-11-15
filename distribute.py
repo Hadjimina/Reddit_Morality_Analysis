@@ -53,6 +53,22 @@ def main(args):
     """
     repo_name = "Reddit_Morality_Analysis"
     
+    # skip list
+    only_skip = True
+    to_skip = []
+    for host in dist_config.feature_functions["hosts"].keys():
+        if "skip" in dist_config.feature_functions["hosts"][host] and dist_config.feature_functions["hosts"][host]["skip"]:
+            to_skip.append(host)
+        else:
+            only_skip = False
+    
+    if only_skip:
+        lg.warning("No distribution! Skipping all instances")
+    else:
+        for sk in to_skip:
+            lg.warning("Skipping host {sk}".format(sk=sk))
+            
+    
     # install cmds
     requirements_cmd = "pip3 install -r requirements.txt || pip install -r requirements.txt"
     spacy_install = "python3 -m spacy download en_core_web_trf || python -m spacy download en_core_web_trf"
@@ -70,9 +86,10 @@ def main(args):
         username = dist_config.feature_functions["hosts"][host]["username"]
         remote_host = dist_config.feature_functions["hosts"][host]["host_address"]
         path = dist_config.feature_functions["hosts"][host]["path"]
+        skip = dist_config.feature_functions["hosts"][host]["skip"] if "skip" in dist_config.feature_functions["hosts"][host] else False
         should_upload = dist_config.feature_functions["hosts"][host]["upload"] if "upload" in dist_config.feature_functions["hosts"][host] else True
         
-        if remote_host == "main": #we run the main host last
+        if remote_host == "main"or skip: #we run the main host last and skip if necessary
             continue
         
         # sudo apt install libpython3.8-dev
@@ -99,6 +116,7 @@ def main(args):
         # 2.5 check if tmux is running, if yes kill if not create new instance
         kill_tmux(username, remote_host, verbose)  
         
+         
         # 2.6 ssh into remote host & run create features over tmux
         msg = "Creating features on {0}".format(host)
         cmd = "ssh {username}@{remote_host} 'cd {path}; {tmux} \"({create_features})\"'".format(path=path+"/"+repo_name, tmux=tmux_cmd, create_features = create_features_cmd, username=username, remote_host=remote_host)
@@ -112,16 +130,17 @@ def main(args):
     # Start main session
     addresses = [dist_config.feature_functions["hosts"][host]["host_address"] for host in list(dist_config.feature_functions["hosts"].keys())]
     if "main" in addresses:
-        kill_tmux(username, "main", verbose)
-        msg = "Creating features on {0}".format(socket.gethostname())
-        cmd = "{tmux} \"({create_features})\"".format(tmux=tmux_cmd, create_features = create_features_cmd)
-        run_cmd(cmd, True, msg)
+        if not("skip" in dist_config.feature_functions["hosts"]["phdesktop"] and dist_config.feature_functions["hosts"]["phdesktop"]["skip"]):
+            kill_tmux(username, "main", verbose)
+            msg = "Creating features on {0}".format(socket.gethostname())
+            cmd = "{tmux} \"({create_features})\"".format(tmux=tmux_cmd, create_features = create_features_cmd)
+            run_cmd(cmd, True, msg)
+            
+            #sent_telegram_notification("* Create features on {host} sucessfull".format(host=host))
+            cmd_to_connect = "tmux a -t rma"
+            sent_telegram_notification("Connect to {host} with: \n{cmd_to_connect}".format(host=socket.gethostname(), cmd_to_connect=cmd_to_connect))
         
-        #sent_telegram_notification("* Create features on {host} sucessfull".format(host=host))
-        cmd_to_connect = "tmux a -t rma"
-        sent_telegram_notification("Connect to {host} with: \n{cmd_to_connect}".format(host=socket.gethostname(), cmd_to_connect=cmd_to_connect))
-        
-    sent_telegram_notification("*** All distributions started sucessfully ")                
+    sent_telegram_notification("*** All distributions started ")                
     
 
 if __name__ == "__main__":
