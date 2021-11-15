@@ -9,13 +9,15 @@ import logging as lg
 import coloredlogs
 coloredlogs.install()
 
+TMUX_SESSION_NAME = "rma"
+
 def run_subprocess(cmd):
     """Run command on subprocess
 
     Args:
         cmd (string): command to run on subprocess
     """
-    return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return  str(subprocess.check_output(cmd, shell=True)).replace('\\n', '\n').replace('\\t', '\t')
 
 def run_cmd(cmd, verbose, verbose_msg):
     if verbose:
@@ -24,14 +26,27 @@ def run_cmd(cmd, verbose, verbose_msg):
         #print(cmd)
         
     p = run_subprocess(cmd)
-    p.wait()
-    if verbose:
-        out_str = repr(p.stdout.readline())#.decode("ascii")
-        err_str = repr(p.stderr.readline())#.decode("ascii")
-        if len(out_str) > 3:
-            print("    Output:\n"+out_str)
-        if len(err_str) > 3:
-            print("    Errors:\n"+err_str)
+    if verbose and len(p)>3:
+        print(p)
+    
+def kill_tmux(username, remote_host, verbose):
+    tmux_running = "[[ -n $(pgrep tmux) ]] && echo true || echo false"
+    tmux_ls  = "tmux ls"
+    tmux_kill = "tmux kill-session -t "+TMUX_SESSION_NAME
+    
+    # 1. check if server running
+    cmd = tmux_running if remote_host == "main" else "ssh {username}@{remote_host} '{tmux_running}'".format(username=username, remote_host=remote_host,tmux_running=tmux_running)
+    p = str(subprocess.check_output(cmd, shell=True)).replace('\\n', '\n').replace('\\t', '\t')
+    if "true" in p:
+        # 2. check session list
+        cmd = tmux_ls if remote_host == "main" else "ssh {username}@{remote_host} '{tmux_ls}'".format(username=username, remote_host=remote_host,tmux_ls=tmux_ls)
+        p = str(subprocess.check_output(cmd, shell=True)).replace('\\n', '\n').replace('\\t', '\t')
+        
+        # 3. only kill if session exists
+        if "rma" in p:
+            cmd = tmux_kill if remote_host == "main" else "ssh {username}@{remote_host} '{tmux_kill}'".format(username=username, remote_host=remote_host,tmux_kill=tmux_kill)
+            verbose_msg = "Kill existing tmux on {username}@{remote_host}".format(username=username, remote_host=remote_host)
+            run_cmd(cmd, verbose, verbose_msg)     
     
 def main(args):
     """Distributed feature extraction to all hosts listed in distributed_configuration.py
@@ -39,12 +54,11 @@ def main(args):
     repo_name = "Reddit_Morality_Analysis"
     
     # install cmds
-    requirements_cmd = "pip3 -r requirements.txt || pip -r requirements.txt"
+    requirements_cmd = "pip3 install -r requirements.txt || pip install -r requirements.txt"
     spacy_install = "python3 -m spacy download en_core_web_trf || python -m spacy download en_core_web_trf"
     
     # tmux & create_features
-    tmux_kill_cmd  = "tmux kill-session -t rma"
-    tmux_cmd = "tmux new-session -d  -s rma " 
+    tmux_cmd = "tmux new-session -d  -s "+TMUX_SESSION_NAME
     create_features_cmd = "python3 create_features.py -d || python create_features.py -d"
     
     
@@ -56,45 +70,58 @@ def main(args):
         username = dist_config.feature_functions["hosts"][host]["username"]
         remote_host = dist_config.feature_functions["hosts"][host]["host_address"]
         path = dist_config.feature_functions["hosts"][host]["path"]
+        should_upload = dist_config.feature_functions["hosts"][host]["upload"] if "upload" in dist_config.feature_functions["hosts"][host] else True
         
         if remote_host == "main": #we run the main host last
             continue
         
-        # 2.1 exchange ssh keys 
-        #cmd = "ssh-copy-id {username}@{remote_host}".format(username=username, remote_host=remote_host)
-        #verbose_msg = "Copying ssh key to {username}@{remote_host}".format(username=username, remote_host=remote_host)
-        #run_cmd(cmd, verbose, verbose_msg)
-        #
-        # 2.2 make sure that path exists over ssh & delete existing repo i.e. ssh username@remote_host mkdir -p path
-        cmd = "ssh {username}@{remote_host} 'mkdir -p {path} && rm -rf {path}/{repo_name}'".format(path=path, repo_name=repo_name,username=username, remote_host=remote_host)
-        verbose_msg = "Create directory on {username}@{remote_host}".format(username=username, remote_host=remote_host)
-        run_cmd(cmd, verbose, verbose_msg)
+        # sudo apt install libpython3.8-dev
         
-        # 2.3 scp current code into remote-host
-        cmd = "scp -r ../{repo} {username}@{remote_host}:{path} ".format(username=username, remote_host=remote_host, cmd=cmd, path=path, repo=repo_name)
-        verbose_msg = "Copy directory to {username}@{remote_host}".format(username=username, remote_host=remote_host)
-        run_cmd(cmd, verbose, verbose_msg)
-        
-        # 2.4 ssh into remote host and check if all packages are installed and kill prev tmux sessions 
-        cmd = "ssh {username}@{remote_host} 'cd {path}/{repo} && ({requirements}) && ({spacy_install}) && {tmux_kill}'".format(path=path ,repo=repo_name, requirements=requirements_cmd,spacy_install=spacy_install, tmux_kill=tmux_kill_cmd, username=username, remote_host=remote_host,)
+        # Don't always upload the directory
+        if should_upload:
+            # 2.2 make sure that path exists over ssh & delete existing repo i.e. ssh username@remote_host mkdir -p path
+            cmd = "ssh {username}@{remote_host} 'mkdir -p {path} && rm -rf {path}/{repo_name}'".format(path=path, repo_name=repo_name,username=username, remote_host=remote_host)
+            verbose_msg = "Create directory on {username}@{remote_host}".format(username=username, remote_host=remote_host)
+            run_cmd(cmd, verbose, verbose_msg)
+            
+            # 2.3 scp current code into remote-host
+            cmd = "scp -r ../{repo} {username}@{remote_host}:{path} ".format(username=username, remote_host=remote_host, cmd=cmd, path=path, repo=repo_name)
+            verbose_msg = "Copy directory to {username}@{remote_host}".format(username=username, remote_host=remote_host)
+            run_cmd(cmd, verbose, verbose_msg)
+        else:
+            lg.info("Not uploading to {host}".format(host=host))
+            
+        # 2.4 ssh into remote host and check if all packages are installed
+        cmd = "ssh {username}@{remote_host} 'cd {path}/{repo} && ({requirements}) && ({spacy_install})'".format(path=path ,repo=repo_name, requirements=requirements_cmd,spacy_install=spacy_install, username=username, remote_host=remote_host,)
         verbose_msg = "Check installed packages on {username}@{remote_host}".format(username=username, remote_host=remote_host)
         run_cmd(cmd, verbose, verbose_msg)            
         
-        # 2.5 ssh into remote host & run create features over tmux
-        msg = "Start create_features on {0}".format(remote_host)
+        # 2.5 check if tmux is running, if yes kill if not create new instance
+        kill_tmux(username, remote_host, verbose)  
+        
+        # 2.6 ssh into remote host & run create features over tmux
+        msg = "Creating features on {0}".format(host)
         cmd = "ssh {username}@{remote_host} 'cd {path}; {tmux} \"({create_features})\"'".format(path=path+"/"+repo_name, tmux=tmux_cmd, create_features = create_features_cmd, username=username, remote_host=remote_host)
         run_cmd(cmd, True, msg)
+        
         # cmd to connect to instance
+        # sent_telegram_notification("* Create features on {host} sucessfull".format(host=host))
         cmd_to_connect = "ssh -t {username}@{remote_host} \"tmux a -t rma\"".format(username=username, remote_host=remote_host)
         sent_telegram_notification("Connect to {host} with: \n{cmd_to_connect}".format(host=host, cmd_to_connect=cmd_to_connect))
 
+    # Start main session
     addresses = [dist_config.feature_functions["hosts"][host]["host_address"] for host in list(dist_config.feature_functions["hosts"].keys())]
     if "main" in addresses:
-        lg.info("create_features on {0}".format(host))
-        run_subprocess(tmux_kill_cmd)
-        run_subprocess("{tmux} '({create_features})'".format(tmux=tmux_cmd, create_features = create_features_cmd))
-    
-    sent_telegram_notification("***All distributions started sucessfully ")                
+        kill_tmux(username, "main", verbose)
+        msg = "Creating features on {0}".format(socket.gethostname())
+        cmd = "{tmux} \"({create_features})\"".format(tmux=tmux_cmd, create_features = create_features_cmd)
+        run_cmd(cmd, True, msg)
+        
+        #sent_telegram_notification("* Create features on {host} sucessfull".format(host=host))
+        cmd_to_connect = "tmux a -t rma"
+        sent_telegram_notification("Connect to {host} with: \n{cmd_to_connect}".format(host=socket.gethostname(), cmd_to_connect=cmd_to_connect))
+        
+    sent_telegram_notification("*** All distributions started sucessfully ")                
     
 
 if __name__ == "__main__":

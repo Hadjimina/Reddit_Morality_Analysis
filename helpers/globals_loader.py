@@ -7,6 +7,7 @@ import constants as CS
 import pandas as pd
 import spacy
 import sys
+import json
 from spacytextblob.spacytextblob import SpacyTextBlob
 
 def init(do_load_spacy=True):
@@ -60,13 +61,19 @@ def init(do_load_spacy=True):
     
 
 def load_reddit_settings():
-    """Load the reddit settings
+    """Load the reddit settings from secrets/reddit.json
     """
     global reddit
+    path = sys.path[0]+"/secrets/reddit.json"
+    file = open(path)
+    data = json.load(file)
+    id = data[CS.REDDIT_INSTANCE_IDX]["client_id"]
+    secret = data[CS.REDDIT_INSTANCE_IDX]["client_secret"]
+    agent = data[CS.REDDIT_INSTANCE_IDX]["user_agent"]
     reddit = praw.Reddit(
-            client_id="ChMem9TZYJif1A",
-            client_secret="3HkLZRVIBwAWbUdYExTGFK0e35d1Uw",
-            user_agent="android:com.example.myredditapp:v1.2.3"
+            client_id=id,
+            client_secret=secret,
+            user_agent=agent
         )
 
 def load_comments():

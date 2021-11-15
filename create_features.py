@@ -118,25 +118,50 @@ def create_features():
 
     # Do topic modeling & merge
     if CS.DO_TOPIC_MODELLING:
+        if CS.NOTIFY_TELEGRAM:
+            msg = "Start {fn} on {host}".format(fn ="topic modelling", host=socket.gethostname())
+            sent_telegram_notification(msg)
+            
         posts_raw = df_posts["post_text"].to_list()
         post_ids = df_posts["post_id"].to_list()
         topic_df = topic_modelling(posts_raw, post_ids)
         feature_df = topic_df.merge(
             feature_df, left_on="post_id", right_on="post_id", validate="1:1")
+        
+        if CS.NOTIFY_TELEGRAM:
+            msg = "Finished {fn} on {host}".format(fn ="topic modelling", host=socket.gethostname())
+            sent_telegram_notification(msg)
 
     # Merge generate features with LIWC & Moral foundations
     if CS.LOAD_LIWC:
+        if CS.NOTIFY_TELEGRAM:
+           msg = "Start {fn} on {host}".format(fn ="LIWC merge", host=socket.gethostname())
+           sent_telegram_notification(msg)
+            
         feature_df = feature_df.merge(
             globals_loader.df_liwc, left_on="post_id", right_on=CS.LIWC_PREFIX+"post_id", validate="1:1")
         if CS.TITLE_AS_STANDALONE:
             feature_df = feature_df.merge(
                 globals_loader.df_liwc_title, left_on="post_id", right_on=CS.LIWC_TITLE_PREFIX+"post_id", validate="1:1")
+            
+        if CS.NOTIFY_TELEGRAM:
+           msg = "Finished {fn} on {host}".format(fn ="LIWC merge", host=socket.gethostname())
+           sent_telegram_notification(msg)
+           
     if CS.LOAD_FOUNDATIONS:
+        if CS.NOTIFY_TELEGRAM:
+           msg = "Started {fn} on {host}".format(fn ="Foundations merge", host=socket.gethostname())
+           sent_telegram_notification(msg)
+            
         feature_df = feature_df.merge(globals_loader.df_foundations, left_on="post_id",
                                       right_on=CS.FOUNDATIONS_PREFIX+"post_id", validate="1:1")
         if CS.TITLE_AS_STANDALONE:
             feature_df = feature_df.merge(globals_loader.df_foundations_title,
                                           left_on="post_id", right_on=CS.FOUNDATIONS_TITLE+"post_id", validate="1:1")
+
+        if CS.NOTIFY_TELEGRAM:
+           msg = "Finished {fn} on {host}".format(fn ="Foundations merge", host=socket.gethostname())
+           sent_telegram_notification(msg)
 
     # Save features in one big dataframe
     date_time = get_date_str()
@@ -163,9 +188,13 @@ def thread_print():
         lg.info(lg_str)
 
 
-def setup():
-    """Load globals and print number of threads used, before running "create_features"
+def setup(reddit_instance_idx=0):
+    """Setup gloabal variables, profanity and print current number of threads
+
+    Args:
+        reddit_instance_idx (int, optional): Index of reddit settings we should use for the praw instance. Defaults to 0.
     """
+    CS.REDDIT_INSTANCE_IDX = reddit_instance_idx
     globals_loader.init()
     profanity.load_censor_words()
     thread_print()
@@ -175,7 +204,11 @@ def refresh_token(gdrive_json):
 
     Args:
         gdrive_json (dict): dictionary of gdrive secrets
+
+    Returns:
+        token (string): new bearer token
     """
+    token = ""
     client_id = gdrive_json["client_id"]
     client_secret = gdrive_json["client_secret"]
     refresh_token = gdrive_json["refresh_token"]
@@ -184,8 +217,15 @@ def refresh_token(gdrive_json):
                             -d client_secret={secret} \
                             -d refresh_token={refresh} \
                             -d grant_type=refresh_token".format(id=client_id, secret=client_secret, refresh=refresh_token)
-    p = subprocess.Popen(refresh_token_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.wait()
+                            
+    p = str(subprocess.check_output(refresh_token_cmd, shell=True)).replace('\\n', '\n').replace('\\t', '\t')
+    start_idx = p.find("{")
+    end_idx = p.find("}")
+    if start_idx != -1 and end_idx != -1:
+        p = p[start_idx:end_idx+1]
+        dict = json.loads(p)
+        token = dict["access_token"]
+    return token
     
     
 def upload_output_dir():
@@ -200,9 +240,7 @@ def upload_output_dir():
     path = sys.path[0]+"/secrets/gdrive.json"
     file = open(path)
     data = json.load(file)
-    refresh_token(data)
-    
-    bearer = data["bearer"]
+    bearer = refresh_token(data)
     folder_id = data["folder_id"]
     link = data["link"]
     upload_to_gdrive_cmd = "curl -X POST -L \
@@ -216,14 +254,15 @@ def upload_output_dir():
     p.wait()
     
     if CS.NOTIFY_TELEGRAM:
-        msg = "Uploaded {filename} from {host} to GDrive.\n    {link}".format(filename=filename, host=socket.gethostname(), link=link)
+        msg = "Uploaded {filename} from {host} to GDrive.\n\n{function_list_str}\n{link}".format(
+            filename=filename, host=socket.gethostname(), link=link, function_list_str=dist_conf_to_function_list_str(dist_conf))
+        
         sent_telegram_notification(msg)
 
 
 def main(args):
     if "-vis" in args:
-        filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[
-            2]  # [] if no file
+        filenames = next(walk(CS.OUTPUT_DIR), (None, None, []))[2] #[] if no file
         filenames = list(
             filter(lambda x: ".csv" in x and "features_output" in x, filenames))
         filenames = sorted(filenames, reverse=True)
@@ -240,7 +279,16 @@ def main(args):
 
         vis.generate_report(df)
     elif "-dist" in args or "-d" in args:
-        setup()
+        # get reddit instance idx
+        hostname = socket.gethostname().lower()
+        if "reddit_instance_idx" in dist_conf.feature_functions["hosts"][hostname]:
+            reddit_instance_idx = dist_conf.feature_functions["hosts"][hostname]["reddit_instance_idx"]
+            setup(reddit_instance_idx)
+        else:
+            setup()
+            
+        
+        
         # If we run it in a distributed manner, we might run it once for title standalone once prepend
         lg.info("Running distributed.")
         title_handling = dist_conf.feature_functions["title_handling"]
@@ -253,6 +301,9 @@ def main(args):
             set_features_to_run_dist(bool(title_handling))
             create_features()
             upload_output_dir()
+            
+    elif "-upload" in args or "-u" in args:
+        upload_output_dir()
     else:
         setup()
         create_features()

@@ -10,10 +10,11 @@ import multiprocessing
 
 # Minification, requirements and title
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
-USE_MINIFIED_DATA = False
+USE_MINIFIED_DATA = True
 ENFORCE_POST_REQUIREMENTS = False
 TITLE_AS_STANDALONE = False
 NOTIFY_TELEGRAM = False
+REDDIT_INSTANCE_IDX = 1
 
 # TOPIC MODELING
 # TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
@@ -34,6 +35,7 @@ TOPIC_PREFIX = "topic_"
 dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
 
 HOME_DIR = os.path.dirname(os.path.abspath(__file__))+"/"
+
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"+output_dir_name()+"/"
 OUTPUT_DIR_ZIPS = os.path.dirname(os.path.abspath(__file__))+"/output/zips/"
 
