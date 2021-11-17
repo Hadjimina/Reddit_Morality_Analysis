@@ -29,7 +29,6 @@ class parallel_process (Process):
         self.features_to_generate = features_to_generate
         self.df = None
     
-        #print("DF on thread "+str(thread_id))
         
 
     def run(self):

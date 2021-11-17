@@ -8,6 +8,7 @@ import pandas as pd
 import logging as lg
 import coloredlogs
 from matplotlib import pyplot as plt
+from sklearn.feature_extraction.text import CountVectorizer 
 
 coloredlogs.install()
 
@@ -34,8 +35,10 @@ def topic_modelling(posts_raw, post_ids):
     #                    for post in posts_raw]
 
     post_list_clean = posts_raw
-    # min topic size?
-    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), nr_topics="auto", low_memory=True, calculate_probabilities=False)
+    # stopword removal
+    vectorizer_model = CountVectorizer(ngram_range=(1, 2), stop_words="english")
+    # lemmatization?
+    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), low_memory=True, calculate_probabilities=False, nr_topics="auto", vectorizer_model=vectorizer_model)
     topics, _ = model.fit_transform(post_list_clean)
 
     actual_nr_topics = len(set(topics))
@@ -49,7 +52,8 @@ def topic_modelling(posts_raw, post_ids):
         data = list(zip(post_ids, topics)), #data = list(zip(post_ids, topics, probs)),
         columns = ["post_id", "topic_nr"]) #columns = ["post_id", "topic_nr", "topic_probability"])
 
-    print(info_df.head(3))
+    print("Printing first 10 results")
+    print(info_df.head(10))
 
     topic_ids = info_df["Topic"]
     topic_sizes = info_df["Count"]

@@ -115,7 +115,8 @@ def get_author_age_and_gender(post_text):
                 age_gender_list.append((age, gender))
 
     if len(age_gender_list) > 1:
-        lg.warning("More than 1 age/gender found for poster.")
+        True
+        #lg.warning("More than 1 age/gender found for poster.")
     elif len(age_gender_list) < 1:
         age_gender_list = [(-1,-1)] #-1 if nothing found
     

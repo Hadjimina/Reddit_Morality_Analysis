@@ -19,10 +19,10 @@ REDDIT_INSTANCE_IDX = 1
 # TOPIC MODELING
 # TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
 TOPICS_ABS = 300000000000
-MIN_CLUSTER_PERC = 0.02
+MIN_CLUSTER_PERC = 0.002
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.15
+MINIFY_FRAC = 0.3
 
 # Prefixes
 LIWC_PREFIX = "liwc_"
@@ -45,7 +45,7 @@ mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(dataset_dir, mini_str)
+COMMENTS_CLEAN = "{0}comments_clean_16_07_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC = "{0}LIWC_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_TITLE = "{0}LIWC_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_MERGED = "{0}LIWC_merged_27_6_2021{1}.csv".format(dataset_dir, mini_str)
@@ -125,7 +125,7 @@ FEATURES_TO_GENERATE_MP = {
         #(get_author_age_and_gender, CS.POST_TEXT)
     ],
     "writing_sty": [
-        (get_punctuation_count, CS.POST_TEXT),
+        #(get_punctuation_count, CS.POST_TEXT),
         #(get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
@@ -156,11 +156,11 @@ SPACY_FUNCTIONS = [
 ]
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
-DO_TOPIC_MODELLING = True
+DO_TOPIC_MODELLING = False
 
 # Loading
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
-LOAD_COMMENTS = False #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = True
-LOAD_LIWC = True
+LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+LOAD_FOUNDATIONS = False
+LOAD_LIWC = False

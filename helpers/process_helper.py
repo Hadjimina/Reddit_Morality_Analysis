@@ -21,7 +21,7 @@ def process_run(feat_to_gen, sub_df, id):
 
     # Create a list of all individual feature dfs and merge. Lastly append last column with post_id
     feature_df_list = []
-    standalone_ft_collector = []
+    fn_executed = [] # Why is this needed at all?
     sent_msgs =[]
     for category in feat_to_gen:
         # We iterate over every column in dataset s.t. we first use all columns that use e.g. "post_author", before moving on
@@ -29,23 +29,24 @@ def process_run(feat_to_gen, sub_df, id):
             for feature_tuple in feat_to_gen[category]:
                 
                 funct = feature_tuple[0]
+                fn_name = funct.__name__
                 idx = feature_tuple[1]
-                msg = "Started {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
-                if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
-                    sent_telegram_notification(msg)
-                    sent_msgs.append(msg)
-                    
                 
                 if idx == i:
                     col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
-                    if not category in standalone_ft_collector: 
+                    if not fn_name in fn_executed:
+                        msg = "Started {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
+                        if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
+                            sent_telegram_notification(msg)
+                            sent_msgs.append(msg)
+                     
                         feature_df_list.append(feature_to_df(id, category, col, funct))
-                        standalone_ft_collector.append(category)
+                        fn_executed.append(fn_name)
                     
-                msg = "Finished {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
-                if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
-                    sent_telegram_notification(msg)
-                    sent_msgs.append(msg)
+                        #msg = "    Finished {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
+                        #if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
+                        #    sent_telegram_notification(msg)
+                        #    sent_msgs.append(msg)
     
     # Post pends some post specific information
     if id == CS.MONO_ID:
@@ -65,10 +66,12 @@ def feature_to_df(id, category, column, funct):
         category (string): Which feature category we are currently using
         column  (string): dataframe column we apply the feature function to
         function (any->any): feature function
+        
     Returns: 
         dataframe: dataframe with headers corresponding to category and feature function. e.g "speaker" + "author_age" = "speaker_author_age", values are int returned from feature function
     """
-    lg.info('Running "{0}" on thread {1}'.format(funct.__name__, id))
+    if id == 0:
+        lg.info('Running "{0}" on thread {1}'.format(funct.__name__, id))
     if id == "mono":
         spacy_fn_names = [fn.__name__ for fn in CS.SPACY_FUNCTIONS]
         lg.info ("  Spacy features: {0}".format(spacy_fn_names))

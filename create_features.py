@@ -54,7 +54,7 @@ def set_features_to_run_dist(title_as_standalone):
     CS.FEATURES_TO_GENERATE_MONO = dist_conf.feature_functions["hosts"][hostname]["mono"]
     CS.SPACY_FUNCTIONS = dist_conf.feature_functions["hosts"][hostname]["spacy"]
     CS.DO_TOPIC_MODELLING = dist_conf.feature_functions["hosts"][hostname]["topic"]
-    CS.DO_TOPIC_MODELLING = dist_conf.feature_functions["hosts"][hostname]["topic"]
+    
     CS.LOAD_COMMENTS = get_judgement_labels in [
         item for sublist in CS.FEATURES_TO_GENERATE_MP["reactions"]+CS.FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
     CS.LOAD_FOUNDATIONS = dist_conf.feature_functions["hosts"][hostname]["foundations"]
@@ -187,6 +187,11 @@ def create_features():
            msg = "Finished {fn} on {host}".format(fn ="Foundations merge", host=socket.gethostname())
            sent_telegram_notification(msg)
 
+    
+    if CS.NOTIFY_TELEGRAM:
+        msg = "Finished all feature extractions on {host}".format(t=socket.gethostname())
+        sent_telegram_notification(msg)
+    
     # Save features in one big dataframe
     date_time = get_date_str()
     feature_df_to_save = feature_df.drop("post_text", axis=1)
@@ -310,23 +315,27 @@ def main(args):
         if "reddit_instance_idx" in dist_conf.feature_functions["hosts"][hostname]:
             reddit_instance_idx = dist_conf.feature_functions["hosts"][hostname]["reddit_instance_idx"]
             setup(reddit_instance_idx)
-        else:
-            setup()
-            
-        
         
         # If we run it in a distributed manner, we might run it once for title standalone once prepend
         lg.info("Running distributed.")
         title_handling = dist_conf.feature_functions["title_handling"]
         if title_handling > 1:
             for title_as_standalone in [False, True]:
-                set_features_to_run_dist(title_as_standalone)
+                try:
+                    set_features_to_run_dist(title_as_standalone)
+                    setup()
+                    create_features()
+                    upload_output_dir()
+                except Exception as e:
+                    sent_telegram_notification("Crashed on {hostname}:\n    {e_str}".format(e_str=str(e)))
+        else:
+            try:
+                set_features_to_run_dist(bool(title_handling))
+                setup()
                 create_features()
                 upload_output_dir()
-        else:
-            set_features_to_run_dist(bool(title_handling))
-            create_features()
-            upload_output_dir()
+            except Exception as e:
+                    sent_telegram_notification("Crashed on {hostname}:\n    {e_str}".format(e_str=str(e)))
             
     elif "-upload" in args or "-u" in args:
         upload_output_dir()
