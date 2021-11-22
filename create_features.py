@@ -134,9 +134,6 @@ def create_features():
         feature_df = topic_df.merge(
             feature_df, left_on="post_id", right_on="post_id", validate="1:1")
         
-        if CS.NOTIFY_TELEGRAM:
-            msg = "Finished {fn} on {host}".format(fn ="topic modelling", host=socket.gethostname())
-            sent_telegram_notification(msg)
 
     # Merge generate features with LIWC & Moral foundations
     if CS.LOAD_LIWC:
@@ -160,9 +157,6 @@ def create_features():
                 globals_loader.df_liwc_merged, left_on="post_id", right_on=CS.LIWC_MERGED_PREFIX+"post_id", validate="1:1")
             
             
-        if CS.NOTIFY_TELEGRAM:
-           msg = "Finished {fn} on {host}".format(fn ="LIWC merge", host=socket.gethostname())
-           sent_telegram_notification(msg)
            
     if CS.LOAD_FOUNDATIONS:
         if CS.NOTIFY_TELEGRAM:
@@ -189,7 +183,7 @@ def create_features():
 
     
     if CS.NOTIFY_TELEGRAM:
-        msg = "Finished all feature extractions on {host}".format(t=socket.gethostname())
+        msg = "Finished all feature extractions on {host}".format(host=socket.gethostname())
         sent_telegram_notification(msg)
     
     # Save features in one big dataframe
@@ -327,7 +321,8 @@ def main(args):
                     create_features()
                     upload_output_dir()
                 except Exception as e:
-                    sent_telegram_notification("Crashed on {hostname}:\n    {e_str}".format(e_str=str(e)))
+                    print(sys.exc_info()[2])
+                    sent_telegram_notification("Crashed on {hostname}\n    {e_str}".format(e_str=str(e), hostname=hostname))
         else:
             try:
                 set_features_to_run_dist(bool(title_handling))
@@ -335,7 +330,8 @@ def main(args):
                 create_features()
                 upload_output_dir()
             except Exception as e:
-                    sent_telegram_notification("Crashed on {hostname}:\n    {e_str}".format(e_str=str(e)))
+                lg.exception(e)
+                sent_telegram_notification("Crashed on {hostname}\n    {e_str}".format(e_str=str(e), hostname=hostname))
             
     elif "-upload" in args or "-u" in args:
         upload_output_dir()

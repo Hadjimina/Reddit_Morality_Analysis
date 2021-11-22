@@ -36,19 +36,19 @@ feature_functions = {
                 },
                 "mono": {
                     "writing_sty": [
-                         (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+                        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
                     ],
                     "reactions": [
 
                     ]
                 },
                 "spacy": [
-                     get_tense_in_spacy,
-                     get_voice_in_spacy,
-                     get_sentiment_in_spacy,
-                     get_focus_in_spacy,
-                     get_emotions_self_vs_other_in_spacy,
-                     get_profanity_self_vs_other_in_spacy,
+                    get_tense_in_spacy,
+                    get_voice_in_spacy,
+                    get_sentiment_in_spacy,
+                    get_focus_in_spacy,
+                    get_emotions_self_vs_other_in_spacy,
+                    get_profanity_self_vs_other_in_spacy,
                 ],
                 "topic": False,
                 "foundations": True,

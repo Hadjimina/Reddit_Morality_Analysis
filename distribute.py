@@ -80,13 +80,17 @@ def is_server_creating(username, remote_host):
         p = run_cmd(cmd, False, "", ret=True).split("\n")
         p_filtered = list(filter(lambda x: "create_features.py -d" in x, p))
         is_running = len(p_filtered)> 0
+        tmux_str = "tmux a -t rma"
+        connection_str = f"    ssh {username}@{remote_host} '{tmux_str}'" if remote_host != "main" else "    "+tmux_str
         if is_running:
-            lg.info(f"  {remote_host} is creating")
+            lg.info(f"  ✔️  {remote_host} is creating, connect to it with:")
+            lg.info(" "+connection_str)
         else:
-            lg.warning(f"  {remote_host} has crashed")
+            lg.warning(f"  ❌ {remote_host} has crashed, connect to it with:")
+            lg.warning(f"     ssh {username}@{remote_host}")
         return is_running
     else:
-        lg.info(f"  {remote_host} is down")
+        lg.info(f"  ❔ {remote_host} is down")
         return True
     
 def main(args):
@@ -120,7 +124,9 @@ def main(args):
     
     if "-c" in args or "-check" in args:
         if all_running:
-            lg.info("All Okay")
+            lg.info("✅ All Okay")
+        else:
+            lg.warning("⛔ Not okay")
         return
     
     sent_telegram_notification("*** Started distribution on "+socket.gethostname())
