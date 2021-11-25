@@ -127,7 +127,7 @@ FEATURES_TO_GENERATE_MP = {
     ],
     "writing_sty": [
         #(get_punctuation_count, CS.POST_TEXT),
-        #(get_emotions, CS.POST_TEXT),
+        (get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
         #(check_wibta, CS.POST_TEXT)
@@ -142,13 +142,12 @@ FEATURES_TO_GENERATE_MP = {
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MONO = {
     "writing_sty": [
-        #(get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
 }
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 SPACY_FUNCTIONS = [
-    #get_emotions
     #get_tense_in_spacy,
     #get_voice_in_spacy,
     #get_sentiment_in_spacy,
@@ -159,12 +158,12 @@ SPACY_FUNCTIONS = [
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 DO_TOPIC_MODELLING = True
-TOPIC_DOWNSAMPLE = True
+TOPIC_DOWNSAMPLE = False
 TOPIC_DOWNSAMPLE_FRAC = 0.3
 
 # Loading
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
-LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = True
-LOAD_LIWC = True
+LOAD_COMMENTS = False #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+LOAD_FOUNDATIONS = False
+LOAD_LIWC = False

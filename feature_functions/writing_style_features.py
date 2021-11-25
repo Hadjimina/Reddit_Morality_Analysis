@@ -312,8 +312,9 @@ def get_profanity_self_vs_other_in_spacy(sentence):
                 continue
 
             ret_dict[prefix+"prof"] = profanity_abs
+            ret_dict[prefix+"prof_length"] = len(sentence.split(" "))
 
-    return ret_dict 
+    return ret_dict
 
 
 def get_emotions_self_vs_other_in_spacy(sentence):
@@ -403,7 +404,7 @@ def get_spacy_features(post_text):
     emo_self_vs_oth_dict = dict.fromkeys(emo_self_vs_oth_dict_keys,0)
 
     # 6. Get profanity in sentence about self vs other 
-    prof_self_vs_oth_dict = {"self_prof":0, "other_prof":0}
+    prof_self_vs_oth_dict = {"self_prof":0, "other_prof":0, "self_prof_length":0, "other_prof_length":0 }
     
     for sentence in doc.sents:
 
@@ -466,7 +467,13 @@ def get_spacy_features(post_text):
     to_return += dict_to_feature_tuples(focus_norm_abs)
     
     # 5. Get self/other emotions in tuple list
-    emo_self_vs_oth_dict = get_abs_and_norm_dict(emo_self_vs_oth_dict, out_off_ratio=nr_words, only_norm=True)
+    #emo_self_vs_oth_dict = get_abs_and_norm_dict(emo_self_vs_oth_dict, out_off_ratio=nr_words, only_norm=True)
+    # 5.1 Normalise by self focused sentences length and other focused sentence length
+    emo_self_vs_oth_dict["self_prof"] = emo_self_vs_oth_dict["self_prof"]/emo_self_vs_oth_dict["self_prof_length"]
+    emo_self_vs_oth_dict["other_prof"] = emo_self_vs_oth_dict["other_prof"]/emo_self_vs_oth_dict["other_prof_length"]
+    #5.2 remove length entries
+    emo_self_vs_oth_dict.pop("self_prof_length", None)
+    emo_self_vs_oth_dict.pop("other_prof_length", None)
     to_return += dict_to_feature_tuples(emo_self_vs_oth_dict)
 
     # 6. Get self/other profanity in tuple list
