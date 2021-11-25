@@ -81,7 +81,7 @@ def is_server_creating(username, remote_host):
         p_filtered = list(filter(lambda x: "create_features.py -d" in x, p))
         is_running = len(p_filtered)> 0
         tmux_str = "tmux a -t rma"
-        connection_str = f"    ssh {username}@{remote_host} '{tmux_str}'" if remote_host != "main" else "    "+tmux_str
+        connection_str = f"    ssh {username}@{remote_host} \"{tmux_str}\"" if remote_host != "main" else "    "+tmux_str
         if is_running:
             lg.info(f"  ✔️  {remote_host} is creating, connect to it with:")
             lg.info(" "+connection_str)
@@ -173,7 +173,11 @@ def main(args):
             lg.info(f"Not uploading to {host}")
             
         # 2.4 ssh into remote host and check if all packages are installed
-        cmd = f"ssh {username}@{remote_host} 'cd {path}/{repo_name} && ({requirements_cmd}) && ({click_install}) &&({spacy_install})'"
+        update_pip = dist_config.feature_functions["hosts"][host]["update_pip"] if "update_pip" in dist_config.feature_functions["hosts"][host] else True
+        reqs = f"&& ({requirements_cmd})" if update_pip else ""
+        if not update_pip:
+            lg.info("Not updating pip")
+        cmd = f"ssh {username}@{remote_host} 'cd {path}/{repo_name} {reqs} && ({click_install}) &&({spacy_install})'"
         verbose_msg = f"Check installed packages on {username}@{remote_host}"
         run_cmd(cmd, verbose, verbose_msg)            
         
@@ -186,7 +190,7 @@ def main(args):
         #cmd = "ssh {username}@{remote_host} 'cd {path}; {tmux_cmd} \"({create_features_cmd})\"'".format(path=path+"/"+repo_name)
         #run_cmd(cmd, True, msg)
         msg = f"Creating features on {0}".format(host)
-        cmd = "ssh {username}@{remote_host} 'cd {path}; {tmux_cmd}; tmux send-keys -t \"rma:0\" \"python3 create_features -d\" Enter'".format(path=path+"/"+repo_name, username=username, tmux_cmd=tmux_cmd, remote_host=remote_host)
+        cmd = "ssh {username}@{remote_host} 'cd {path}; {tmux_cmd}; tmux send-keys -t \"rma:0\" \"python3 create_features.py -d\" Enter'".format(path=path+"/"+repo_name, username=username, tmux_cmd=tmux_cmd, remote_host=remote_host)
         run_cmd(cmd, True, msg)
         
         

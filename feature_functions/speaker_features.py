@@ -57,7 +57,7 @@ def get_author_info(account_name):
         lg.warning("Author older than Reddit. Setting to max age")
         age = 5879
 
-    print(age)
+    print(age, comment_karma, link_karma)
     feature_list += [("account_age", age)]
     feature_list +=[("account_comment_karma", comment_karma)]
     feature_list +=[("account_link_karma", link_karma)]

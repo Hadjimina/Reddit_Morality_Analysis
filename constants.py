@@ -10,19 +10,18 @@ import multiprocessing
 
 # Minification, requirements and title
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
-USE_MINIFIED_DATA = True
-ENFORCE_POST_REQUIREMENTS = False
+USE_MINIFIED_DATA = False
 TITLE_AS_STANDALONE = True
 NOTIFY_TELEGRAM = False
 REDDIT_INSTANCE_IDX = 1
 
 # TOPIC MODELING
 # TODO: this value was chosen arbitrarily. should it stay a frac or absolute?
-TOPICS_ABS = 300000000000
+#TOPICS_ABS = 300000000000
 MIN_CLUSTER_PERC = 0.002
 
 # PERCENTAGE TO MINIFY POSTS
-MINIFY_FRAC = 0.3
+MINIFY_FRAC = 0.05
 
 # Prefixes
 LIWC_PREFIX = "liwc_"
@@ -87,7 +86,7 @@ MONO_ID = "mono"
 # FEATURE DF POSTPEND
 # post_id,post_text,post_title,post_author_id,post_score,post_created_utc,post_num_comments
 # "post_ups", "post_downs"
-POST_PEND = ["post_id", "post_text", "post_num_comments", ]
+POST_PEND = ["post_id", "post_text", "post_num_comments", "post_flair" ]
 POST_PEND_MONO = ["post_id"]
 
 # SPACY STRINGS
@@ -110,6 +109,8 @@ PRONOUNS = [["i", "me", "my", "mine", "myself"],
             ["they", "them", "their", "theirs", "themselves"]]
 # max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
 PRONOUN_AGE_GENDER_DIST = 3
+
+FLAIRS_TO_REMOVE = ["troll", "meta", "news", "shitpost", "troll", "community discussion", "awards", "fake","announcement", "spam","new rule", "shit post","Unintelligible"]
 
 # EMO LEX EMOTIONS
 EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness',
@@ -147,6 +148,7 @@ FEATURES_TO_GENERATE_MONO = {
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 SPACY_FUNCTIONS = [
+    #get_emotions
     #get_tense_in_spacy,
     #get_voice_in_spacy,
     #get_sentiment_in_spacy,
@@ -156,11 +158,13 @@ SPACY_FUNCTIONS = [
 ]
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
-DO_TOPIC_MODELLING = False
+DO_TOPIC_MODELLING = True
+TOPIC_DOWNSAMPLE = True
+TOPIC_DOWNSAMPLE_FRAC = 0.3
 
 # Loading
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
 LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = False
-LOAD_LIWC = False
+LOAD_FOUNDATIONS = True
+LOAD_LIWC = True

@@ -11,7 +11,7 @@ feature_functions = {
     "hosts":
         {
             "phdesktop": {
-                "skip": False,
+                "skip": True,
                 "username": "philipp",
                 "host_address": "main",
                 "path": "/home/philipp/Documennts/Coding",
@@ -23,10 +23,10 @@ feature_functions = {
                     ],
                     "writing_sty": [
                         (get_punctuation_count, CS.POST_TEXT),
-                        (get_emotions, CS.POST_TEXT),           #not executed, but msg sent
-                        (aita_location, CS.POST_TEXT),          #not executed, but msg sent
-                        (get_profanity_count, CS.POST_TEXT),    #not executed, but msg sent
-                        (check_wibta, CS.POST_TEXT)             #not executed, but msg sent
+                        (get_emotions, CS.POST_TEXT),           
+                        (aita_location, CS.POST_TEXT),          
+                        (get_profanity_count, CS.POST_TEXT),    
+                        (check_wibta, CS.POST_TEXT)             
 
                     ],
                     "reactions": [
@@ -36,28 +36,29 @@ feature_functions = {
                 },
                 "mono": {
                     "writing_sty": [
-                        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+                        #(get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
                     ],
                     "reactions": [
 
                     ]
                 },
                 "spacy": [
-                    get_tense_in_spacy,
-                    get_voice_in_spacy,
-                    get_sentiment_in_spacy,
-                    get_focus_in_spacy,
-                    get_emotions_self_vs_other_in_spacy,
-                    get_profanity_self_vs_other_in_spacy,
+                    #get_tense_in_spacy,
+                    #get_voice_in_spacy,
+                    #get_sentiment_in_spacy,
+                    #get_focus_in_spacy,
+                    #get_emotions_self_vs_other_in_spacy,
+                    #get_profanity_self_vs_other_in_spacy,
                 ],
                 "topic": False,
                 "foundations": True,
                 "liwc": True,
+                "reddit_instance_idx": 0
             },
-             "104-171-200-248": {
-                 "skip":True,
+             "104-171-200-216": {
+                "skip":False,
                 "username": "ubuntu",
-                "host_address": "104.171.200.248",
+                "host_address": "104.171.200.216",
                 "path": "/home/ubuntu",
                 "upload": True,
                 "mp": {
@@ -87,6 +88,7 @@ feature_functions = {
                 "username": "root",
                 "host_address": "64.227.39.41",
                 "path": "/home/root/",
+                "update_pip":False,
                 "upload": True,
                 "mp": {
                     "speaker": [
@@ -96,7 +98,7 @@ feature_functions = {
             
                     ],
                     "reactions": [
-                        # (check_crossposts, CS.POST_ID),  # slow
+                        #(check_crossposts, CS.POST_ID),  # slow
                     ]
                 },
                 "mono": {
@@ -112,16 +114,18 @@ feature_functions = {
                 "liwc": False,
                 "reddit_instance_idx": 0
             },
-            "digitalocean-2": {
+            "phmedia": {
                 "skip":True,
-                "username": "root",
-                "host_address": "157.245.44.115",
-                "path": "/home/root/",
+                "username": "philipp",
+                "host_address": "phmedia.duckdns.org",
+                "path": "/home/philipp/scripts/msc",
                 "upload": True,
+                "update_pip":False,
                 "mp": {
                     "speaker": [
                     ],
                     "writing_sty": [
+            
                     ],
                     "reactions": [
                         (check_crossposts, CS.POST_ID),  # slow
@@ -140,34 +144,6 @@ feature_functions = {
                 "liwc": False,
                 "reddit_instance_idx": 1
             },
-            #"phmedia": {
-            #    "username": "philipp",
-            #    "host_address": "phmedia.duckdns.org",
-            #    "path": "/home/philipp/scripts/msc",
-            #    "upload": True,
-            #    "mp": {
-            #        "speaker": [
-            #        ],
-            #        "writing_sty": [
-            #
-            #        ],
-            #        "reactions": [
-            #            (check_crossposts, CS.POST_ID),  # slow
-            #        ]
-            #    },
-            #    "mono": {
-            #        "writing_sty": [
-            #        ],
-            #        "reactions": [
-            #        ]
-            #    },
-            #    "spacy": [
-            #    ],
-            #    "topic": False,
-            #    "foundations": False,
-            #    "liwc": False,
-            #    "reddit_instance_idx": 0
-            #},
 
             # phmedia
         }

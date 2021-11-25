@@ -317,3 +317,16 @@ def dist_conf_to_function_list_str(dist_conf):
         
 
     return function_list_str
+
+def downsample_to_proportion(rows, proportion):
+    """Downsample a list
+
+    Args:
+        rows (list): List of rows we want to downsample
+        proportion (int): ratio to downsample rows to. e.g. 0.3
+
+    Returns:
+        list: downsampleded list
+    """
+    
+    return rows[::int(1 / proportion)]

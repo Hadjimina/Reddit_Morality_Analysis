@@ -94,6 +94,8 @@ def load_posts():
     global df_posts
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
     df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False)
+    
+    
     if CS.USE_MINIFIED_DATA:
         lg.info("Nr. of posts {0}".format(df_posts.shape[0]))
 

@@ -109,8 +109,8 @@ def get_emotions(post_text):
             abs_affect[key] = 0
 
     emo_dict = get_abs_and_norm_dict(abs_affect, len(post_text))
-    tuple_list = dict_to_feature_tuples(emo_dict)
-    return tuple_list
+    ret_tpl = dict_to_feature_tuples(emo_dict)
+    return ret_tpl
 
 def aita_location(post_text):
     """Get the location (in % of entire text) and the number of "aita?" questions the author asks. 
@@ -250,39 +250,32 @@ def get_profanity_count(post_text):
     return [("profanity_abs", profanity_abs), ("profanity_norm",profanity_norm)]
 
 def get_focus_in_spacy(token, count_possesive_pronouns=True):
-    """ Count pronouns in the text if they are subjects, objects or possesive pronouns (optional). 
-        If it was the subject of the sentence we give it a higher weight than if it was the object.
+    """ Check if  token in the text is a pronoun. If so, check if they are subjects, objects or possesive pronouns (optional). 
+        
     Args:
         token (spaCy token): token we got from analysing the entire post text using spaCy
 
     Returns:
-        str, int: the focus string as well as its weight
+        str: the focus string with its type (subject, object, possessive) post pended
     """
-    weight = 0
-    focus_str = ""
-
     token_str = str(token).lower().strip()
     # disregard tokens with only whitespaces or only numbers
     if str(token).isspace() or token_str.isnumeric():
-        return None, None
+        return None
 
-    # 1. Figure out if token is object or subject
-    # Subject
-    if token.dep_ == "nsubj":
-        weight = 2 #TODO: check if these weights make sense
-    elif token.dep_ in ["iobj", "dobj", "pobj", "dative"]: # object 
-        weight = 1
-    elif token.dep_ == "poss" and count_possesive_pronouns:
-        weight = 1
+    # Get focus string
+    focus_str = find_focus_str(token_str)
+    if focus_str is None:
+        return None
     
-    #print(token, weight)
-    if weight != 0: # If weight is set, we know that token is either subject or object
-        focus_str = find_focus_str(token_str)
-        #print(token, focus_str)
-        if not focus_str is None:
-            return focus_str, weight
-
-    return None, None 
+    if token.dep_ == "nsubj":
+        return focus_str+"_subj"
+    elif token.dep_ in ["iobj", "dobj", "pobj", "dative"]: # object 
+        return focus_str+"_obj"
+    elif token.dep_ == "poss" and count_possesive_pronouns:
+        return focus_str+"_poss"
+    
+    return None 
 
 def get_profanity_self_vs_other_in_spacy(sentence):
     """ Iterate over text and
@@ -394,8 +387,9 @@ def get_spacy_features(post_text):
     voice_dict = dict.fromkeys(voices, 0)
 
     focus = ["focus_i", "focus_you_sg", "focus_he", "focus_we", "focus_you_pl","focus_they"]
+    focus = [x+"_"+y for y in ["subj", "obj", "poss"]for x in focus]
     focus_dict_raw = dict.fromkeys(focus, 0)
-    focus_int_ext = {"internal_focus":0, "external_focus":0}
+    #focus_int_ext = {"internal_focus":0, "external_focus":0}
 
     # 3. Get Sentiment & Polarity
     sent_dict = {"sent_polarity":0, "sent_subjectivity": 0} 
@@ -442,9 +436,9 @@ def get_spacy_features(post_text):
         for token in sentence:
             # 4. Get focus 
             if get_focus_in_spacy in CS.SPACY_FUNCTIONS:
-                focus_str, weight = get_focus_in_spacy(token)
+                focus_str = get_focus_in_spacy(token)
                 if focus_str in focus_dict_raw.keys():
-                    focus_dict_raw[focus_str] += 1*weight
+                    focus_dict_raw[focus_str] += 1
 
 
     to_return = []
@@ -466,10 +460,10 @@ def get_spacy_features(post_text):
     # 4. Get focus in tuple list
     # Raw values probably do not make sense since we cannot distinguish between you (singular) and you (plural)
     ## to_return += dict_to_feature_tuples(focus_dict_raw)
-    focus_int_ext["internal_focus"] = focus_dict_raw["focus_i"] # TODO: should we count "focus_we" as internal focus aswell?
-    focus_int_ext["external_focus"] = sum(list(focus_dict_raw.values())) - focus_dict_raw["focus_i"]
-    focus_int_ext = get_abs_and_norm_dict(focus_int_ext, out_off_ratio=nr_words)
-    to_return += dict_to_feature_tuples(focus_int_ext)
+    #focus_int_ext["internal_focus"] = focus_dict_raw["focus_i"] # TODO: should we count "focus_we" as internal focus aswell?
+    #focus_int_ext["external_focus"] = sum(list(focus_dict_raw.values())) - focus_dict_raw["focus_i"]
+    focus_norm_abs = get_abs_and_norm_dict(focus_dict_raw, out_off_ratio=nr_words)
+    to_return += dict_to_feature_tuples(focus_norm_abs)
     
     # 5. Get self/other emotions in tuple list
     emo_self_vs_oth_dict = get_abs_and_norm_dict(emo_self_vs_oth_dict, out_off_ratio=nr_words, only_norm=True)
@@ -479,5 +473,6 @@ def get_spacy_features(post_text):
     prof_self_vs_oth_dict = get_abs_and_norm_dict(prof_self_vs_oth_dict, out_off_ratio=nr_words, only_norm=True)
     to_return += dict_to_feature_tuples(prof_self_vs_oth_dict)
 
+    
     return to_return
     

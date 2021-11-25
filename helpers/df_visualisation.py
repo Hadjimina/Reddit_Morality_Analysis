@@ -296,7 +296,7 @@ def df_to_plots(df_features):
 
     mini_text = "Using minified data ({0} fraction, {1} posts)".format(CS.MINIFY_FRAC, df_features.shape[0]) if CS.USE_MINIFIED_DATA else "Using complete dataset"
     mini_text+="\n LOAD_POSTS={0}, LOAD_COMMENTS={1}, LOAD_FOUNDATIONS={2}, LOAD_LIWC={3}".format(CS.LOAD_POSTS, CS.LOAD_COMMENTS, CS.LOAD_FOUNDATIONS, CS.LOAD_LIWC)
-    mini_text +="\n ENFORCE_POST_REQUIREMENTS={0}, TITLE_AS_STANDALONE={1}".format(CS.ENFORCE_POST_REQUIREMENTS, CS.TITLE_AS_STANDALONE)
+    mini_text +="\n TITLE_AS_STANDALONE={0}".format( CS.TITLE_AS_STANDALONE)
     plt.suptitle(mini_text, fontsize=16)
     if False and df_features.shape[1] < CS.MAX_FEATURES_TO_DISPLAY:
         plt.show()

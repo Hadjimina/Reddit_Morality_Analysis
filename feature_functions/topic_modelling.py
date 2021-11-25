@@ -34,15 +34,28 @@ def topic_modelling(posts_raw, post_ids):
     #                        do_lemmatization=False) 
     #                    for post in posts_raw]
 
-    post_list_clean = posts_raw
+    #post_list_clean = posts_raw
+    
+    if CS.TOPIC_DOWNSAMPLE:
+        posts_complete = posts_raw.copy()
+        posts_sampled = downsample_to_proportion(posts_raw, CS.TOPIC_DOWNSAMPLE_FRAC)
+        lg.warning(f"Downsampling to {CS.TOPIC_DOWNSAMPLE_FRAC} ({CS.TOPIC_DOWNSAMPLE_FRAC*len(posts_raw)} posts)")
+        
+    lg.warning(f"Minimum cluster size {int(CS.MIN_CLUSTER_PERC*len(post_ids))}")    
     # stopword removal
-    vectorizer_model = CountVectorizer(ngram_range=(1, 2), stop_words="english")
-    # lemmatization?
-    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), low_memory=True, calculate_probabilities=False, nr_topics="auto", vectorizer_model=vectorizer_model)
-    topics, _ = model.fit_transform(post_list_clean)
+    vectorizer_model = CountVectorizer(ngram_range=(1, 2), stop_words="english", min_df=10)
+    model = BERTopic(language="english", min_topic_size=int(CS.MIN_CLUSTER_PERC*len(post_ids)), low_memory=True, calculate_probabilities=False, nr_topics="auto", verbose=True, vectorizer_model=vectorizer_model)
+    
+    if CS.TOPIC_DOWNSAMPLE:
+        topic_model = model.fit(posts_sampled)
+        topics, _ = topic_model.transform(posts_complete)
+    else:
+        topics, _ = model.fit_transform(posts_raw)
+    
+    model.save(path=CS.OUTPUT_DIR+"topic_model")
 
-    actual_nr_topics = len(set(topics))
-    desired_nr_topics = int(CS.TOPICS_ABS)
+    #actual_nr_topics = len(set(topics))
+    #desired_nr_topics = int(CS.TOPICS_ABS)
     #if actual_nr_topics > int(CS.TOPICS_ABS):
     #    topics, probs = model.reduce_topics(post_list_clean, topics, probabilities=probs, nr_topics=desired_nr_topics)
 

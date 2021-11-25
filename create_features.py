@@ -30,7 +30,6 @@ from feature_functions.reaction_features import *
 
 from helpers.helper_functions import *
 from helpers.process_helper import *
-from helpers.requirements import *
 
 coloredlogs.install()
 
@@ -100,15 +99,7 @@ def create_features():
         if allExited & q.empty():
             break
 
-    # fix "uniquely valued index object"
-    #for df in multi_feature_df_list:
-        
-        #print(df.index.duplicated().sum())
-        #print(df.columns)
-        #df = df.reset_index(inplace=True, drop=True)
-        #df = df.loc[~df.index.duplicated(keep='first')]
-    
-    
+    print("df list"+len(multi_feature_df_list))
     feature_df_multi = pd.concat(multi_feature_df_list, axis=0, join="inner")
     lg.info("Finished Multiprocessing")
 
@@ -186,16 +177,16 @@ def create_features():
         msg = "Finished all feature extractions on {host}".format(host=socket.gethostname())
         sent_telegram_notification(msg)
     
+    df_size = feature_df.shape[0]
+    feature_df = feature_df[~feature_df['post_flair'].str.lower().isin(CS.FLAIRS_TO_REMOVE)]
+    lg.info(f"Removed {df_size-feature_df.shape[0]} posts with flairs")
     # Save features in one big dataframe
     date_time = get_date_str()
     feature_df_to_save = feature_df.drop("post_text", axis=1)
+    feature_df_to_save = feature_df.drop("post_flair", axis=1)
     mini = "_mini" if CS.USE_MINIFIED_DATA else ""
     feature_df_to_save.to_csv(
         CS.OUTPUT_DIR+"features_output_"+date_time+mini+".csv", index=False)
-
-    # Enforce minimum post requiremnets
-    if CS.ENFORCE_POST_REQUIREMENTS:
-        feature_df = enforce_requirements(feature_df)
 
     # Create histogram and sample texts as png
     vis.generate_report(feature_df)
@@ -298,9 +289,6 @@ def main(args):
         df_posts = globals_loader.df_posts[["post_id", "post_text"]]
         df = pd.merge(df, df_posts, on=['post_id', 'post_id'])
 
-        # Enforce minimum post requiremnets
-        if CS.ENFORCE_POST_REQUIREMENTS:
-            df = enforce_requirements(df)
 
         vis.generate_report(df)
     elif "-dist" in args or "-d" in args:
@@ -317,7 +305,7 @@ def main(args):
             for title_as_standalone in [False, True]:
                 try:
                     set_features_to_run_dist(title_as_standalone)
-                    setup()
+                    #setup()
                     create_features()
                     upload_output_dir()
                 except Exception as e:
@@ -326,7 +314,7 @@ def main(args):
         else:
             try:
                 set_features_to_run_dist(bool(title_handling))
-                setup()
+                #setup()
                 create_features()
                 upload_output_dir()
             except Exception as e:
