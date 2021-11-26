@@ -99,7 +99,7 @@ def create_features():
         if allExited & q.empty():
             break
 
-    print("df list"+len(multi_feature_df_list))
+    print("df list"+str(len(multi_feature_df_list)))
     feature_df_multi = pd.concat(multi_feature_df_list, axis=0, join="inner")
     lg.info("Finished Multiprocessing")
 

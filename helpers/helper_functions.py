@@ -307,7 +307,7 @@ def dist_conf_to_function_list_str(dist_conf):
     if "spacy" in dist_conf.feature_functions["hosts"][hostname]:
         spacy_list = dist_conf.feature_functions["hosts"][hostname]["spacy"]
         for ff in spacy_list:
-            function_list_str += ff_to_string(ff[0])
+            function_list_str += ff_to_string(ff)
 
     # topic modelling, foundations, liwc
     binary_features_list = ["topic", "foundations", "liwc" ]
