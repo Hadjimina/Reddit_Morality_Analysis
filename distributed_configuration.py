@@ -4,7 +4,7 @@ from feature_functions.writing_style_features import *
 from feature_functions.topic_modelling import *
 
 feature_functions = {
-    "minify": True,
+    "minify": False,
     "title_handling": 0,  # 0 = prepend, 1 = standalone, 2 = first standalone, rerun as prepend
     "telegram_notify": True,
     "verbose": True,
@@ -55,10 +55,10 @@ feature_functions = {
                 "liwc": False,
                 "reddit_instance_idx": 0
             },
-             "104-171-200-216": {
+             "104-171-249-216": {
                 "skip":False,
                 "username": "ubuntu",
-                "host_address": "104.171.200.216",
+                "host_address": "104.171.249.216",
                 "path": "/home/ubuntu",
                 "upload": True,
                 "mp": {

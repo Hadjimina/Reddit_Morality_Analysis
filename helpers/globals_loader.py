@@ -94,9 +94,9 @@ def load_posts():
     global df_posts
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
     
-    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False,skiprows=range(1, 100000), nrows=100000) #should have 1 overlap
+    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False,skiprows=range(1, 600000), nrows=100000) #should have 1 overlap
     print(df_posts.columns)
-    
+    lg.info(f"{len(df_posts)} number of posts")
     if CS.USE_MINIFIED_DATA:
         lg.info("Nr. of posts {0}".format(df_posts.shape[0]))
 
