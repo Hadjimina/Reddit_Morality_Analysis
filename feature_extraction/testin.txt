@@ -1,0 +1,10 @@
+curl -d "client_id=701531649143-97mt7k3fm8nvee9fec82crtaab2kcb26.apps.googleusercontent.com&scope=https://www.googleapis.com/auth/drive.file" https://oauth2.googleapis.com/device/code
+curl -d client_id=701531649143-97mt7k3fm8nvee9fec82crtaab2kcb26.apps.googleusercontent.com -d client_secret=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 -d device_code=AH-1Ng1Fk4e7HFG4xYIlGMHH_RcTlQ1jyY44xfCRhAdxgO7qMKe5K_ZcywXZS3O_ZaC1mPlVenZWNV5OuEUMXam5J2McY6MA7w -d grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code https://accounts.google.com/o/oauth2/token
+curl -X POST -L \
+    -H "Authorization: Bearer ya29.a0ARrdaM8cfyoFPX33WxdTWxxOI4U3wfj3ircxCuSJN7Unuzq5lD5puyAzZT9t-dZfeuG7rtmSfbJ6J3Vj2mjls48sWTsnfQM_Xucd3sfWDCLR0GJJpvP7aeGY-8g40OGG1JY4fBqUmoHKygnddZ0uO-Rly6Rf" \
+    -F "metadata={name : 'cat.zip', parents: ['Msc'] };type=application/json;charset=UTF-8" \
+    -F "file=@cat.zip;type=application/zip" \
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+    
+    
+https://stackoverflow.com/questions/45878753/upload-zip-file-to-google-drive-using-curl    
