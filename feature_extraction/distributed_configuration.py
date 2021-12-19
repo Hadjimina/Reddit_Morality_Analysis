@@ -26,12 +26,12 @@ feature_functions = {
                         (get_emotions, CS.POST_TEXT),           
                         (aita_location, CS.POST_TEXT),          
                         (get_profanity_count, CS.POST_TEXT),    
-                        #(check_wibta, CS.POST_TEXT)             
+                        (check_wibta, CS.POST_TEXT)             
 
                     ],
                     "reactions": [
                         # (check_crossposts, CS.POST_ID),  # slow
-                        #(get_judgement_labels, CS.POST_ID)
+                        (get_judgement_labels, CS.POST_ID)
                     ]
                 },
                 "mono": {
@@ -51,8 +51,8 @@ feature_functions = {
                     get_profanity_self_vs_other_in_spacy,
                 ],
                 "topic": False,
-                "foundations": True,
-                "liwc": True,
+                "foundations": False,
+                "liwc": False,
                 "reddit_instance_idx": 0
             },
              "104-171-249-216": {

@@ -158,13 +158,13 @@ SPACY_FUNCTIONS = [
 ]
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
-DO_TOPIC_MODELLING = True
+DO_TOPIC_MODELLING = False
 TOPIC_DOWNSAMPLE = False
 TOPIC_DOWNSAMPLE_FRAC = 0.3
 
 # Loading
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
-LOAD_COMMENTS = False #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
-LOAD_FOUNDATIONS = True
-LOAD_LIWC = True
+LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+LOAD_FOUNDATIONS = False
+LOAD_LIWC = False
