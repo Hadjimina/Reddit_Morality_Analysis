@@ -29,11 +29,13 @@ def process_run(feat_to_gen, sub_df, id):
             for feature_tuple in feat_to_gen[category]:
                 
                 funct = feature_tuple[0]
+                col_name = feature_tuple[1]
                 fn_name = funct.__name__
-                idx = feature_tuple[1]
+                idx = list(sub_df).index(col_name)
                 
                 if idx == i:
-                    col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
+                    #col = sub_df.iloc[:,idx] #TODO: change this to use column text (e.g. "post_text") instead of index
+                    col = sub_df[col_name]
                     if not fn_name in fn_executed:
                         msg = "Started {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
                         if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
@@ -41,8 +43,11 @@ def process_run(feat_to_gen, sub_df, id):
                             sent_msgs.append(msg)
                      
                         feature_df_list.append(feature_to_df(id, category, col, funct))
+                        
+                        if CS.TITLE_AS_STANDALONE and col == CS.POST_TEXT:
+                            feature_df_list.append(feature_to_df(id, "title_"+category, sub_df[CS.POST_TITLE], funct))
+                            
                         fn_executed.append(fn_name)
-                    
                         #msg = "    Finished {fn} on {host}".format(fn = funct.__name__, host=socket.gethostname())
                         #if CS.NOTIFY_TELEGRAM and (id == 0 or str(id) == "mono") and msg not in sent_msgs:
                         #    sent_telegram_notification(msg)

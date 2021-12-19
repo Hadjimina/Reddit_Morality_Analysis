@@ -10,7 +10,7 @@ feature_functions = {
     "verbose": True,
     "hosts":
         {
-            "phdesktop": {
+            "phlaptop": { #change this back to phdesktop
                 "skip": True,
                 "username": "philipp",
                 "host_address": "main",

@@ -54,10 +54,10 @@ FOUNDATIONS_MERGED = "{0}moral_foundations_merged_27_6_2021{1}.csv".format(datas
 
 # COLUMN INDICES
 #INDEX = 0
-POST_ID = 0
-POST_TEXT = 1
-POST_TITLE = 2
-POST_AUTHOR = 3
+POST_ID = "post_id"
+POST_TEXT = "post_text"
+POST_TITLE = "post_title"
+POST_AUTHOR = "post_author"
 
 # VISUALISATION
 DIAGRAM_HIDE_0_VALUES = False
@@ -108,9 +108,6 @@ PRONOUNS = [["i", "me", "my", "mine", "myself"],
             ["yourselves"],
             ["they", "them", "their", "theirs", "themselves"]]
 PRONOUN_MATCHING_MISC = ["i'm", "i am","aita", "im"]
-# max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
-PRONOUN_AGE_GENDER_DIST = 3
-
 FLAIRS_TO_REMOVE = ["troll", "meta", "news", "shitpost", "troll", "community discussion", "awards", "fake","announcement", "spam","new rule", "shit post","Unintelligible"]
 
 # EMO LEX EMOTIONS
