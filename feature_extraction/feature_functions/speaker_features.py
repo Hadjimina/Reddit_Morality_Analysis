@@ -77,10 +77,10 @@ def get_author_age_and_gender(post_text):
     #cleaned_text = prep_text_for_string_matching(post_text) 
 
     # extract all ages
-    male_strings = ["m","male","mal"]
-    female_strings = ["f","fem","female"]
-    rgx_pronoun = "\\b("+"|".join(CS.PRONOUNS[0])+")\\b"
-    rgx_gap = "[^a-z0-9]{0,3}"
+    male_strings = ["male", "m"]
+    female_strings = ["female","f"]
+    rgx_pronoun = "\\b("+"|".join(CS.PRONOUNS[0]+CS.PRONOUN_MATCHING_MISC)+")\\b"
+    rgx_gap = "[^b-z0-9]{0,3}"
     rgx_age = "(\\d{1,2})"
     rgx_gender = "("+"|".join(male_strings+female_strings)+")"
     rgx_string = (
@@ -92,7 +92,7 @@ def get_author_age_and_gender(post_text):
         "("+rgx_pronoun+rgx_gap+rgx_gender+")"                                          #i f 
     )
     
-    
+
     age_gender_list = []
     rgx = re.compile(r""+rgx_string)
     
