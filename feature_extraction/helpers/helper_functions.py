@@ -153,12 +153,13 @@ def string_matching_arr_append_ah(matches):
     """
 
     asshole_str = "asshole"
-    ah_str = "ah"
+    ah_str_list = ["ah","a-hole", "a hole", "ass hole", "a**hole", "a** hole"]
 
     ah_to_post_pend = []
-    for match_str in matches:
-        if asshole_str in match_str:
-            ah_to_post_pend += [match_str.replace(asshole_str, ah_str)]
+    for ah_str in ah_str_list:
+        for match_str in matches:
+            if asshole_str in match_str:
+                ah_to_post_pend += [match_str.replace(asshole_str, ah_str)]
 
     matches_extended = matches + ah_to_post_pend
     return matches_extended

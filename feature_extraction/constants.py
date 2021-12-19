@@ -67,16 +67,16 @@ MAX_FEATURES_TO_DISPLAY = 25
 
 # JUDGEMENT LABELS
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
-JUDGEJMENT_DICT = {
-    "YTA": ["YTA", "You're the asshole", "You are the asshole"],
-    "NTA": ["NTA", "not the asshole"],
-    "INFO": ["INFO", "Not enough info", "Not enough information"],
+JUDGEJMENT_DICT = { # everytime asshole appears an expression get added that replaces asshole with "ah"
+    "YTA": ["YTA", "You're the asshole", "You are the asshole", "You are a little bit the asshole", "YWBTA", "You are an asshole", "You're an asshole", "yt absolute a"],
+    "NTA": ["NTA", "not the asshole", "not an asshole", "don't think you're an asshole", "YWNBTA"],
+    "INFO": ["INFO", "Not enough info", "Not enough information", "More info", ],
     "ESH": ["ESH", "everyone sucks here", "everybody sucks here", "ETA", "everyone's the asshole"],
     "NAH": ["NAH", "No Assholes here", "No Asshole here", "no one sucks here"],
 }
 BOT_STRINGS = ["automod", "i am a bot"]
-AITA = ["am i the asshole", "aita", "aitah", "am i an asshole"]
-WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole"]
+AITA = ["am i the asshole", "aita", "aitah", "am i an asshole", "aith", "was i the asshole", "was i an asshole", "amia", "am i ta", "am i being an asshole", "am i being the asshole", "was I an asshole", "was I the asshole", "amita", "was i ta", "am i ta"]
+WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole","would i really be the asshole"]
 
 # MULTITHREADING
 NR_THREADS = multiprocessing.cpu_count()
@@ -107,6 +107,7 @@ PRONOUNS = [["i", "me", "my", "mine", "myself"],
             ["we", "us", "our", "ours", "ourselves"],
             ["yourselves"],
             ["they", "them", "their", "theirs", "themselves"]]
+PRONOUN_MATCHING_MISC = ["i'm", "i am","aita", "im"]
 # max number of characters that may lie between end of pronoun and start of age/gender description. e.g. "My (23M) boyfriend" => 2 characters
 PRONOUN_AGE_GENDER_DIST = 3
 

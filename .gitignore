@@ -9,7 +9,7 @@ ouptut/zips/*
 output/*
 feature_analysis/.ipynb_checkpoints/*
 feature_analysis/structured_data_classifier/*
-
+*.sio
 
 
 # Byte-compiled / optimized / DLL files
