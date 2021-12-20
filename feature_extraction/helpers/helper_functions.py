@@ -331,3 +331,21 @@ def downsample_to_proportion(rows, proportion):
     """
     
     return rows[::int(1 / proportion)]
+
+def find_all(a_str, sub):
+    """Find all indices of a substring (sub) in the string a_str
+
+    Args:
+        a_str (str): long string we want to find subs indeces in
+        sub (str): sub string we get indices of
+
+    Yields:
+        [int]: list of sub indices start locations
+    """
+    
+    start = 0
+    while True:
+        start = a_str.find(sub, start)
+        if start == -1: return
+        yield start
+        start += len(sub) # use start += 1 to find overlapping matches
