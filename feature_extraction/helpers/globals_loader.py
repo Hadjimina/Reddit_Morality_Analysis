@@ -95,11 +95,11 @@ def load_posts():
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
     
     #df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False,skiprows=range(1, 500000), nrows=100000)
-    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False, nrows=10)
+    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False, nrows=220000)
     #df_checked = pd.read_csv("/mnt/c/Users/Philipp/Desktop/ids.csv")
     #df_posts = df_posts[~df_posts['post_id'].isin(df_checked["post_id"].tolist())]
     
-    print(df_posts.columns)
+
     lg.info(f"{len(df_posts)} number of posts")
     if CS.USE_MINIFIED_DATA:
         lg.info("Nr. of posts {0}".format(df_posts.shape[0]))
