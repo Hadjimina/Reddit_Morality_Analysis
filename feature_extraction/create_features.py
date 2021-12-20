@@ -47,7 +47,6 @@ def set_features_to_run_dist(title_as_standalone):
     CS.NOTIFY_TELEGRAM = dist_conf.feature_functions["telegram_notify"]
     CS.USE_MINIFIED_DATA = dist_conf.feature_functions["minify"]
 
-    # print(dist_conf.feature_functions["hosts"].keys())
 
     CS.FEATURES_TO_GENERATE_MP = dist_conf.feature_functions["hosts"][hostname]["mp"]
     CS.FEATURES_TO_GENERATE_MONO = dist_conf.feature_functions["hosts"][hostname]["mono"]
@@ -67,20 +66,7 @@ def create_features():
     lg.info("Title as standalone" if CS.TITLE_AS_STANDALONE else "Title Prepended")
     df_posts = globals_loader.df_posts
     df_posts_split = np.array_split(df_posts, CS.NR_THREADS)
-    
-    # Check location of features...these could just be set or change it in porcess_helpers to get columns by names instead of id.🤷
-    #for df in df_posts_split:
-    #    feat_lst = list(df.columns)
-    #    if feat_lst.index("post_text") != CS.POST_TEXT:
-    #        raise ValueError("index of 'post_text' in df_posts is not at CS.POST_TEXT location.")
-    #    elif feat_lst.index("post_title") != CS.POST_TITLE:
-    #        raise ValueError("index of 'post_title' in df_posts is not at CS.POST_TITLE location.")
-    #    elif feat_lst.index("post_id") != CS.POST_ID:
-    #        raise ValueError("index of 'post_id' in df_posts is not at CS.POST_ID location.")
-    #    elif feat_lst.index("post_author") != CS.POST_AUTHOR:
-    #        raise ValueError("index of 'post_author' in df_posts is not at CS.POST_AUTHOR location.")
-        
-
+            
     # setup output dir
     Path(CS.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -112,7 +98,6 @@ def create_features():
         if allExited & q.empty():
             break
 
-    print("df list"+str(len(multi_feature_df_list)))
     feature_df_multi = pd.concat(multi_feature_df_list, axis=0, join="inner")
     lg.info("Finished Multiprocessing")
 

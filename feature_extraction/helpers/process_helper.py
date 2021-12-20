@@ -43,8 +43,8 @@ def process_run(feat_to_gen, sub_df, id):
                             sent_msgs.append(msg)
                      
                         feature_df_list.append(feature_to_df(id, category, col, funct))
-                        
-                        if CS.TITLE_AS_STANDALONE and col == CS.POST_TEXT:
+                        print("standalone", CS.TITLE_AS_STANDALONE, CS.POST_TEXT, col_name)
+                        if CS.TITLE_AS_STANDALONE and col_name == CS.POST_TEXT:
                             feature_df_list.append(feature_to_df(id, "title_"+category, sub_df[CS.POST_TITLE], funct))
                             
                         fn_executed.append(fn_name)

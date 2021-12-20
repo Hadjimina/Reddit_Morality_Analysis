@@ -125,7 +125,7 @@ FEATURES_TO_GENERATE_MP = {
     ],
     "writing_sty": [
         #(get_punctuation_count, CS.POST_TEXT),
-        (get_emotions, CS.POST_TEXT),
+        #(get_emotions, CS.POST_TEXT),
         #(aita_location, CS.POST_TEXT),
         #(get_profanity_count, CS.POST_TEXT),
         #(check_wibta, CS.POST_TEXT)
@@ -140,7 +140,7 @@ FEATURES_TO_GENERATE_MP = {
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MONO = {
     "writing_sty": [
-        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+        #(get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
 }
 

@@ -59,8 +59,7 @@ def check_wibta(post_text):
     expressions_to_check = string_matching_arr_append_ah(CS.WIBTA)
     post_text_clean = get_clean_text(post_text, globals_loader.nlp, do_lemmatization=False, remove_punctuation=True )
 
-    regex = "\\b("+"|".join(expressions_to_check)+")\\b" 
-    if re.search(regex, post_text_clean):
+    if any(exp in post_text_clean for exp in expressions_to_check):
         return [("is_wibta", 1)]
     else:
         return [("is_wibta", 0)]
