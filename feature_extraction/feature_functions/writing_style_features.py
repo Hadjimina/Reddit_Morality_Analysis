@@ -137,7 +137,7 @@ def aita_location(post_text):
         # if we know we have some occurences get all the start indices
         if cur_occurences > 0:
             location_abs += find_all(post_text, aita_string)
-            #location_abs += [m.start() for m in re.finditer(aita_string, post_text)]
+            
 
     post_length = len(post_text)
     location_ratio = list(map(lambda x: x/post_length, location_abs))
