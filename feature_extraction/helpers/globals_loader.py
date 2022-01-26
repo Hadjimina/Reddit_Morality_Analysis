@@ -94,7 +94,8 @@ def load_posts():
     global df_posts
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
     
-    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False,skiprows=range(1, 100000), nrows=110000)
+    # Done 0-110000, 
+    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False,skiprows=range(1, 600000))
     #df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False, nrows=110000)
     #df_checked = pd.read_csv("/mnt/c/Users/Philipp/Desktop/ids.csv")
     #df_posts = df_posts[~df_posts['post_id'].isin(df_checked["post_id"].tolist())]

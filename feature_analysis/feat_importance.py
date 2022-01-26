@@ -19,7 +19,9 @@ import gc
 import json
 from itertools import islice
 import functools
+from scipy import stats
 from datetime import date
+import openpyxl
 #%matplotlib inline
 #import mpld3
 #mpld3.enable_notebook()
@@ -30,14 +32,15 @@ def get_data(normalised=1, weighted=True, title_prepend=True, time_split=0, topi
     if time_split %2 !=0:
          raise Exception("time_split has to be divisble by 2")
     
+    dataset_to_read = "/mnt/g/My Drive/Msc/Thesis/Coding/dataset_output/prepend_scores_no_utc.csv"
     
-    df = pd.read_csv("prepend_scores_no_utc.csv", nrows=3)
+    df = pd.read_csv(dataset_to_read, nrows=3)
     cols_to_drop = ["post_text", "post_id", "post_created_utc", "Unnamed: 0", "Unnamed: 1"] 
     cols_lst = list(df.columns)
     for col in cols_to_drop:
         if col in cols_lst:
             cols_to_read = list(df.columns).remove(col)
-    df = pd.read_csv("prepend_scores_no_utc.csv", usecols=cols_to_read)
+    df = pd.read_csv(dataset_to_read, usecols=cols_to_read)
     
     
     if normalised < 2:
@@ -70,6 +73,8 @@ def get_data(normalised=1, weighted=True, title_prepend=True, time_split=0, topi
     print(f"Number of dataframes: {len(dfs)}")
 
     return dfs, acros
+
+
 
 
 def sampling(y, kind="up", indices=[], verbose=False):
@@ -151,52 +156,69 @@ def memory_usage():
     memory_usage_by_variable['Size']=memory_usage_by_variable['Size'].apply(lambda x: obj_size_fmt(x))
     return memory_usage_by_variable
 
-def opposite_jdgmt(judgement):
-    if judgement == "nta":
-        return "yta"
-    elif judgement == "nah":
-        return "esh"
-    elif judgement == "yta":
-        return "nta"
-    elif judgement =="esh":
-        return "nah"
-    else:
-        return judgement
+def opposite_jdgmt(judg):
+    
+    if "NTA" in judg  :
+        rtn =  judg.replace("NTA","YTA")
+    elif "NAH" in judg:
+        rtn =  judg.replace("NAH","ESH")
+    elif "YTA" in judg:
+        rtn =  judg.replace("YTA","NTA")
+    elif "ESH" in judg:
+        rtn =  judg.replace("ESH","NAH")
+    elif "INFO" in judg:
+        rtn = judg
+    
+    return rtn+"_neg_vals"
+
+def get_vote_counts(df, acros):
+    dct = {}
+    for acr in list(acros.values()):
+        dct[acr] = len(df[acr].to_numpy().nonzero()[0])
+    
+    dct["total"] = np.sum(list(dct.values()))
+    print(dct)
+    
     
 # mapping is either "clip", meaning negative votes are just set to 0, or "oppossite", meaning we use the mapping table in "opposite_jdgmt"
 def map_negative_values(df, acros, mapping="clip"):
-    # Seems buggy
+    
     if mapping == "opposite":
+        print("Map = opposite")    
+        for k in acros.keys():
+            acr = acros[k]
+            #print(f"{acr} pos amount {len(df.loc[df[acr] > 0])}")
+            #print(f"{acr} neg amount {len(df.loc[df[acr] < 0])}")
+            
+            
+            if k == "info":
+                continue
+            
+            # create temporary columns containing zeros and only negative votes for each vote type (except info)        
+            df[acr+"_neg_vals"] = 0
+            df.loc[df[acr] < 0, acr+"_neg_vals"] = df[acr]*-1
+            df.loc[df[acr] < 0, acr] = 0
+            
         for k in acros.keys():
             if k == "info":
                 continue
             acr = acros[k]
-            # create temporary columns containing zeros and only negative votes for each vote type (except info)
-            df[acr+"_neg_vals"] = df[acr]
-            
-            df.loc[df[acr+"_neg_vals"] > 0] = 0
-            df.loc[df[acr+"_neg_vals"] < 0] = df.loc[df[acr+"_neg_vals"] < 0]*-1
-
-        for k in acros.keys():
-            if k == "info":
-                continue
-            acr = acros[k]
-            #set negative values to 0 & add opposite judgement votes
-            
-            df[acr][df[acr] < 0] = 0
+            #set negative values to 0 & add opposite judgement vote 
             df[acr] = df[acr] + df[opposite_jdgmt(acr)]
-        
+           
     elif mapping =="clip":
+        print("Map = clip")    
         for k in acros.keys():
             acr = acros[k]
             df[acr][df[acr] < 0] = 0
             
     # finally set all negative info votes to 0
-    df[df[acros["info"]] < 0] = 0
+    #df[df[acros["info"]] < 0] = 0
     
-    print("info sum", df[acros["info"]].min())
+    #print("info sum", df[acros["info"]].min())
     
     return df
+
 
 def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judgement_weighted=True, mapping="clip"):
     if verbose:
@@ -234,7 +256,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         
         #drop NAs & infty
         df = df.replace([np.inf, -np.inf], np.nan)
-        df = df.dropna()
+        df = df.dropna(subset=["Y"])
         if verbose:
            print(f"Removed {n_rows_old-len(df)} rows b.c. no votes. Now {df.shape}")
         n_rows_old = len(df)
@@ -253,7 +275,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         if col in list(df.columns):
             df = df.drop(columns=[col])
         
-    print(df.info(memory_usage="deep"))
+    #print(df.info(memory_usage="deep"))
 
     # Removing top 4 most important features leads to 0.66 f1
     #df = df.drop(columns=["speaker_account_comment_karma", "post_num_comments", "speaker_account_link_karma", "speaker_account_age"])
@@ -268,13 +290,13 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
     # scaling
     scaler = preprocessing.StandardScaler().fit(X)
     X_scaled = scaler.transform(X)
-    return X_scaled, y, feat_name_lst    
+    return X_scaled, y, feat_name_lst     
 
 def main(args):
     print(args)
     
     
-    FORCE_SIMPLIFY = True
+    FORCE_SIMPLIFY = False
     SHOW_SHAPLY = False
     DO_SHAPLY = True
     SHOW_PREDICTION_DISTRIBUTION = False
@@ -287,8 +309,8 @@ def main(args):
         "sampling_vals" : ["up", "down"],   # sampling_vals: which type of sampling should be done
         "topics_separate": False,           # if each topic should be analysed separately
         "predict":"ratio",                  # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
-        "mapping_type":["clip", "opposite"], # should we "clip" negative votes or map them to the "opposite"
-        "ratio": [0.5, 0.4,0.3, 0.2, 0.1, 0.05 ]      # which most extreme AHR or YTA_ratio we want to predict
+        "mapping_type":[ "clip", "opposite"], # should we "clip" negative votes or map them to the "opposite"
+        "ratio": [0.5  ]      # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
     }
 
 
@@ -302,15 +324,7 @@ def main(args):
     if params["predict"] == "ratio":
         params["sampling_vals"] = ["up"]
 
-    #for arg in args:
-    #    if "norm" in arg:
-    #        norm = arg.split("=")[1]
-    #        params["norm_vals"] = [int(norm)]
-    #    if "weighted" in arg:
-    #        params["weighted_vals"] = True
-    #    if "norm" in arg:
-    #        norm = arg.split("=")[1]
-    #        params["norm_vals"] = norm
+
 
     # mpc = MLPClassifier( random_state=1) seems pretty shitty
     # boost = GradientBoostingClassifier(n_estimators=300, learning_rate=1.0,max_depth=20, random_state=0)
@@ -330,6 +344,11 @@ def main(args):
     nr_samples = []
     class_ratio = [] #only used for classification
     top_n_features = {}
+    
+    
+    
+    #for correlation
+    #y_lst = []
 
     current_iter = 1
     max_iter = functools.reduce(lambda a, b: a*b, [len(x) if isinstance(x, list) else 1 for x in list(params.values())])
@@ -353,7 +372,16 @@ def main(args):
                     for rto in params["ratio"]:
                         for mpt in params["mapping_type"]:
                             for df in dfs: 
-                                X, y, feat_name_lst = get_data_classes(df, ratio=rto, acros=acros, predict=params["predict"],judgement_weighted=weighted, mapping=mpt, verbose=True)    
+                                df_cpy = df.copy()
+                                X, y, feat_name_lst = get_data_classes(df_cpy, ratio=rto, acros=acros, predict=params["predict"],judgement_weighted=weighted, mapping=mpt, verbose=False)    
+                                #y_lst.append(y.flatten())
+                                
+                                # sanity check for y sum
+                                y_sum_should = 35461 if mpt == "clip" else 35850
+                                eps = np.absolute(np.sum(y) - y_sum_should)
+                                if eps > 3 and rto == 0.5:
+                                    raise Exception("WRONG Y SUM FOR "+mpt+" ("+str(eps)+")")
+                                
                                 train, test = train_test_split(range(len(X)), test_size=0.33, random_state=42)
 
                                 if params["predict"]=="class":
@@ -387,6 +415,7 @@ def main(args):
                                     y_pred = clf.predict(X_test)
                                     
                                     if DO_SHAPLY:
+                                        print("    Doing shaply")
                                         explainer = shap.explainers.GPUTree(clf, X_train)
                                         #explainer = shap.explainers.Tree(clf, X_train)
                                         shap_values = explainer(X_train)
@@ -394,10 +423,18 @@ def main(args):
                                             shap.summary_plot(shap_values, X_train, feature_names=feat_name_lst, max_display=50)
                                         
                                         # save top N features
-                                        shapely_abs = np.absolute(shap_values)
-                                        id_sorted = np.argsort(shapely_abs[i])#? why [i]
-                                        top_n_features[clf_name] = feat_name_lst[id_sorted[:FEAT_IMPORTANCE_N]]
-                                        top_n_features[clf_name+" (SHAP SCORES)"] = shapely_abs[:FEAT_IMPORTANCE_N]
+                                        feature_names = feat_name_lst
+                                        shap_df = pd.DataFrame(shap_values.values, columns=feature_names)
+                                        vals = np.abs(shap_df.values).mean(0)
+                                        shap_importance = pd.DataFrame(list(zip(feature_names, vals)), columns=['col_name', 'feature_importance_vals'])
+                                        shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
+                                        
+                                        #shapely_abs = np.absolute(shap_values)
+                                        #print(shap_values.shape)
+                                        #id_sorted = np.argsort(shapely_abs[i])#? why [i]
+                                        name_importance_zip = list(zip(shap_importance["col_name"][:FEAT_IMPORTANCE_N], shap_importance["feature_importance_vals"][:FEAT_IMPORTANCE_N]))+["RMSE ="+ str(metrics.mean_squared_error(y_test, y_pred, squared=False))]
+                                        top_n_features[clf_name] = name_importance_zip
+                                
                                         
 
 
@@ -427,6 +464,9 @@ def main(args):
                                         nr_samples.append(len(X_train))
                                         current_iter+=1
                                         print(f"    Mean absolute: {mean_abs}\n    Mean squared: {mean_sqr}\n    Root Mean Squared: {rmse}")
+                                    
+                                    del df_cpy
+                                
     
                         
     #test_scores = np.array(test_scores)
@@ -465,29 +505,54 @@ def main(args):
 
     # For each feature generate a list of all indices where it appears over various classifiers    
     print("Most important features:")
-    top_feat_val = filter(lambda x: isinstance(x[0], str), list(top_n_features.values()))
+    
     overal_top_feat = {}
-    for i in range(len(top_feat_val)):
-        current_top_feats = top_feat_val[i]
-        for j in range(len(current_top_feats)):
-            if top_feat_val[i] in overal_top_feat:
-                overal_top_feat[i] = top_feat_val[i] + [current_top_feats.index(top_feat_val[i])]
+    
+    #dict with each feature name : [importance index list]
+    #iterate over top_n_features[clf] (per classifier)
+    for clf in top_n_features.keys():
+        #iterate over top features zipped list
+        top_feat_lst = top_n_features[clf]
+        for k in range(len(top_feat_lst)):
+            cur_feat_name = top_feat_lst[k][0]
+            cur_feat_importance = top_feat_lst[k][1]
+            if cur_feat_name in overal_top_feat:
+                overal_top_feat[cur_feat_name] =  overal_top_feat[cur_feat_name] + [k]
             else:
-                overal_top_feat[i] = [current_top_feats.index(top_feat_val[i])]
+                overal_top_feat[cur_feat_name] = [k]
 
-    # get overal ranking sum (the one with the smallest ranke is the most important)
-    for i in range(len(overal_top_feat)):
-        overal_top_feat[i] = sum(overal_top_feat[i])
+    # get overal ranking sum (the one with the smallest rank is the most important)
+    clf_count = len(list(overal_top_feat.values())[0])
+    for feat in overal_top_feat.keys():
+        
+        if len(overal_top_feat[feat]) < clf_count:
+            dist = clf_count - len(overal_top_feat[feat])
+            
+            overal_top_feat[feat] =  overal_top_feat[feat] + ([50]*dist)
+        overal_top_feat[feat] = sum(overal_top_feat[feat])/clf_count +1
+        
     overal_top_feat = dict(sorted(overal_top_feat.items(), key=lambda item: item[1]))
 
-    top_n_features["Overal most important"] = list(top_feat_val.keys())
-    top_n_features["Overal most important (SUM)"] = list(top_feat_val.values())
+    top_n_features["Overal most important"] = list(overal_top_feat.keys())
+    top_n_features["Avg rank"] = list(overal_top_feat.values())
 
     today = date.today()
     output = today.strftime("%d_%m_%Y")
-    top_n_features_pd = pd.DataFrame.from_dict(top_n_features)
-    top_n_features.to_excel(output+".xlsx")
+    top_n_features_pd = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in top_n_features.items() ]))
+    top_n_features_pd.to_excel(output+".xlsx")
 
+    print(feat_name_lst)
+    
+    # correlation
+    #min = len(y_lst[0])
+    #for i in range(len(y_lst)):
+    #    ln = len(y_lst[i])
+    #    if ln < min:
+    #        min = ln
+    #    
+    #y1 = y_lst[0][:min-1]
+    #y2 = y_lst[1][:min-1]
+    #print(f"Correlation {stats.pearsonr(y1,y2)}")
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -11,7 +11,7 @@ import multiprocessing
 # Minification, requirements and title
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 USE_MINIFIED_DATA = False
-TITLE_AS_STANDALONE = True
+TITLE_AS_STANDALONE = False
 NOTIFY_TELEGRAM = False
 REDDIT_INSTANCE_IDX = 1
 
