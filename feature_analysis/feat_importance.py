@@ -8,7 +8,7 @@ from sklearn import preprocessing
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neural_network import MLPClassifier
-from mrmr import mrmr_classif
+#from mrmr import mrmr_classif
 import matplotlib.pyplot as plt
 from pprint import pprint
 #import tensorflow as tf
@@ -20,26 +20,26 @@ import json
 from itertools import islice
 import functools
 from datetime import date
+from tqdm import tqdm
 #%matplotlib inline
 #import mpld3
 #mpld3.enable_notebook()
 # rf, pps (https://github.com/8080labs/ppscore), correleation, shapele, mrmr
 
+OUTPUT_DIR = "./output/"
+DATASETS_DIR = "./datasets/"
 
-def get_data(normalised=1, weighted=True, title_prepend=True, time_split=0, topics_separate=False):
-    if time_split %2 !=0:
-         raise Exception("time_split has to be divisble by 2")
+
+def get_data(normalised=1, weighted=True, title_prepend=True, topics_separate=False):
     
+    prepend_csv = "prepend_complete.csv"
+    standalone_csv = "standalone_complete.csv"
     
-    df = pd.read_csv("prepend_scores_no_utc.csv", nrows=3)
-    cols_to_drop = ["post_text", "post_id", "post_created_utc", "Unnamed: 0", "Unnamed: 1"] 
-    cols_lst = list(df.columns)
-    for col in cols_to_drop:
-        if col in cols_lst:
-            cols_to_read = list(df.columns).remove(col)
-    df = pd.read_csv("prepend_scores_no_utc.csv", usecols=cols_to_read)
-    
-    
+    if title_prepend:
+        df = load_wo_cols(DATASETS_DIR+prepend_csv)
+    else:
+        df = load_wo_cols(DATASETS_DIR+standalone_csv)
+         
     if normalised < 2:
         df = df[df.columns.drop(list(df.filter(regex="_abs" if normalised == 1 else "_norm")))]
         
@@ -50,27 +50,39 @@ def get_data(normalised=1, weighted=True, title_prepend=True, time_split=0, topi
     acros = dict(zip(keys, values))
     
     dfs = []
-    if time_split > 0:
-        print("Data split by date range")
-        #for i in range(len(spacing)-1):
-        #    start = spacing[i]
-        #    end = spacing[i+1]
-        #    dfs.append(df.loc[start <= df["post_created_utc"] & df["post_created_utc"]<end])
-    elif topics_separate >0:
+    if topics_separate >0:
         
         topic_min = df["topic_nr"].min()
         topic_max = df["topic_nr"].max()
-        print(f"Data split by topic ({topic_min}, {topic_max})")
+        #print(f"Data split by topic ({topic_min}, {topic_max})")
          
         for i in range(topic_min, topic_max+1):
             dfs.append(df.loc[df["topic_nr"]==i])
     else:
         dfs = [df]
 
-    print(f"Number of dataframes: {len(dfs)}")
+    #print(f"Number of dataframes: {len(dfs)}")
 
     return dfs, acros
 
+def load_wo_cols(path, remove_cols=[],verbose=False):
+    cols_to_remove = ["post_text", "Unnamed: 0", "Unnamed: 1", "Unnamed: 2", "Unnamed: 0.1", 
+                      "Unnamed: 0.1.1", "liwc_post_id", "foundations_post_id", 
+                      "foundations_title_post_id", "liwc_title_post_id", "post_created_utc"]+remove_cols
+    removed = []
+    df = pd.read_csv(path, nrows=10)
+    cols_to_read = list(df.columns)
+    
+    if verbose:
+        print(cols_to_read)
+    for col in cols_to_remove:
+        if col in cols_to_read:
+            cols_to_read.remove(col)
+            removed.append(col)
+    
+    print(f"Removed {removed} from {path.split('/')[-1]}")        
+    df = pd.read_csv(path, usecols=cols_to_read)
+    return df
 
 def sampling(y, kind="up", indices=[], verbose=False):
     
@@ -248,7 +260,8 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
      # get list of all columns that contain uppercase vote acronym
     vote_acroynms = list(filter(lambda x: any([acr.upper() in x for acr in list(acros.keys())]), list(df.columns)))  
     df = df.drop(columns=vote_acroynms)
-    cols_to_drop =  ["post_text", "post_id", "post_created_utc", "Unnamed: 0", "Unnamed: 1"] 
+    
+    cols_to_drop =  ["post_text", "post_id", "post_created_utc"] 
     for col in cols_to_drop:
         if col in list(df.columns):
             df = df.drop(columns=[col])
@@ -275,15 +288,16 @@ def main(args):
     
     
     FORCE_SIMPLIFY = True
-    SHOW_SHAPLY = False
+    #SHOW_SHAPLY = True
     DO_SHAPLY = True
     SHOW_PREDICTION_DISTRIBUTION = False
     FEAT_IMPORTANCE_N = 50
 
+    
     params = {
         "norm_vals": [0,1,2],               # normalised: 0 = only "abs", 1 = only "norm", 2 = norm and abs
         "weighted_vals" : [True, False],     # weighted_vals: whether votes should be weighted by comment score FALSE IS BETTER 0.32
-        "title_prep_vals" : [True],   # title_prepend: whether to use the title prepended or standalone dataset
+        "title_prep_vals" : [True, False],   # title_prepend: whether to use the title prepended or standalone dataset
         "sampling_vals" : ["up", "down"],   # sampling_vals: which type of sampling should be done
         "topics_separate": False,           # if each topic should be analysed separately
         "predict":"ratio",                  # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
@@ -302,15 +316,8 @@ def main(args):
     if params["predict"] == "ratio":
         params["sampling_vals"] = ["up"]
 
-    #for arg in args:
-    #    if "norm" in arg:
-    #        norm = arg.split("=")[1]
-    #        params["norm_vals"] = [int(norm)]
-    #    if "weighted" in arg:
-    #        params["weighted_vals"] = True
-    #    if "norm" in arg:
-    #        norm = arg.split("=")[1]
-    #        params["norm_vals"] = norm
+    #params["title_prep_vals"]= ["True", "False"]
+ 
 
     # mpc = MLPClassifier( random_state=1) seems pretty shitty
     # boost = GradientBoostingClassifier(n_estimators=300, learning_rate=1.0,max_depth=20, random_state=0)
@@ -348,16 +355,16 @@ def main(args):
                     
                 dfs, acros = get_data(normalised=norm, weighted=weighted, title_prepend=title_prep, topics_separate=params["topics_separate"])
 
-                print("nr samples",len(dfs[0]))
+                #print("nr samples",len(dfs[0]))
                 for smp in params["sampling_vals"]:
                     for rto in params["ratio"]:
                         for mpt in params["mapping_type"]:
                             for df in dfs: 
-                                X, y, feat_name_lst = get_data_classes(df, ratio=rto, acros=acros, predict=params["predict"],judgement_weighted=weighted, mapping=mpt, verbose=True)    
+                                X, y, feat_name_lst = get_data_classes(df, ratio=rto, acros=acros, predict=params["predict"],judgement_weighted=weighted, mapping=mpt, verbose=False)    
                                 train, test = train_test_split(range(len(X)), test_size=0.33, random_state=42)
 
                                 if params["predict"]=="class":
-                                    print("Doing sampling")
+                                    #print("Doing sampling")
                                     train = sampling(y, kind=smp, indices=train, verbose=False)
 
                                 for clf_tpl in classifiers:
@@ -387,26 +394,42 @@ def main(args):
                                     y_pred = clf.predict(X_test)
                                     
                                     if DO_SHAPLY:
-                                        explainer = shap.explainers.GPUTree(clf, X_train)
-                                        #explainer = shap.explainers.Tree(clf, X_train)
+                                        #explainer = shap.explainers.GPUTree(clf, X_train)
+                                        explainer = shap.explainers.Tree(clf, X_train)
                                         shap_values = explainer(X_train)
-                                        if SHOW_SHAPLY:
-                                            shap.summary_plot(shap_values, X_train, feature_names=feat_name_lst, max_display=50)
-                                        
+                                        #shap.summary_plot(shap_values, X_train, feature_names=feat_name_lst, max_display=50, show=False)
+                                        #f = plt.gcf()
+                                        #f.set_size_inches(18.5, 10.5)
+                                        #plt.savefig(f'{OUTPUT_DIR}{clf_name}.png')
                                         # save top N features
-                                        shapely_abs = np.absolute(shap_values)
-                                        id_sorted = np.argsort(shapely_abs[i])#? why [i]
-                                        top_n_features[clf_name] = feat_name_lst[id_sorted[:FEAT_IMPORTANCE_N]]
-                                        top_n_features[clf_name+" (SHAP SCORES)"] = shapely_abs[:FEAT_IMPORTANCE_N]
+                                        print("1")
                                         
-
-
+                                        #shapely_abs = np.absolute(shap_values)
+                                        #shapely_abs = shap_values
+                                        #c = 0
+                                        #for y in np.nditer(shap_values, op_flags=['readwrite']):
+                                        #    print("hi")
+                                        #    c+=1
+                                        #    #if c % 1000 == 0:
+                                        #    print(f"{c}/{shap_values.shape[0]*shap_values.shape[1]}")
+                                        #    if y < 0:
+                                        #        y = y*-1
+                                        print("2")
+                                        id_sorted = np.argsort(shap_values[i])#? why [i]
+                                        print("3")
+                                        top_n_features[clf_name] = feat_name_lst[id_sorted[:FEAT_IMPORTANCE_N]]
+                                        print("4")
+                                        top_n_features[clf_name+" (SHAP SCORES)"] = shap_values[:FEAT_IMPORTANCE_N]
+                                        print("5")
+                                        
+                                    print("completely done")
                                     # We have more Y=0 (NTA) than Y=1 (YTA)
                                     #metrics.plot_confusion_matrix(classify, X_test, y_test)  
                                     #plt.show()
                                     #print(metrics.classification_report(y_test, y_pred, target_names=["NTA (0)", "YTA (1)"]))
 
                                     if params["predict"] == "class":
+                                        print("class")
                                         # testing score
                                         f1_test = metrics.f1_score(y_test, y_pred, average="weighted")
                                         acc_test = metrics.accuracy_score(y_test, y_pred)
@@ -420,6 +443,7 @@ def main(args):
                                         print(f"    Accuracy: {acc_test}\n    F1: {f1_test}")
 
                                     elif params["predict"] == "ratio":
+                                        print("ratio")
                                         mean_abs = metrics.mean_absolute_error(y_test, y_pred)
                                         mean_sqr = metrics.mean_squared_error(y_test, y_pred)
                                         rmse = metrics.mean_squared_error(y_test, y_pred, squared=False)
@@ -448,7 +472,7 @@ def main(args):
     ax1.legend(["Classification", "Class Ratios"])
 
     plt.title("Comparing "+("F1 " if params["predict"]=="class" else "RMSE ")+"of different classifiers")
-    plt.savefig("plt.png")
+    plt.savefig(OUTPUT_DIR+"plt.png")
     #plt.show()
     #print(test_scores)
 
@@ -465,7 +489,7 @@ def main(args):
 
     # For each feature generate a list of all indices where it appears over various classifiers    
     print("Most important features:")
-    top_feat_val = filter(lambda x: isinstance(x[0], str), list(top_n_features.values()))
+    top_feat_val = list(filter(lambda x: isinstance(x[0], str), list(top_n_features.values())))
     overal_top_feat = {}
     for i in range(len(top_feat_val)):
         current_top_feats = top_feat_val[i]
@@ -486,7 +510,7 @@ def main(args):
     today = date.today()
     output = today.strftime("%d_%m_%Y")
     top_n_features_pd = pd.DataFrame.from_dict(top_n_features)
-    top_n_features.to_excel(output+".xlsx")
+    top_n_features.to_excel(OUTPUT_DIR+output+".xlsx")
 
 
 if __name__ == "__main__":
