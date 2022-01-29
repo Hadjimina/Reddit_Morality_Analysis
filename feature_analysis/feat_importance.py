@@ -331,6 +331,7 @@ def main(args):
     args = " ".join(args)
     
     params["wo_metadata"] = ("wo" in args or "no" in args) and ("metadata" in args or "meta" in args)
+    OUTPUT_DIR = "./output/" if not params["wo_metadata"] else "./output_wometadata/"
     
     print("CLASSIFICATION\n----" if params["predict"]=="class" else "REGRESSION\n----")
     if FORCE_SIMPLIFY:
