@@ -524,7 +524,7 @@ def main(args):
     ax1.legend(["Classification", "Class Ratios"])
 
     plt.title("Comparing "+("F1 " if params["predict"]=="class" else "RMSE ")+"of different classifiers")
-    plt.savefig(OUTPUT_DIR+"rmse_comparison.png")
+    plt.savefig(OUTPUT_DIR+"rmse_comparison.png",bbox_inches = "tight")
     plt.clf()
     #plt.show()
     #print(test_scores)
