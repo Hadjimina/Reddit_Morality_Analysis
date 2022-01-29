@@ -328,8 +328,10 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
     return X_scaled, y, feat_name_lst     
 
 def main(args):
-    print(args)
-           
+    args = " ".join(args)
+    
+    params["wo_metadata"] = ("wo" in args or "no" in args) and ("metadata" in args or "meta" in args)
+    
     print("CLASSIFICATION\n----" if params["predict"]=="class" else "REGRESSION\n----")
     if FORCE_SIMPLIFY:
         print("SIMPLIFYING")
