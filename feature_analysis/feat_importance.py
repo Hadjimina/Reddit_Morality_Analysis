@@ -27,20 +27,36 @@ from tqdm import tqdm
 #mpld3.enable_notebook()
 # rf, pps (https://github.com/8080labs/ppscore), correleation, shapele, mrmr
 
-OUTPUT_DIR = "./output/"
+params = {
+    "norm_vals": [0,1,2],               # normalised: 0 = only "abs", 1 = only "norm", 2 = norm and abs
+    "weighted_vals" : [True, False],     # weighted_vals: whether votes should be weighted by comment score FALSE IS BETTER 0.32
+    "title_prep_vals" : [True, False],   # title_prepend: whether to use the title prepended or standalone dataset
+    "sampling_vals" : ["up", "down"],   # sampling_vals: which type of sampling should be done
+    "topics_separate": False,           # if each topic should be analysed separately
+    "predict":"ratio",                  # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
+    "mapping_type":[  "opposite", "clip"], # should we "clip" negative votes or map them to the "opposite"
+    "ratio": [0.5,0.3,0.1  ],      # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
+    "wo_metadata": False #wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
+}
+
+FORCE_SIMPLIFY = False
+#SHOW_SHAPLY = True
+DO_SHAPLY = True
+SHOW_PREDICTION_DISTRIBUTION = False
+FEAT_IMPORTANCE_N = 50
+OUTPUT_DIR = "./output/" if not params["wo_metadata"] else "./output_wometadata/"
 DATASETS_DIR = "./datasets/"
-
-
-def get_data(normalised=1, weighted=True, title_prepend=True, topics_separate=False):
     
-    prepend_csv = "prepend_complete.csv"
-    standalone_csv = "standalone_complete.csv"
+def get_data(normalised=1, weighted=True, title_prepend=True, topics_separate=False, wo_metadata=False):
+    prepend_csv = "prepend_mf_liwc_angel_info_topic_scores_reactions_reduced_da.csv"
+    standalone_csv = "standalone_liwc_mf_angel_info_topic_scores_reduced_reactions_da.csv"
     
     if title_prepend:
-        df = load_wo_cols(DATASETS_DIR+prepend_csv)
+        df = load_wo_cols(DATASETS_DIR+prepend_csv, wo_metadata=wo_metadata)
     else:
-        df = load_wo_cols(DATASETS_DIR+standalone_csv)
+        df = load_wo_cols(DATASETS_DIR+standalone_csv, wo_metadata=wo_metadata)
          
+
     if normalised < 2:
         df = df[df.columns.drop(list(df.filter(regex="_abs" if normalised == 1 else "_norm")))]
         
@@ -64,12 +80,18 @@ def get_data(normalised=1, weighted=True, title_prepend=True, topics_separate=Fa
 
     #print(f"Number of dataframes: {len(dfs)}")
 
+    
     return dfs, acros
 
-def load_wo_cols(path, remove_cols=[],verbose=False):
+def load_wo_cols(path, remove_cols=[],verbose=False, wo_metadata=False):
     cols_to_remove = ["post_text", "Unnamed: 0", "Unnamed: 1", "Unnamed: 2", "Unnamed: 0.1", 
                       "Unnamed: 0.1.1", "liwc_post_id", "foundations_post_id", 
                       "foundations_title_post_id", "liwc_title_post_id", "post_created_utc"]+remove_cols
+    metadata = ["speaker_account_comment_karma", "post_num_comments", "post_ratio", "speaker_account_age", "speaker_account_link_karma", "post_ups", "post_downs", "post_score","reactions_is_devil", "reactions_is_angel"]
+    
+    if wo_metadata:
+        cols_to_read = cols_to_remove+metadata
+        
     removed = []
     df = pd.read_csv(path, nrows=10)
     cols_to_read = list(df.columns)
@@ -193,8 +215,8 @@ def get_vote_counts(df, acros):
 # mapping is either "clip", meaning negative votes are just set to 0, or "oppossite", meaning we use the mapping table in "opposite_jdgmt"
 def map_negative_values(df, acros, mapping="clip"):
     
-    if mapping == "opposite":
-        print("Map = opposite")    
+    if mapping == "opposite" or mapping =="map":
+        #print("Map = opposite")    
         for k in acros.keys():
             acr = acros[k]
             #print(f"{acr} pos amount {len(df.loc[df[acr] > 0])}")
@@ -217,10 +239,11 @@ def map_negative_values(df, acros, mapping="clip"):
             df[acr] = df[acr] + df[opposite_jdgmt(acr)]
            
     elif mapping =="clip":
-        print("Map = clip")    
+        #print("Map = clip")    
         for k in acros.keys():
             acr = acros[k]
-            df[acr][df[acr] < 0] = 0
+            df.loc[df[acr]<0,acr]=0
+        
             
     # finally set all negative info votes to 0
     #df[df[acros["info"]] < 0] = 0
@@ -262,11 +285,13 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
             
     elif predict == "ratio":
         # Y = asshole ratio(AHR) = (YTA+ESH)/(YTA+ESH+NTA+NAH)
-        df["Y"] = (df[acros["yta"]]+df[acros["esh"]])/(df[acros["yta"]]+ df[acros["nah"]]+df[acros["esh"]]+df[acros["nta"]])
         
-        #drop NAs & infty
-        df = df.replace([np.inf, -np.inf], np.nan)
-        df = df.dropna(subset=["Y"])
+        #drop posts w.o. votes
+        tmp = df[acros["yta"]]+ df[acros["nah"]]+df[acros["esh"]]+df[acros["nta"]]
+        tmp = tmp[tmp != 0]
+        tmp = (df[acros["yta"]]+df[acros["esh"]])/tmp
+        df["Y"] = tmp
+        
         if verbose:
            print(f"Removed {n_rows_old-len(df)} rows b.c. no votes. Now {df.shape}")
         n_rows_old = len(df)
@@ -274,10 +299,10 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         if verbose:
             print(f"Removed {n_rows_old-len(df)} rows b.c. not enough agreement. Now {df.shape}")
         
+    if np.min(df["Y"]) < 0 or np.max(df["Y"])>1:
+        raise Exception("Y value should be in range [0,1]")
         
-        
-        
-     # get list of all columns that contain uppercase vote acronym
+    # get list of all columns that contain uppercase vote acronym
     vote_acroynms = list(filter(lambda x: any([acr.upper() in x for acr in list(acros.keys())]), list(df.columns)))  
     df = df.drop(columns=vote_acroynms)
     
@@ -289,7 +314,6 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
     #print(df.info(memory_usage="deep"))
 
     # Removing top 4 most important features leads to 0.66 f1
-    #df = df.drop(columns=["speaker_account_comment_karma", "post_num_comments", "speaker_account_link_karma", "speaker_account_age"])
     if verbose:
         print(df.shape)
     
@@ -305,27 +329,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
 
 def main(args):
     print(args)
-    
-    
-    FORCE_SIMPLIFY = True
-    #SHOW_SHAPLY = True
-    DO_SHAPLY = True
-    SHOW_PREDICTION_DISTRIBUTION = False
-    FEAT_IMPORTANCE_N = 50
-
-    
-    params = {
-        "norm_vals": [0,1,2],               # normalised: 0 = only "abs", 1 = only "norm", 2 = norm and abs
-        "weighted_vals" : [True, False],     # weighted_vals: whether votes should be weighted by comment score FALSE IS BETTER 0.32
-        "title_prep_vals" : [True, False],   # title_prepend: whether to use the title prepended or standalone dataset
-        "sampling_vals" : ["up", "down"],   # sampling_vals: which type of sampling should be done
-        "topics_separate": False,           # if each topic should be analysed separately
-        "predict":"ratio",                  # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
-        "mapping_type":[ "clip", "opposite"], # should we "clip" negative votes or map them to the "opposite"
-        "ratio": [0.5  ]      # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
-    }
-
-
+           
     print("CLASSIFICATION\n----" if params["predict"]=="class" else "REGRESSION\n----")
     if FORCE_SIMPLIFY:
         print("SIMPLIFYING")
@@ -358,8 +362,6 @@ def main(args):
     class_ratio = [] #only used for classification
     top_n_features = {}
     
-    
-    
     #for correlation
     #y_lst = []
 
@@ -369,7 +371,6 @@ def main(args):
         for weighted in params["weighted_vals"]:
             for title_prep in params["title_prep_vals"]:
             
-                #TODO: shap dependency plot  
                 if "dfs" in locals() or "dfs" in globals():
                     for i in dfs:
                         del i
@@ -377,23 +378,26 @@ def main(args):
                     del df
                     gc.collect()
                 
-                    
-                dfs, acros = get_data(normalised=norm, weighted=weighted, title_prepend=title_prep, topics_separate=params["topics_separate"])
+                dfs, acros = get_data(normalised=norm, weighted=weighted, title_prepend=title_prep,
+                                      topics_separate=params["topics_separate"], wo_metadata=params["wo_metadata"])
 
-                #print("nr samples",len(dfs[0]))
                 for smp in params["sampling_vals"]:
                     for rto in params["ratio"]:
                         for mpt in params["mapping_type"]:
                             for df in dfs: 
                                 df_cpy = df.copy()
-                                X, y, feat_name_lst = get_data_classes(df_cpy, ratio=rto, acros=acros, predict=params["predict"],judgement_weighted=weighted, mapping=mpt, verbose=False)    
+                                X, y, feat_name_lst = get_data_classes(df_cpy, ratio=rto, acros=acros, 
+                                                                       predict=params["predict"], judgement_weighted=weighted,
+                                                                       mapping=mpt,verbose=False)    
                                 #y_lst.append(y.flatten())
                                 
                                 # sanity check for y sum
                                 y_sum_should = 35461 if mpt == "clip" else 35850
                                 eps = np.absolute(np.sum(y) - y_sum_should)
-                                if eps > 3 and rto == 0.5:
-                                    raise Exception("WRONG Y SUM FOR "+mpt+" ("+str(eps)+")")
+                                if eps > 3 and rto == 0.5 and params["predict"]=="ratio":
+                                    print(np.sum(y))
+                                    #raise Exception("WRONG Y SUM FOR "+mpt+" ("+str(eps)+")")
+                                    print("WRONG Y SUM FOR "+mpt+" ("+str(eps)+")")
                                 
                                 train, test = train_test_split(range(len(X)), test_size=0.33, random_state=42)
 
@@ -405,16 +409,16 @@ def main(args):
                                     clf = clf_tpl[0]
                                     clf_name = clf_tpl[1]
                                     clf_name += f"_norm={norm}"
-                                    clf_name += "_title=" + "prep" if title_prep else "stdal"
+                                    clf_name += "_title=prep" if title_prep else "_title=standalone"
                                     clf_name += "_weighted" if weighted else ""
                                     clf_name += "_ratio="+str(rto)
-                                    if params["predict"] == "ratio":
-                                        clf_name += "_"+mpt
+                                    clf_name += "_"+mpt
 
                                     clf_name += "_topic_"+str(df["topic_nr"].iloc[0]) if params["topics_separate"] else ""                      
+                                    clf_name += "_wometadata" if params["wo_metadata"] else ""
 
                                     print(f"Running ({current_iter}/{max_iter*len(dfs)}):\n  {clf_name}")
-
+                                    #print(f"    Training set size: {len(train)} Testing set size: {len(test)} => TOTAL SIZE: {len(train)+len(test)}")
                                     X_train = X[train, :]
                                     y_train = y[train]
                                     X_test = X[test, :]
@@ -428,14 +432,16 @@ def main(args):
                                     y_pred = clf.predict(X_test)
                                     
                                     if DO_SHAPLY:
-                                        print("    Doing shaply")
+                                        #print("    Doing shaply")
                                         explainer = shap.explainers.GPUTree(clf, X_train)
                                         #explainer = shap.explainers.Tree(clf, X_train)
                                         shap_values = explainer(X_train)
-                                        #shap.summary_plot(shap_values, X_train, feature_names=feat_name_lst, max_display=50, show=False)
-                                        #f = plt.gcf()
+                                        shap.summary_plot(shap_values, X_train, feature_names=feat_name_lst, max_display=50, show=False)
+                                        f = plt.gcf()
                                         #f.set_size_inches(18.5, 10.5)
-                                        #plt.savefig(f'{OUTPUT_DIR}{clf_name}.png')
+                                        plt.savefig(f'{OUTPUT_DIR}{clf_name}.png',bbox_inches = "tight")
+                                        plt.clf()
+                                        
                                         # save top N features
                                         feature_names = feat_name_lst
                                         shap_df = pd.DataFrame(shap_values.values, columns=feature_names)
@@ -443,16 +449,16 @@ def main(args):
                                         shap_importance = pd.DataFrame(list(zip(feature_names, vals)), columns=['col_name', 'feature_importance_vals'])
                                         shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
                                         
-                                        #shapely_abs = np.absolute(shap_values)
-                                        #print(shap_values.shape)
-                                        #id_sorted = np.argsort(shapely_abs[i])#? why [i]
-                                        name_importance_zip = list(zip(shap_importance["col_name"][:FEAT_IMPORTANCE_N], shap_importance["feature_importance_vals"][:FEAT_IMPORTANCE_N]))+["RMSE ="+ str(metrics.mean_squared_error(y_test, y_pred, squared=False))]
+                                        name_importance_zip = list(zip(
+                                            shap_importance["col_name"][:FEAT_IMPORTANCE_N],
+                                            shap_importance["feature_importance_vals"][:FEAT_IMPORTANCE_N]))+["RMSE ="+ str(metrics.mean_squared_error(y_test, y_pred, squared=False))]
+                                        
                                         top_n_features[clf_name] = name_importance_zip
                                 
                                         
-                                    print("completely done")
+                                
                                     # We have more Y=0 (NTA) than Y=1 (YTA)
-                                    #metrics.plot_confusion_matrix(classify, X_test, y_test)  
+                                    # metrics.plot_confusion_matrix(classify, X_test, y_test)  
                                     #plt.show()
                                     #print(metrics.classification_report(y_test, y_pred, target_names=["NTA (0)", "YTA (1)"]))
 
@@ -475,10 +481,23 @@ def main(args):
                                         mean_abs = metrics.mean_absolute_error(y_test, y_pred)
                                         mean_sqr = metrics.mean_squared_error(y_test, y_pred)
                                         rmse = metrics.mean_squared_error(y_test, y_pred, squared=False)
+                                        
+                                        
+                                        
                                         test_scores[clf_name]=rmse
                                         nr_samples.append(len(X_train))
                                         current_iter+=1
                                         print(f"    Mean absolute: {mean_abs}\n    Mean squared: {mean_sqr}\n    Root Mean Squared: {rmse}")
+                                    
+                                    #plt.figure(2)
+                                    #plt.scatter(y_pred,y_test,s=0.35)
+                                    #plt.plot([0,1], color="red")
+                                    #plt.plot([0.15,1.15], color="orange")
+                                    #plt.plot([-0.15,0.85], color="orange")
+                                    #plt.title("Prediction accuracy for "+params["predict"])
+                                    #plt.xlabel("Predicted value")
+                                    #plt.ylabel("Actual value")
+                                    #plt.show()
                                     
                                     del df_cpy
                                 
@@ -493,8 +512,8 @@ def main(args):
                         'samples': nr_samples, 
                             "class_ratio":class_ratio if len(class_ratio) > 0 else np.zeros(len(scores))})
 
+    # plot RMSE over dataset types
     fig, ax1 = plt.subplots(figsize=(15, 10))
-
     df_plt['samples'].plot(kind='line', marker='d', secondary_y=True, ylabel="# Samples").set_ylabel("# Samples")
     df_plt['scores'].plot(kind='bar', color='r', ylabel="F1 score" if params["predict"]=="class" else "RMSE").set_xticklabels(classifiers) 
     if len(class_ratio)>0:
@@ -503,7 +522,8 @@ def main(args):
     ax1.legend(["Classification", "Class Ratios"])
 
     plt.title("Comparing "+("F1 " if params["predict"]=="class" else "RMSE ")+"of different classifiers")
-    plt.savefig(OUTPUT_DIR+"plt.png")
+    plt.savefig(OUTPUT_DIR+"rmse_comparison.png")
+    plt.clf()
     #plt.show()
     #print(test_scores)
 
@@ -519,7 +539,6 @@ def main(args):
         
 
     # For each feature generate a list of all indices where it appears over various classifiers    
-    print("Most important features:")
     
     overal_top_feat = {}
     
@@ -554,9 +573,7 @@ def main(args):
     today = date.today()
     output = today.strftime("%d_%m_%Y")
     top_n_features_pd = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in top_n_features.items() ]))
-    top_n_features_pd.to_excel(output+".xlsx")
-
-    print(feat_name_lst)
+    top_n_features_pd.to_excel(OUTPUT_DIR+output+".xlsx")
     
     # correlation
     #min = len(y_lst[0])
