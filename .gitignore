@@ -10,6 +10,7 @@ output/*
 feature_analysis/.ipynb_checkpoints/*
 feature_analysis/structured_data_classifier/*
 *.sio
+xgboost_*.png
 
 
 # Byte-compiled / optimized / DLL files

@@ -39,8 +39,7 @@ params = {
     "wo_metadata": False #wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
 }
 
-FORCE_SIMPLIFY = False
-#SHOW_SHAPLY = True
+FORCE_SIMPLIFY = True
 DO_SHAPLY = True
 SHOW_PREDICTION_DISTRIBUTION = False
 FEAT_IMPORTANCE_N = 50
@@ -435,9 +434,8 @@ def main(args):
                                     y_pred = clf.predict(X_test)
                                     
                                     if DO_SHAPLY:
-                                        #print("    Doing shaply")
-                                        explainer = shap.explainers.GPUTree(clf, X_train)
-                                        #explainer = shap.explainers.Tree(clf, X_train)
+                                        #explainer = shap.explainers.GPUTree(clf, X_train)
+                                        explainer = shap.explainers.Tree(clf, X_train)
                                         shap_values = explainer(X_train)
                                         shap.summary_plot(shap_values, X_train, feature_names=feat_name_lst, max_display=50, show=False)
                                         f = plt.gcf()
