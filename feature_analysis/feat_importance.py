@@ -39,7 +39,7 @@ params = {
     "wo_metadata": False #wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
 }
 
-FORCE_SIMPLIFY = False
+FORCE_SIMPLIFY = True
 DO_SHAPLY = True
 SHOW_PREDICTION_DISTRIBUTION = False
 FEAT_IMPORTANCE_N = 50
@@ -89,7 +89,7 @@ def load_wo_cols(path, remove_cols=[],verbose=False, wo_metadata=False):
     metadata = ["speaker_account_comment_karma", "post_num_comments", "post_ratio", "speaker_account_age", "speaker_account_link_karma", "post_ups", "post_downs", "post_score","reactions_is_devil", "reactions_is_angel"]
     
     if wo_metadata:
-        cols_to_read = cols_to_remove+metadata
+        cols_to_remove = cols_to_remove+metadata
         
     removed = []
     df = pd.read_csv(path, nrows=10)

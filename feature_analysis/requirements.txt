@@ -7,3 +7,5 @@ scipy==1.7.3
 #tqdm==4.62.3
 xgboost==1.5.1
 openpyxl>=3.0.9
+tune-sklearn>=0.4.1
+ray[tune]>=1.9.2
