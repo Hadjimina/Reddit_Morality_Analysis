@@ -31,15 +31,15 @@ params = {
     "norm_vals": [0,1,2],               # normalised: 0 = only "abs", 1 = only "norm", 2 = norm and abs
     "weighted_vals" : [True, False],     # weighted_vals: whether votes should be weighted by comment score FALSE IS BETTER 0.32
     "title_prep_vals" : [True, False],   # title_prepend: whether to use the title prepended or standalone dataset
-    "sampling_vals" : ["up", "down"],   # sampling_vals: which type of sampling should be done
+    "sampling_vals" : ["up", ], #"down"  # sampling_vals: which type of sampling should be done
     "topics_separate": False,           # if each topic should be analysed separately
-    "predict":"ratio",                  # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
+    "predict":"class",                  # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
     "mapping_type":[  "opposite", "clip"], # should we "clip" negative votes or map them to the "opposite"
     "ratio": [0.5,0.3,0.1  ],      # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
     "wo_metadata": False #wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
 }
 
-FORCE_SIMPLIFY = True
+FORCE_SIMPLIFY = False
 DO_SHAPLY = True
 SHOW_PREDICTION_DISTRIBUTION = False
 FEAT_IMPORTANCE_N = 50
@@ -291,6 +291,10 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         tmp = (df[acros["yta"]]+df[acros["esh"]])/tmp
         df["Y"] = tmp
         
+        #sanity check
+        df["Y"] = np.random.randint(0, 1001, size=len(tmp))/1000
+        print("RANDOM Y")
+        
         if verbose:
            print(f"Removed {n_rows_old-len(df)} rows b.c. no votes. Now {df.shape}")
         n_rows_old = len(df)
@@ -347,7 +351,7 @@ def main(args):
 
     # mpc = MLPClassifier( random_state=1) seems pretty shitty
     # boost = GradientBoostingClassifier(n_estimators=300, learning_rate=1.0,max_depth=20, random_state=0)
-    xgboost = xgb.XGBClassifier(verbosity = 0) if params["predict"] == "class" else xgb.XGBRegressor(verbosity = 0)
+    xgboost = xgb.XGBClassifier(verbosity = 0, random_state=42,tree_method='gpu_hist') if params["predict"] == "class" else xgb.XGBRegressor(verbosity = 0, random_state=42,tree_method='gpu_hist')
     rfc = RandomForestClassifier(n_estimators= 766, min_samples_split= 2, min_samples_leaf= 1, max_features="auto", max_depth= 40, bootstrap= False, n_jobs=-1) if params["predict"] == "class" else RandomForestRegressor(n_estimators= 766, min_samples_split= 2, min_samples_leaf= 1, max_features="auto", max_depth= 40, bootstrap= False, n_jobs=-1)
 
     #classifiers = [(boost,"boost"), (xgboost,"xgboost"), (rfc,"rfc")]
@@ -415,6 +419,7 @@ def main(args):
                                     clf_name += "_weighted" if weighted else ""
                                     clf_name += "_ratio="+str(rto)
                                     clf_name += "_"+mpt
+                                    clf_name += "_"+mpt
 
                                     clf_name += "_topic_"+str(df["topic_nr"].iloc[0]) if params["topics_separate"] else ""                      
                                     clf_name += "_wometadata" if params["wo_metadata"] else ""
@@ -450,9 +455,14 @@ def main(args):
                                         shap_importance = pd.DataFrame(list(zip(feature_names, vals)), columns=['col_name', 'feature_importance_vals'])
                                         shap_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
                                         
-                                        name_importance_zip = list(zip(
-                                            shap_importance["col_name"][:FEAT_IMPORTANCE_N],
-                                            shap_importance["feature_importance_vals"][:FEAT_IMPORTANCE_N]))+["RMSE ="+ str(metrics.mean_squared_error(y_test, y_pred, squared=False))]
+                                        to_zip_1 = shap_importance["col_name"][:FEAT_IMPORTANCE_N],
+                                        to_zip_2 = shap_importance["feature_importance_vals"][:FEAT_IMPORTANCE_N]
+                                        if params["predict"] == "ratio":
+                                            to_zip_2 = to_zip_2+["RMSE ="+ str(metrics.mean_squared_error(y_test, y_pred, squared=False))]
+                                        else:
+                                            
+                                            to_zip_2 = to_zip_2+["RMSE ="+ str(metrics.f1_score(y_test, y_pred, average="weighted"))]                                                                                        
+                                        name_importance_zip = list(zip(to_zip_1, to_zip_2))
                                         
                                         top_n_features[clf_name] = name_importance_zip
                                 
@@ -517,8 +527,9 @@ def main(args):
     fig, ax1 = plt.subplots(figsize=(15, 10))
     df_plt['samples'].plot(kind='line', marker='d', secondary_y=True, ylabel="# Samples").set_ylabel("# Samples")
     df_plt['scores'].plot(kind='bar', color='r', ylabel="F1 score" if params["predict"]=="class" else "RMSE").set_xticklabels(classifiers) 
-    if len(class_ratio)>0:
-        df_plt['class_ratio'].plot(kind='bar', color='orange')
+    
+    #if len(class_ratio)>0:
+    #    df_plt['class_ratio'].plot(kind='bar', color='orange')
     plt.xlabel("Classifiers")
     ax1.legend(["Classification", "Class Ratios"])
 
