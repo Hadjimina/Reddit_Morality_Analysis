@@ -291,10 +291,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         tmp = (df[acros["yta"]]+df[acros["esh"]])/tmp
         df["Y"] = tmp
         
-        #sanity check
-        df["Y"] = np.random.randint(0, 1001, size=len(tmp))/1000
-        print("RANDOM Y")
-        
+    
         if verbose:
            print(f"Removed {n_rows_old-len(df)} rows b.c. no votes. Now {df.shape}")
         n_rows_old = len(df)
