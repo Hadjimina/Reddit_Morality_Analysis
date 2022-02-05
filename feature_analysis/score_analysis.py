@@ -109,7 +109,7 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
     nr_rows_pre_req = len(df)
     for k, v in params["requirements"].items():
         df = df.loc[(df[k] >= v), :]
-    #print(
+    # print(
     #    f"Removed {int(100*(nr_rows_pre_req-len(df))/len(df))}% due to requirements, Now {len(df)} posts remain.")
     # Check values in df
     # df.describe().loc[['min','max']].to_csv("min_max.csv",index=False)
@@ -353,8 +353,8 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         # drop all rows that are not "extreme" enough
         df = df.loc[(1-ratio <= df["YTA_ratio"]) | (df["YTA_ratio"] <= ratio)]
 
-        print(
-            f"Removed {int(100*( (n_rows_old-len(df)) / n_rows_old) )}% due to agreement ratio, Now {len(df)} posts remain.")
+        #print(
+        #    f"Removed {int(100*( (n_rows_old-len(df)) / n_rows_old) )}% due to agreement ratio, Now {len(df)} posts remain.")
 
         # specifc classes & drop unnecesarry
         # YTA = Class 1, NTA = class 0
@@ -375,7 +375,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         n_rows_old = len(df)
         df = df.loc[(1-ratio <= df["Y"]) | (df["Y"] <= ratio)]
 
-        #print(
+        # print(
         #    f"Removed {int(100*(n_rows_old-len(df))/len(df))}% of posts b.c. not enough agreement. Now {df.shape}")
 
     if np.min(df["Y"]) < 0 or np.max(df["Y"]) > 1:
@@ -462,7 +462,7 @@ def get_metrics(y_test, y_pred, params, verbose=True):
         if verbose:
             print(f"    Accuracy: {acc_test}\n    F1: {f1_test}")
             print(classification_report(y_test, y_pred, target_names=[
-              "Class 0: low AH", "Class 1: high AH"]))
+                "Class 0: low AH", "Class 1: high AH"]))
         else:
             return f1_test
 
@@ -477,58 +477,57 @@ def get_metrics(y_test, y_pred, params, verbose=True):
         else:
             return rmse
 
+
 def get_param_combs(params,):
     combinations = list(it.product(*(params[Name] for Name in params)))
 
     keys = list(params.keys())
-    combs = list(map(lambda x: dict(zip(keys, x)), combinations) )
+    combs = list(map(lambda x: dict(zip(keys, x)), combinations))
 
     return combs
 
 
 def main():
     params = {
-        "norm": [0,1,2],  # normalised: 0 = only "abs", 1 = only "norm", 2 = norm and abs
+        # normalised: 0 = only "abs", 1 = only "norm", 2 = norm and abs
+        "norm": [0, 1, 2],
         # weighted_vals: whether votes should be weighted by comment score
         "weighted": [True, False],
         # title_prepend: whether to use the title prepended or standalone dataset
         "title_prepend": [True, False],
         # sampling_vals: which type of sampling should be done ("up", "down", "none")
-        "sampling": ["up","down","none"],
-        "topics_separate": [False],   # if each topic should be analysed separately
+        "sampling": ["up", "down", "none"],
+        # if each topic should be analysed separately
+        "topics_separate": [False],
         # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
-        "predict": ["ratio"],
+        "predict": ["ratio", "class"],
         # should we "clip" negative votes or map them to the "opposite"
         "mapping": ["opposite", "clip"],
         # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
-        "ratio": [0.5, 0.3,0.1],
+        "ratio": [0.5, 0.3, 0.1],
         # wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
-        "wo_metadata": [True,],
+        "wo_metadata": [True, ],
         # wheter we should use the old or new reactions (reactions_YTA, NTA)
         "new_reactions": [False],
         "use_liwc": [True],  # wheter we use liwc features
         "use_mf": [True],  # whether we use moral foundation features
-        "requirements":[True, False],
+        "requirements": [True, False],
     }
 
-    post_requirements= {  # requirement: key >= value in post
+    post_requirements = {  # requirement: key >= value in post
         "post_num_comments": 10,
         "post_score": 10,
         "post_ratio": 0.7,
-        # "judgements": 0
     }
 
-    xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, ) if params["predict"] == "class" else xgb.XGBRegressor(
-        verbosity=0, random_state=42)
-    classifiers = (xgboost, "xgboost")
-
     models_to_compare = []
-    random_run = [True,False] #wheter we a random run right now => to compare the actual score with the random one
+    # wheter we a random run right now => to compare the actual score with the random one
+    random_run = [True, False]
 
     combs = get_param_combs(params)
     for params_i in tqdm(combs):
 
-        #upsamping not implemented for regression
+        # upsamping not implemented for regression
         if params_i["sampling"] == "up" and params_i["predict"] == "ratio":
             continue
 
@@ -537,34 +536,44 @@ def main():
             params_i["requirements"] = post_requirements
         else:
             params_i["requirements"] = dict.fromkeys(post_requirements, 0)
-        
-        last_random_score = None #holder variable for last random score
+
+        last_random_score = None  # holder variable for last random score
         for is_random in random_run:
-            params_i["random_y"]=is_random
-            print(is_random)
+            params_i["random_y"] = is_random
+
+            # ADD GPU
+            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False) if params_i["predict"] == "class" else xgb.XGBRegressor(
+                verbosity=0, random_state=42)
+            classifiers = (xgboost, "xgboost")
             clf_name = get_clf_name(params_i, classifiers[1])
             X_train, y_train, X_test, y_test, feat_name_lst = get_train_test_split(
                 params_i)
             xgboost.fit(X_train, y_train)
             y_pred = xgboost.predict(X_test)
 
+            is_regression = params_i["predict"] == "ratio"
+
             nr_samples = X_train.shape[0]
             nr_features = X_train.shape[1]
             complexity = nr_samples*nr_features
             score = get_metrics(y_test, y_pred, params_i, verbose=False)
-            
+
             if is_random:
                 last_random_score = score
                 improvement_rnd = -42
             else:
                 # how much better the actual run was compared to the random
-                improvement_rnd = score-last_random_score if params_i["predict"]=="class" else last_random_score-score
+                improvement_rnd = score - \
+                    last_random_score if params_i["predict"] == "class" else last_random_score-score
                 print(improvement_rnd)
 
-            models_to_compare.append([clf_name, score, improvement_rnd, complexity, nr_samples, nr_features, is_random, ])
+            models_to_compare.append(
+                [clf_name, score, improvement_rnd, complexity, nr_samples, nr_features, is_random, is_regression])
 
-    models_df = pd.DataFrame(models_to_compare, columns=["Name", "Score", "Improvement", "Complexity","Nr Samples", "Nr Features", "Random"])
+    models_df = pd.DataFrame(models_to_compare, columns=[
+                             "Name", "Score", "Improvement", "Complexity", "Nr Samples", "Nr Features", "is_random", "is_regression"])
     models_df.to_csv(OUTPUT_DIR+"model_comparisons.csv", index=False)
+
 
 if __name__ == "__main__":
     main()
