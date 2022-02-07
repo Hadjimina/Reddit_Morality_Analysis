@@ -36,38 +36,6 @@ def check_crossposts(post_id):
     feature_list = [("is_angel", is_angel), ("is_devil", is_devil)]
     return feature_list
 
-def count_label(comment, acronym):
-    """Check if the judgemnt label (YTA, NTA, INFO, ESH, NAH) is contained in comment.
-       We not only check for exact label match but also some minor text analysis
-
-    Args:
-        comment (string): post comment body
-        label (string): label to detect
-    Returns:
-        middle_dist (int): distance of label detection from middle of comment in percent 
-            0 = detected acryonm in center of post text
-            1 = detected acryonm either at beginning or end of comment
-    """    
-
-    # split on any whitspace
-    label_i = CS.JUDGMENT_ACRONYM.index(acronym)
-    # naive detection
-    
-
-    # priorities values that are in the beginning or end
-    middle_index = len(comment)//2
-    middle_dist = 0
-    try:
-        dist_abs = abs(middle_index - comment.index(acronym.lower()))
-        middle_dist = dist_abs/(len(comment)/2)
-        
-    except ValueError as e:
-        middle_dist = -1
-        # specific label not naively found
-        #TODO: Some more sophisticated checking needed to check expressions (i.e. "you are the asshole")
-
-
-    return middle_dist
     
 def get_judgement_labels(post_id):
     """Returns judgement label counts (YTA, NTA, INFO, ESH, NAH)
@@ -104,29 +72,29 @@ def get_judgement_labels(post_id):
 
         middle = max(len(comment_body)//2,1)
         middle_simple = max(len(comment_body_no_punct.split())//2,1)
+
         for k in CS.JUDGEJMENT_DICT.keys():
             idxes = []              # "e.g. You are the asshole"
             center_dist = []                 
-            idxes_simple = []       # e.g. "YTA"
-            center_dist_simple = []   
+
             for x in string_matching_arr_append_ah(CS.JUDGEJMENT_DICT[k]):   
                 if len(x.split()) > 1: 
                     idxes = find_all(comment_body, x.lower())
                     idxes = list(filter(lambda x: x != -1, idxes))
-                    # No longer index but distance from center
-                    center_dist = list(map(lambda q: (abs(middle-q) / middle), idxes ))
-                    center_dist.sort(reverse=True)
+                    center_dist_tmp = list(map(lambda q: (abs(middle-q) / middle), idxes ))
+                    
                 else: 
-                    idxes_simple = [i for i,y in enumerate(comment_body_no_punct.split()) if y==x.lower()]
-                    # No longer index but distance from center
-                    center_dist_simple = list(map(lambda q: (abs(middle_simple-q) / middle_simple), idxes_simple ))
-                    center_dist_simple.sort(reverse=True)
+                    idxes = [i for i,y in enumerate(comment_body_no_punct.split()) if y==x.lower()]
+                    center_dist_tmp = list(map(lambda q: (abs(middle_simple-q) / middle_simple), idxes ))
+
+                # No longer index but distance from center
+                center_dist_tmp.sort(reverse=True)
+                center_dist += center_dist_tmp
                 
-            
             # Order by distance
-            merged = center_dist + center_dist_simple
-            merged.sort(reverse=True)
-            labels_loc[k] = merged
+            #merged = center_dist + center_dist_simple
+            center_dist.sort(reverse=True)
+            labels_loc[k] = center_dist
 
         # Check if more than one vote was detected
         nr_votes = len(flatten_list(list(labels_loc.values())))

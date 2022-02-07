@@ -45,6 +45,9 @@ def get_clean_text(post_text,
         string/spacy doc: Cleaned string or cleaned & lemmatized spacy doc. Spacydoc can be iterated over just like one would a string
     """
 
+    #remove emojis:
+    post_text = emoji.get_emoji_regexp().sub(u'', post_text)
+
     if remove_am:
         post_text = post_text.replace("'m", " ").replace("am", " ")
 
@@ -77,7 +80,6 @@ def get_clean_text(post_text,
         return nlp(post_text)  # spacy
     else:
         return post_text
-
 
 def get_ups_downs_from_ratio_score(r, s):
     """Given a ratio and a score, we will return individual number of upvotes and downvotes & ratio, score

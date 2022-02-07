@@ -15,9 +15,10 @@ import multiprocessing
 import itertools as it
 from tqdm import tqdm
 
-DO_SHAPLY = True
+TRIAL_RUN = True
 OUTPUT_DIR = "./output/"
 DATASETS_DIR = "./datasets/"
+
 
 
 def get_data(params):
@@ -104,7 +105,7 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
             removed.append(col)
 
     #print(f"Removed {removed} from {path.split('/')[-1]}")
-    df = pd.read_csv(path, usecols=cols_to_read, nrows=100000)
+    df = pd.read_csv(path, usecols=cols_to_read,nrows = 100000 if TRIAL_RUN else None)
 
     # delte posts that don't meet requirements
     nr_rows_pre_req = len(df)
@@ -428,11 +429,12 @@ def get_train_test_split(params, grid_search=False, verbose=False):
     if params["random_y"]:
         # Sanity check, i.e. get results for random predition
         #df["Y"] = np.random.randint(0, 1001, size=len(df["Y"]))/1000
-        y_test_sum_old = np.sum(y_test[:1000])
+        
+        y_test_sum_old = np.sum(y_test[:len(y_test*0.5)])
         np.random.shuffle(y_test)
-        y_test_sum_new = np.sum(y_test[:1000])
-        if y_test_sum_old == y_test_sum_new:
-            raise Exception("Not truly random values")
+        y_test_sum_new = np.sum(y_test[:len(y_test*0.5)])
+        #if y_test_sum_old == y_test_sum_new:
+        #    print("Not truly random values")
         if verbose:
             print(f"USING RANDOM Y\n Was {y_test_sum_old} Is {y_test_sum_new}")
 
@@ -516,11 +518,17 @@ def main():
         "post_ratio": 0.7,
     }
 
+    
+    
     models_to_compare = []
     # wheter we a random run right now => to compare the actual score with the random one
     random_run = [True, False]
 
     combs = get_param_combs(params)
+    if TRIAL_RUN:
+        print("THIS IS A TRIAL RUN")
+        combs = combs[:2]
+        
     for params_i in tqdm(combs):
 
         # upsamping not implemented for regression
@@ -538,11 +546,11 @@ def main():
             params_i["random_y"] = is_random
 
             # ADD GPU
-            #xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False, tree_method='gpu_hist') if params_i["predict"] == "class" else xgb.XGBRegressor(
-            #    verbosity=0, random_state=42, tree_method='gpu_hist')
+            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False, tree_method='gpu_hist') if params_i["predict"] == "class" else xgb.XGBRegressor(
+                verbosity=0, random_state=42, tree_method='gpu_hist')
 
-            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False) if params_i["predict"] == "class" else xgb.XGBRegressor(
-                verbosity=0, random_state=42)
+            #xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False) if params_i["predict"] == "class" else xgb.XGBRegressor(
+            #    verbosity=0, random_state=42)
             classifiers = (xgboost, "xgboost")
             clf_name = get_clf_name(params_i, classifiers[1])
             X_train, y_train, X_test, y_test, feat_name_lst = get_train_test_split(
