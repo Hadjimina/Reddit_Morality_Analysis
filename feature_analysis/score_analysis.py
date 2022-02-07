@@ -538,6 +538,9 @@ def main():
             params_i["random_y"] = is_random
 
             # ADD GPU
+            #xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False, tree_method='gpu_hist') if params_i["predict"] == "class" else xgb.XGBRegressor(
+            #    verbosity=0, random_state=42, tree_method='gpu_hist')
+
             xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False) if params_i["predict"] == "class" else xgb.XGBRegressor(
                 verbosity=0, random_state=42)
             classifiers = (xgboost, "xgboost")
