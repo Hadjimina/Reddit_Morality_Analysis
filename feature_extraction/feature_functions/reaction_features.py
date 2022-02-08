@@ -8,6 +8,7 @@ import pandas as pd
 from helpers import *
 from helpers.helper_functions import *
 import helpers.globals_loader as globals_loader
+
 coloredlogs.install()
 
 def check_crossposts(post_id):

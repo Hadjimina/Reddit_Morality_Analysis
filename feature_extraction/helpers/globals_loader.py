@@ -68,6 +68,7 @@ def load_reddit_settings():
     """Load the reddit settings from secrets/reddit.json
     """
     global reddit
+    return
     path = sys.path[0]+"/secrets/reddit.json"
     file = open(path)
     data = json.load(file)
@@ -95,7 +96,7 @@ def load_posts():
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
     
     # Done 0-110000, 
-    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False,skiprows=range(1, 600000))
+    df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False)
     #df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False, nrows=110000)
     #df_checked = pd.read_csv("/mnt/c/Users/Philipp/Desktop/ids.csv")
     #df_posts = df_posts[~df_posts['post_id'].isin(df_checked["post_id"].tolist())]

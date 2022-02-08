@@ -10,6 +10,7 @@ import sys
 import requests
 import nltk
 import socket
+import emoji
 from nltk.corpus import stopwords
 nltk.download('stopwords', quiet=True)
 #import helpers.globals_loader as globals_loader
