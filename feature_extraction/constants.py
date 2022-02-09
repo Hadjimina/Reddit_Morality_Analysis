@@ -44,7 +44,7 @@ mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_CLEAN = "{0}comments_clean_16_07_2021{1}.csv".format(dataset_dir, mini_str)
+COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC = "{0}LIWC_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_TITLE = "{0}LIWC_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_MERGED = "{0}LIWC_merged_27_6_2021{1}.csv".format(dataset_dir, mini_str)
@@ -133,7 +133,7 @@ FEATURES_TO_GENERATE_MP = {
     ],
     "reactions": [
         #(check_crossposts, CS.POST_ID),  # slow
-        #(get_judgement_labels, CS.POST_ID)
+        (get_judgement_labels, CS.POST_ID)
     ]
 }
 

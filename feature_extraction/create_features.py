@@ -327,7 +327,7 @@ def main(args):
     else:
         setup()
         create_features()
-        upload_output_dir()
+        #upload_output_dir()
         
 
 
