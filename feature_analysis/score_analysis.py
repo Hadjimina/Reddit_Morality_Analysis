@@ -20,19 +20,19 @@ OUTPUT_DIR = "./output/"
 DATASETS_DIR = "./datasets/"
 
 def get_data(params):
-    prepend_csv = "prepend_mf_liwc_angel_info_topic_scores_reactions_reduced_da.csv"
-    standalone_csv = "standalone_liwc_mf_angel_info_topic_scores_reduced_reactions_da.csv"
+    prepend_csv = "prepend_done.csv"
+    standalone_csv = "standalone_done.csv"
 
     if params["title_prepend"]:
         df = load_wo_cols(DATASETS_DIR+prepend_csv, params)
     else:
         df = load_wo_cols(DATASETS_DIR+standalone_csv, params)
 
-    if params["new_reactions"]:
-        new_react = "id_to_reactions_new.csv"
-        df_reactions = pd.read_csv(DATASETS_DIR+new_react)
-        df = df.merge(df_reactions, left_on="post_id", right_on="post_id",
-                      validate="1:1", suffixes=('', '_DROP')).filter(regex='^(?!.*_DROP)')
+    #if params["new_reactions"]:
+    #    new_react = "id_to_reactions_correct.csv"
+    #    df_reactions = pd.read_csv(DATASETS_DIR+new_react)
+    #    df = df.merge(df_reactions, left_on="post_id", right_on="post_id",
+    #                  validate="1:1", suffixes=('', '_DROP')).filter(regex='^(?!.*_DROP)')
 
     if params["norm"] < 2:
         df = df[df.columns.drop(
@@ -76,10 +76,10 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
     if params["wo_metadata"]:
         cols_to_remove = cols_to_remove+metadata
 
-    # replace reactions with new ones TODO: why are they different?
-    if params["new_reactions"]:
-        cols_to_remove = cols_to_remove + \
-            list(filter(lambda x: "reaction" in x and not "reaction_is" in x, cols_to_read))
+    
+    #if params["new_reactions"]:
+    #    cols_to_remove = cols_to_remove + \
+    #        list(filter(lambda x: "reaction" in x and not "reaction_is" in x, cols_to_read))
 
     # remove liwc
     if not params["use_liwc"]:
@@ -105,6 +105,7 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
     #print(f"Removed {removed} from {path.split('/')[-1]}")
     df = pd.read_csv(path, usecols=cols_to_read,nrows = 100000 if TRIAL_RUN else None)
 
+    
     # delte posts that don't meet requirements
     nr_rows_pre_req = len(df)
     for k, v in params["requirements"].items():
@@ -118,7 +119,16 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
         removed += will_drop
         
         
+<<<<<<< HEAD
+    #yta_should = 552092
+    #yta_is = df["reactions_YTA"].sum()
+    #if not yta_should == yta_is:
+    #    raise Exception(f"SUM IS NOT CORRECT! is {yta_is} should {yta_should}")
+    #else:
+    #    print("correct y sum")
+=======
     
+>>>>>>> 98e5948a9acc2019e0a55ad4c12ec51dffd8af5a
     # print(
     #    f"Removed {int(100*(nr_rows_pre_req-len(df))/len(df))}% due to requirements, Now {len(df)} posts remain.")
     # Check values in df
@@ -173,7 +183,7 @@ def sampling(X_train, y_train, params, indices=[], verbose=False):
                     df_bkt = df_to_sample.loc[(bucket_ranges[j] <= df_to_sample['Y']) & (
                         df_to_sample['Y'] <= bucket_ranges[j+1])]
                     df_bkt_smpl = df_bkt.sample(
-                        n=int(bucket_max), replace=False, random_state=42)
+                        n=min(int(bucket_max),len(df_bkt)), replace=False, random_state=42)
                     df_to_sample.loc[(bucket_ranges[j] <= df_to_sample['Y']) & (
                         df_to_sample['Y'] <= bucket_ranges[j+1])] = df_bkt_smpl
 
@@ -501,11 +511,11 @@ def main():
         # title_prepend: whether to use the title prepended or standalone dataset
         "title_prepend": [True,False ],
         # sampling_vals: which type of sampling should be done ("up", "down", "none")
-        "sampling": ["up", "down", "none"],
+        "sampling": ["down","up",  "none"],
         # if each topic should be analysed separately
         "topics_separate": [False, ],
         # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
-        "predict": ["class","ratio", ],
+        "predict": ["ratio","class", ],
         # should we "clip" negative votes or map them to the "opposite"
         "mapping": ["opposite", "clip"],
         # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
@@ -513,7 +523,7 @@ def main():
         # wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
         "wo_metadata": [True, False],
         # wheter we should use the old or new reactions (reactions_YTA, NTA)
-        "new_reactions": [False],
+        #"new_reactions": [True],
         "use_liwc": [True],  # wheter we use liwc features
         "use_mf": [True],  # whether we use moral foundation features
         "requirements": [False,True],
@@ -552,8 +562,8 @@ def main():
         for is_random in random_run:
             params_i["random_y"] = is_random
             # ADD GPU
-            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False, tree_method='gpu_hist') if params_i["predict"] == "class" else xgb.XGBRegressor(
-                verbosity=0, random_state=42, tree_method='gpu_hist')
+            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False,) if params_i["predict"] == "class" else xgb.XGBRegressor(
+                verbosity=0, random_state=42, )
 
             #xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False) if params_i["predict"] == "class" else xgb.XGBRegressor(
             #    verbosity=0, random_state=42)
