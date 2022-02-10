@@ -15,26 +15,24 @@ import multiprocessing
 import itertools as it
 from tqdm import tqdm
 
-TRIAL_RUN = True
+TRIAL_RUN = False
 OUTPUT_DIR = "./output/"
 DATASETS_DIR = "./datasets/"
 
-
-
 def get_data(params):
-    prepend_csv = "prepend_mf_liwc_angel_info_topic_scores_reactions_reduced_da.csv"
-    standalone_csv = "standalone_liwc_mf_angel_info_topic_scores_reduced_reactions_da.csv"
+    prepend_csv = "prepend_done.csv"
+    standalone_csv = "standalone_done.csv"
 
     if params["title_prepend"]:
         df = load_wo_cols(DATASETS_DIR+prepend_csv, params)
     else:
         df = load_wo_cols(DATASETS_DIR+standalone_csv, params)
 
-    if params["new_reactions"]:
-        new_react = "id_to_reactions_new.csv"
-        df_reactions = pd.read_csv(DATASETS_DIR+new_react)
-        df = df.merge(df_reactions, left_on="post_id", right_on="post_id",
-                      validate="1:1", suffixes=('', '_DROP')).filter(regex='^(?!.*_DROP)')
+    #if params["new_reactions"]:
+    #    new_react = "id_to_reactions_correct.csv"
+    #    df_reactions = pd.read_csv(DATASETS_DIR+new_react)
+    #    df = df.merge(df_reactions, left_on="post_id", right_on="post_id",
+    #                  validate="1:1", suffixes=('', '_DROP')).filter(regex='^(?!.*_DROP)')
 
     if params["norm"] < 2:
         df = df[df.columns.drop(
@@ -67,7 +65,7 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
                       "Unnamed: 0.1.1", "liwc_post_id", "foundations_post_id",
                       "foundations_title_post_id", "liwc_title_post_id", "post_created_utc"]+remove_cols
     metadata = ["speaker_account_comment_karma", "post_num_comments", "speaker_account_age",
-                "speaker_account_link_karma", "post_ups", "post_downs", "post_score", "reactions_is_devil", "reactions_is_angel"]
+                "speaker_account_link_karma", "post_ups", "post_downs", "post_score", "reactions_is_devil", "reactions_is_angel","post_ratio"]
     # removed "post_ratio" from metadata b.c. used for weights
 
     removed = []
@@ -78,10 +76,10 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
     if params["wo_metadata"]:
         cols_to_remove = cols_to_remove+metadata
 
-    # replace reactions with new ones TODO: why are they different?
-    if params["new_reactions"]:
-        cols_to_remove = cols_to_remove + \
-            list(filter(lambda x: "reaction" in x and not "reaction_is" in x, cols_to_read))
+    
+    #if params["new_reactions"]:
+    #    cols_to_remove = cols_to_remove + \
+    #        list(filter(lambda x: "reaction" in x and not "reaction_is" in x, cols_to_read))
 
     # remove liwc
     if not params["use_liwc"]:
@@ -107,16 +105,31 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
     #print(f"Removed {removed} from {path.split('/')[-1]}")
     df = pd.read_csv(path, usecols=cols_to_read,nrows = 100000 if TRIAL_RUN else None)
 
+    
     # delte posts that don't meet requirements
     nr_rows_pre_req = len(df)
     for k, v in params["requirements"].items():
         df = df.loc[(df[k] >= v), :]
+    # remove cols required for "requirements"
+    if params["wo_metadata"]:
+        to_drop = set(list(params["requirements"].keys()))
+        in_list = set(list(df.columns))
+        will_drop = list(to_drop.intersection(in_list))
+        df = df.drop(columns=will_drop)
+        removed += will_drop
+        
+        
+    #yta_should = 552092
+    #yta_is = df["reactions_YTA"].sum()
+    #if not yta_should == yta_is:
+    #    raise Exception(f"SUM IS NOT CORRECT! is {yta_is} should {yta_should}")
+    #else:
+    #    print("correct y sum")
     # print(
     #    f"Removed {int(100*(nr_rows_pre_req-len(df))/len(df))}% due to requirements, Now {len(df)} posts remain.")
     # Check values in df
     # df.describe().loc[['min','max']].to_csv("min_max.csv",index=False)
     return df
-
 
 def sampling(X_train, y_train, params, indices=[], verbose=False):
     df_len_old = len(X_train)
@@ -166,7 +179,7 @@ def sampling(X_train, y_train, params, indices=[], verbose=False):
                     df_bkt = df_to_sample.loc[(bucket_ranges[j] <= df_to_sample['Y']) & (
                         df_to_sample['Y'] <= bucket_ranges[j+1])]
                     df_bkt_smpl = df_bkt.sample(
-                        n=int(bucket_max), replace=False, random_state=42)
+                        n=min(int(bucket_max),len(df_bkt)), replace=False, random_state=42)
                     df_to_sample.loc[(bucket_ranges[j] <= df_to_sample['Y']) & (
                         df_to_sample['Y'] <= bucket_ranges[j+1])] = df_bkt_smpl
 
@@ -361,7 +374,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
         # specifc classes & drop unnecesarry
         # YTA = Class 1, NTA = class 0
         df["Y"] = np.where(df[acros["yta"]] > df[acros["nta"]], 1,  0)
-        smp_weights = df["post_ratio"]
+        #smp_weights = df["post_ratio"]
         if verbose:
             print(df.shape)
 
@@ -376,7 +389,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
 
         n_rows_old = len(df)
         df = df.loc[(1-ratio <= df["Y"]) | (df["Y"] <= ratio)]
-        smp_weights = df["post_ratio"]
+        #smp_weights = df["post_ratio"]
         # print(
         #    f"Removed {int(100*(n_rows_old-len(df))/len(df))}% of posts b.c. not enough agreement. Now {df.shape}")
 
@@ -400,7 +413,7 @@ def get_data_classes(df, acros, ratio=0.5, verbose=False, predict="class", judge
     # scaling
     scaler = preprocessing.StandardScaler().fit(X)
     X_scaled = scaler.transform(X)
-    return X_scaled, y, feat_name_lst, smp_weights.to_numpy()
+    return X_scaled, y, feat_name_lst, None#smp_weights.to_numpy()
 
 
 def get_train_test_split(params, grid_search=False, verbose=False):
@@ -411,7 +424,7 @@ def get_train_test_split(params, grid_search=False, verbose=False):
         print("MORE THAN 1 df")
 
     df_cpy = df.copy()
-    X, y, feat_name_lst,smp_weights = get_data_classes(df_cpy, ratio=params["ratio"], acros=acros, predict=params["predict"], judgement_weighted=params["weighted"],
+    X, y, feat_name_lst,_ = get_data_classes(df_cpy, ratio=params["ratio"], acros=acros, predict=params["predict"], judgement_weighted=params["weighted"],
                                            mapping=params["mapping"], verbose=False)
     if grid_search:
         print("YOU SURE YOU WANT TO BE DOING THIS?")
@@ -494,22 +507,22 @@ def main():
         # title_prepend: whether to use the title prepended or standalone dataset
         "title_prepend": [True,False ],
         # sampling_vals: which type of sampling should be done ("up", "down", "none")
-        "sampling": ["up", "down", "none"],
+        "sampling": ["down","up",  "none"],
         # if each topic should be analysed separately
-        "topics_separate": [False, True],
+        "topics_separate": [False, ],
         # should we predict "class" (classification for binary) or "ratio" (regression for AHR)
-        "predict": ["class","ratio", ],
+        "predict": ["ratio","class", ],
         # should we "clip" negative votes or map them to the "opposite"
         "mapping": ["opposite", "clip"],
         # which most extreme AHR or YTA_ratio we want to predict 0.3, 0.2, 0.1, 0.05
-        "ratio": [0.5,0.3, 0.2, 0.1, 0.05],
+        "ratio": [0.5,0.3, 0.2,],
         # wheter we should include metadata columns (e.g. post_score, account_karam, link_karma) set MANUALLY
         "wo_metadata": [True, False],
         # wheter we should use the old or new reactions (reactions_YTA, NTA)
-        "new_reactions": [False],
+        #"new_reactions": [True],
         "use_liwc": [True],  # wheter we use liwc features
         "use_mf": [True],  # whether we use moral foundation features
-        "requirements": [True, False],
+        "requirements": [False,True],
     }
 
     post_requirements = {  # requirement: key >= value in post
@@ -518,7 +531,6 @@ def main():
         "post_ratio": 0.7,
     }
 
-    
     
     models_to_compare = []
     # wheter we a random run right now => to compare the actual score with the random one
@@ -541,13 +553,13 @@ def main():
         else:
             params_i["requirements"] = dict.fromkeys(post_requirements, 0)
 
+        
         last_random_score = None  # holder variable for last random score
         for is_random in random_run:
             params_i["random_y"] = is_random
-
             # ADD GPU
-            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False, tree_method='gpu_hist') if params_i["predict"] == "class" else xgb.XGBRegressor(
-                verbosity=0, random_state=42, tree_method='gpu_hist')
+            xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False,) if params_i["predict"] == "class" else xgb.XGBRegressor(
+                verbosity=0, random_state=42, )
 
             #xgboost = xgb.XGBClassifier(verbosity=0, random_state=42, use_label_encoder=False) if params_i["predict"] == "class" else xgb.XGBRegressor(
             #    verbosity=0, random_state=42)
@@ -582,7 +594,7 @@ def main():
 
     models_df = pd.DataFrame(models_to_compare, columns=[
                              "Name", "Score", "Improvement", "Complexity", "Nr Samples", "Nr Features", "is_random", "is_regression"])
-    models_df.to_csv(OUTPUT_DIR+"model_comparisons.csv", index=False)
+    models_df.to_csv(f"{OUTPUT_DIR}model_comparisons{'_trial'if TRIAL_RUN else ''}_min.csv", index=False)
 
 if __name__ == "__main__":
     main()
