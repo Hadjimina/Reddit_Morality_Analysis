@@ -119,12 +119,16 @@ def load_wo_cols(path, params, remove_cols=[], verbose=False):
         removed += will_drop
         
         
+<<<<<<< HEAD
     #yta_should = 552092
     #yta_is = df["reactions_YTA"].sum()
     #if not yta_should == yta_is:
     #    raise Exception(f"SUM IS NOT CORRECT! is {yta_is} should {yta_should}")
     #else:
     #    print("correct y sum")
+=======
+    
+>>>>>>> 98e5948a9acc2019e0a55ad4c12ec51dffd8af5a
     # print(
     #    f"Removed {int(100*(nr_rows_pre_req-len(df))/len(df))}% due to requirements, Now {len(df)} posts remain.")
     # Check values in df
@@ -594,7 +598,7 @@ def main():
 
     models_df = pd.DataFrame(models_to_compare, columns=[
                              "Name", "Score", "Improvement", "Complexity", "Nr Samples", "Nr Features", "is_random", "is_regression"])
-    models_df.to_csv(f"{OUTPUT_DIR}model_comparisons{'_trial'if TRIAL_RUN else ''}_min.csv", index=False)
+    models_df.to_csv(f"{OUTPUT_DIR}model_comparisons{'_trial'if TRIAL_RUN else ''}.csv", index=False)
 
 if __name__ == "__main__":
     main()
