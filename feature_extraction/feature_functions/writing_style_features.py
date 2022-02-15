@@ -159,7 +159,7 @@ def get_sentiment_in_spacy(doc):
      Returns: 
         int, int: polairty and subjectivity values
         polarity[-1,1] = sentiment => -1 = negative sentence
-        subjectivity [-1,1] => -1 = unsubjective
+        subjectivity [0,1] => 0 = objective
     """
     return doc._.polarity, doc._.subjectivity
 
@@ -273,6 +273,7 @@ def get_focus_in_spacy(token, count_possesive_pronouns=True):
     elif token.dep_ in ["iobj", "dobj", "pobj", "dative"]: # object 
         return focus_str+"_obj"
     elif token.dep_ == "poss" and count_possesive_pronouns:
+        #is this correctly implemented?
         return focus_str+"_poss"
     
     return None 
