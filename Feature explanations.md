@@ -106,7 +106,7 @@ How positive/Negative a sentence was written + how subjective/objective it was. 
 'writing_sty_sent_subjectivity' = How subjective/objective the post is. 0 = very objective, 1 = very subjective
 
 ## Focus Pronoun
-Check various types of pronouns and count how often they appeared as the subject or object. Also counts possessive pronouns.
+Check various types of pronouns and count how often they appeared as the subject or object. Also counts possessive pronouns & adjectives.
 Divided by number of words in the text if normalised. ML based. 
 
 'writing_sty_focus_i_subj' = How often pronoun 1. person singular pronoun appeared as the subject.
@@ -121,12 +121,12 @@ Divided by number of words in the text if normalised. ML based.
 'writing_sty_focus_we_obj'= How often pronoun 1. person plural pronoun appeared as the object.
 'writing_sty_focus_you_pl_obj'= How often pronoun 2. person plural pronoun appeared as the object.
 'writing_sty_focus_they_obj'= How often pronoun 3. person plural pronoun appeared as the object.
-'writing_sty_focus_i_poss'= How often 1. person singular possessive pronoun appeared.
-'writing_sty_focus_you_sg_poss'= How often 2. person singular possessive pronoun appeared.
-'writing_sty_focus_he_poss'= How often 3. person singular possessive pronoun appeared.
-'writing_sty_focus_we_poss'= How often 1. person plural possessive pronoun appeared.
-'writing_sty_focus_you_pl_poss'= How often 2. person plural possessive pronoun appeared.
-'writing_sty_focus_they_poss'= How often 3. person plural possessive pronoun appeared.
+'writing_sty_focus_i_poss'= How often 1. person singular possessive pronoun & adjectives appeared.
+'writing_sty_focus_you_sg_poss'= How often 2. person singular possessive pronoun & adjectives appeared.
+'writing_sty_focus_he_poss'= How often 3. person singular possessive pronoun & adjectives appeared.
+'writing_sty_focus_we_poss'= How often 1. person plural possessive pronoun & adjectives appeared.
+'writing_sty_focus_you_pl_poss'= How often 2. person plural possessive pronoun & adjectives appeared.
+'writing_sty_focus_they_poss'= How often 3. person plural possessive pronoun & adjectives appeared.
 
 
 ## Self vs other emotions
