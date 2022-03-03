@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AITA Post modification</title>
+</head>
+
+<body>
+    <h1>Reddit AITA post modification tool</h1>
+    <p>With this tool you can see how modifications of a post change the outcome of it's judgement</p>
+    <form method="post" style="width: 40%;">
+
+        <textarea rows="2" cols="20" id="old_post_txt" name="old_post" wrap="hard"
+            placeholder="Enter the original post text here."
+            style="width:60%; height:5em;max-height:30em; max-width:100%"></textarea>
+        <br><br>
+        <textarea id="new_post_txt" name="new_post" wrap="hard" placeholder="Enter the modified post text here."
+            style="width:60%; height:5em;max-height:30em; max-width:100%"></textarea>
+
+        <br><br>
+        <input type="submit" name="submit_posts" value="Analyze">
+    </form>
+
+    {% for item in data %}
+    <h2>Results:</h2>
+    <p> Assholeness ratio of <b>original</b> post: {{item.ahr_old}}</p>
+    <p> Assholeness ratio of <b>modified</b> post: {{item.ahr_new}}</p>
+    <h3>Modified features</h3>
+    <ul>
+        {% for mod_feat in item.changedFeatures %}
+        <li>
+            <b>{{mod_feat.name}}</b>
+            = {{mod_feat.value|string}}
+
+            {{"increase" if mod_feat.perc_change >0 else "decrease"}}
+            of {{mod_feat.perc_change*100}}
+
+        </li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+</body>
+
+</html>
