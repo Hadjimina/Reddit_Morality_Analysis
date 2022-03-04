@@ -10,32 +10,35 @@ import sys
 import json
 from spacytextblob.spacytextblob import SpacyTextBlob
 
-def init(do_load_spacy=True):
+
+def init(do_load_spacy=True, single_post=False):
     """Load all required global variables such as dataframes.
         Setup the post title either as a standalone feature that is treated the same way as post text or the post title is prepended ot the post text
-        
+
         Args: 
             do_load_spacy (bool, optional): whether or not we load the spacy library, defaults to True.
     """
 
     if CS.USE_MINIFIED_DATA:
-        lg.warning("Using minified data (fraction: {0})".format(CS.MINIFY_FRAC))
-    if not hasattr(globals(), 'reddit'):
+        lg.warning(
+            "Using minified data (fraction: {0})".format(CS.MINIFY_FRAC))
+
+    if not hasattr(globals(), 'reddit') and not single_post:
         load_reddit_settings()
-        
-    if not hasattr(globals(), 'df_posts'):
+
+    if not hasattr(globals(), 'df_posts') and not single_post:
         if CS.LOAD_POSTS:
-            load_posts()    
+            load_posts()
         else:
             lg.warn("Skipping loading posts...")
 
-    if not hasattr(globals(), 'df_comments'):
+    if not hasattr(globals(), 'df_comments') and not single_post:
         if CS.LOAD_COMMENTS:
             load_comments()
         else:
             lg.warning("Skipping loading comments...")
 
-    if not hasattr(globals(), 'df_liwc') and not hasattr(globals(), 'df_liwc_merged'):
+    if not hasattr(globals(), 'df_liwc') and not hasattr(globals(), 'df_liwc_merged') and not single_post:
         if CS.LOAD_LIWC:
             if CS.TITLE_AS_STANDALONE:
                 load_liwc()
@@ -45,7 +48,7 @@ def init(do_load_spacy=True):
         else:
             lg.warning("Skipping loading liwc...")
 
-    if not hasattr(globals(), 'df_foundations') and not hasattr(globals(), 'df_foundations_merged'):
+    if not hasattr(globals(), 'df_foundations') and not hasattr(globals(), 'df_foundations_merged') and not single_post:
         if CS.LOAD_FOUNDATIONS:
             if CS.TITLE_AS_STANDALONE:
                 load_foundations()
@@ -56,19 +59,18 @@ def init(do_load_spacy=True):
             lg.warning("Skipping loading foundations...")
 
     if not hasattr(globals(), 'nlp'):
-        if  do_load_spacy:  #and len([item for sublist in CS.FEATURES_TO_GENERATE_MONO["writing_sty"] for item in sublist]) > 0 or CS.DO_TOPIC_MODELLING:
+        # and len([item for sublist in CS.FEATURES_TO_GENERATE_MONO["writing_sty"] for item in sublist]) > 0 or CS.DO_TOPIC_MODELLING:
+        if do_load_spacy:
             load_spacy()
 
-    if CS.TITLE_AS_STANDALONE:
+    if CS.TITLE_AS_STANDALONE and not single_post:
         add_standalone_title_features()
-        
-    
+
 
 def load_reddit_settings():
     """Load the reddit settings from secrets/reddit.json
     """
     global reddit
-    return
     path = sys.path[0]+"/secrets/reddit.json"
     file = open(path)
     data = json.load(file)
@@ -76,10 +78,11 @@ def load_reddit_settings():
     secret = data[CS.REDDIT_INSTANCE_IDX]["client_secret"]
     agent = data[CS.REDDIT_INSTANCE_IDX]["user_agent"]
     reddit = praw.Reddit(
-            client_id=id,
-            client_secret=secret,
-            user_agent=agent
-        )
+        client_id=id,
+        client_secret=secret,
+        user_agent=agent
+    )
+
 
 def load_comments():
     """Load the comments csv
@@ -94,13 +97,12 @@ def load_posts():
     """
     global df_posts
     lg.info("Loading posts: "+CS.POSTS_CLEAN)
-    
-    # Done 0-110000, 
+
+    # Done 0-110000,
     df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False)
     #df_posts = pd.read_csv(CS.POSTS_CLEAN, index_col=False, nrows=110000)
     #df_checked = pd.read_csv("/mnt/c/Users/Philipp/Desktop/ids.csv")
     #df_posts = df_posts[~df_posts['post_id'].isin(df_checked["post_id"].tolist())]
-    
 
     lg.info(f"{len(df_posts)} number of posts")
     if CS.USE_MINIFIED_DATA:
@@ -133,13 +135,16 @@ def load_foundations():
     df_foundations = pd.read_csv(CS.FOUNDATIONS, index_col=False)
     df_foundations = df_foundations.add_prefix(CS.FOUNDATIONS_PREFIX)
 
+
 def load_foundations_title():
     """Load the moral foundations csv for only the titles
     """
     global df_foundations_title
     lg.info("Loading foundations: "+CS.FOUNDATIONS_TITLE)
     df_foundations_title = pd.read_csv(CS.FOUNDATIONS_TITLE, index_col=False)
-    df_foundations_title = df_foundations_title.add_prefix(CS.FOUNDATIONS_TITLE_PREFIX)
+    df_foundations_title = df_foundations_title.add_prefix(
+        CS.FOUNDATIONS_TITLE_PREFIX)
+
 
 def load_foundations_merged():
     """Load the moral foundations csv for the posts with title preprended
@@ -147,7 +152,9 @@ def load_foundations_merged():
     global df_foundations_merged
     lg.info("Loading foundations: "+CS.FOUNDATIONS_MERGED)
     df_foundations_merged = pd.read_csv(CS.FOUNDATIONS_MERGED, index_col=False)
-    df_foundations_merged = df_foundations_merged.add_prefix(CS.FOUNDATIONS_MERGED_PREFIX)
+    df_foundations_merged = df_foundations_merged.add_prefix(
+        CS.FOUNDATIONS_MERGED_PREFIX)
+
 
 def load_liwc():
     """ Load the liwc csv for the posts only
@@ -156,7 +163,7 @@ def load_liwc():
     lg.info("Loading liwc posts: "+CS.LIWC)
     df_liwc = pd.read_csv(CS.LIWC, index_col=False)
     df_liwc = df_liwc.add_prefix(CS.LIWC_PREFIX)
-    
+
 
 def load_liwc_title():
     """Load the liwc csv for the titles only
@@ -165,7 +172,8 @@ def load_liwc_title():
     lg.info("Loading liwc titles: "+CS.LIWC_TITLE)
     df_liwc_title = pd.read_csv(CS.LIWC_TITLE, index_col=False)
     df_liwc_title = df_liwc_title.add_prefix(CS.LIWC_TITLE_PREFIX)
-    
+
+
 def load_liwc_merged():
     """ Load the liwc csv for the posts with title preprended
     """
@@ -173,6 +181,7 @@ def load_liwc_merged():
     lg.info("Loading liwc merged: "+CS.LIWC_MERGED)
     df_liwc_merged = pd.read_csv(CS.LIWC_MERGED, index_col=False)
     df_liwc_merged = df_liwc_merged.add_prefix(CS.LIWC_MERGED_PREFIX)
+
 
 def load_spacy():
     """Setup the spacy pipeline
@@ -203,4 +212,3 @@ def add_standalone_title_features():
             CS.FEATURES_TO_GENERATE_MP = feature_dict_copy
         elif i == 1:
             CS.FEATURES_TO_GENERATE_MONO = feature_dict_copy
-

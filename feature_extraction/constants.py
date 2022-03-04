@@ -133,7 +133,7 @@ FEATURES_TO_GENERATE_MP = {
     ],
     "reactions": [
         #(check_crossposts, CS.POST_ID),  # slow
-        (get_judgement_labels, CS.POST_ID)
+        #(get_judgement_labels, CS.POST_ID)
     ]
 }
 
