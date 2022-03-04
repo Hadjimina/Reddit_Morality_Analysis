@@ -24,10 +24,12 @@ from feature_functions.speaker_features import get_author_age_and_gender
 
 LIWC_PATH = "./data/liwc.dic"
 MF_PATH = "./data/mf.dic"
+MF_GAP = "                    "
 XGB_PATH = "./data/xgboost03.03.2022.json"
 RF_PATH = "./data/rf03.03.2022.json"
 TRAIN_CSV = "./data/prepend_done_trained_feats.csv"
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
+
 
 
 def loadSpacy():
@@ -73,6 +75,7 @@ def analyseLIWC(post_text, dict_path):
     result = Counter(category for token in tokenize(post_text)
                      for category in parse(token))
     result_dict = dict(result)
+    print(result_dict)
     #result_val = list(map(lambda x: [x], list(result_dict.values())))
     # modify keys
     if dict_path == LIWC_PATH:
@@ -80,13 +83,15 @@ def analyseLIWC(post_text, dict_path):
             map(lambda x: "liwc_"+x.split("(")[0][:-1], list(result_dict.keys())))
     else:
         result_key = list(map(lambda x: "foundations_" +
-                          x, list(result_dict.keys())))
+                          x.split("\t")[0]+MF_GAP+x.split("\t")[1], list(result_dict.keys())))
+
 
     result_dict = zip(result_key, list(result_dict.values()))
     # print(category_names)
     # print(result_dict)
     #df = pd.DataFrame.from_dict(result_dict)
     # print(df)
+    print(dict(result_dict))
     return result_dict
 
 
@@ -122,8 +127,8 @@ def getFeatureValues(post_text):
     all_features = []
     # LIWC
     # not all categories returned?
-    all_features += analyseLIWC(post_text, LIWC_PATH)
-    # all_features +=analyseLIWC(post_text, MF_PATH)#Somehow not working, dict probably strang spacing
+    #all_features += analyseLIWC(post_text, LIWC_PATH)
+    all_features +=analyseLIWC(post_text, MF_PATH)#Somehow not working, dict probably strang spacing
     all_features += runSpeakerFeatures(post_text)
     all_features += runStyleFeatures(post_text)
     all_features_dict = dictValToList(dict(all_features))
