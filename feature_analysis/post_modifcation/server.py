@@ -43,6 +43,7 @@ def loadSpacy():
 def runSpeakerFeatures(post_text):
     tupleList = []
     tupleList = tupleList + get_author_age_and_gender(post_text)
+    tupleList = list( map(lambda x: ("speaker_"+x[0],x[1]), tupleList))
     return tupleList
 
 
@@ -69,30 +70,44 @@ def tokenize(text):
     for match in re.finditer(r'\w+', text, re.UNICODE):
         yield match.group(0)
 
+def getFoundationsCategoryNames(lst, skip_list=[]):
+    result_key = []
+    for i in range(len(lst)):
+        if lst[i] in skip_list:
+            continue
+        result_key.append(f"foundations_{i+1:02d}{MF_GAP}{lst[i]}")
+    return result_key
 
 def analyseLIWC(post_text, dict_path):
     parse, category_names = liwc.load_token_parser(dict_path)
     result = Counter(category for token in tokenize(post_text)
                      for category in parse(token))
-    result_dict = dict(result)
-    print(result_dict)
+    result_dict = dict(zip(category_names, [0]*len(category_names)))
+    for res in result:
+        result_dict[res] = result[res]
+    missing_feats = set(category_names)-set(dict(result).keys())
+    #print(f"{missing_feats}\n set to value 0")
+    
     #result_val = list(map(lambda x: [x], list(result_dict.values())))
     # modify keys
     if dict_path == LIWC_PATH:
         result_key = list(
             map(lambda x: "liwc_"+x.split("(")[0][:-1], list(result_dict.keys())))
     else:
-        result_key = list(map(lambda x: "foundations_" +
-                          x.split("\t")[0]+MF_GAP+x.split("\t")[1], list(result_dict.keys())))
+        key_lst = list(result_dict.keys())
+        result_key = getFoundationsCategoryNames(key_lst)
+    
+    # Set not detected categories to 0 
+    result_key = result_key + getFoundationsCategoryNames(list(missing_feats), skip_list=result_key)
+    result_vals = list(result_dict.values()) + [0]*len(missing_feats)
+    result_zip = zip(result_key, result_vals)
 
-
-    result_dict = zip(result_key, list(result_dict.values()))
     # print(category_names)
     # print(result_dict)
     #df = pd.DataFrame.from_dict(result_dict)
     # print(df)
-    print(dict(result_dict))
-    return result_dict
+    #print(dict(result_zip))
+    return result_zip
 
 
 def dictValToList(feat_dict):
