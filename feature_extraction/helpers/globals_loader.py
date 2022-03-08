@@ -8,6 +8,7 @@ import pandas as pd
 import spacy
 import sys
 import json
+from os.path import exists
 from spacytextblob.spacytextblob import SpacyTextBlob
 
 
@@ -72,16 +73,19 @@ def load_reddit_settings():
     """
     global reddit
     path = sys.path[0]+"/secrets/reddit.json"
-    file = open(path)
-    data = json.load(file)
-    id = data[CS.REDDIT_INSTANCE_IDX]["client_id"]
-    secret = data[CS.REDDIT_INSTANCE_IDX]["client_secret"]
-    agent = data[CS.REDDIT_INSTANCE_IDX]["user_agent"]
-    reddit = praw.Reddit(
-        client_id=id,
-        client_secret=secret,
-        user_agent=agent
-    )
+    if exists(path):
+        file = open(path)
+        data = json.load(file)
+        id = data[CS.REDDIT_INSTANCE_IDX]["client_id"]
+        secret = data[CS.REDDIT_INSTANCE_IDX]["client_secret"]
+        agent = data[CS.REDDIT_INSTANCE_IDX]["user_agent"]
+        reddit = praw.Reddit(
+            client_id=id,
+            client_secret=secret,
+            user_agent=agent
+        )
+    else:
+        print("Reddit secret not found. Skipping")
 
 
 def load_comments():

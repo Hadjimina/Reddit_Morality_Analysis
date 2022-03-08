@@ -37,20 +37,26 @@ dataset_dir = os.path.dirname(os.path.abspath(__file__))+"/datasets/data/"
 
 HOME_DIR = os.path.dirname(os.path.abspath(__file__))+"/"
 
-OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))+"/output/"+output_dir_name()+"/"
+OUTPUT_DIR = os.path.dirname(os.path.abspath(
+    __file__))+"/output/"+output_dir_name()+"/"
 OUTPUT_DIR_ZIPS = os.path.dirname(os.path.abspath(__file__))+"/output/zips/"
 
 mini_str = "_mini" if USE_MINIFIED_DATA else ""
 POSTS_RAW = "{0}posts_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 POSTS_CLEAN = "{0}posts_cleaned_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(dataset_dir, mini_str)
-COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(dataset_dir, mini_str)
+COMMENTS_RAW = "{0}comments_raw_16_07_2021{1}.csv".format(
+    dataset_dir, mini_str)
+COMMENTS_CLEAN = "{0}comments_cleaned_16_07_2021{1}.csv".format(
+    dataset_dir, mini_str)
 LIWC = "{0}LIWC_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_TITLE = "{0}LIWC_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
 LIWC_MERGED = "{0}LIWC_merged_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(dataset_dir, mini_str)
-FOUNDATIONS_MERGED = "{0}moral_foundations_merged_27_6_2021{1}.csv".format(dataset_dir, mini_str)
+FOUNDATIONS = "{0}moral_foundations_27_6_2021{1}.csv".format(
+    dataset_dir, mini_str)
+FOUNDATIONS_TITLE = "{0}moral_foundations_title_27_6_2021{1}.csv".format(
+    dataset_dir, mini_str)
+FOUNDATIONS_MERGED = "{0}moral_foundations_merged_27_6_2021{1}.csv".format(
+    dataset_dir, mini_str)
 
 # COLUMN INDICES
 #INDEX = 0
@@ -67,7 +73,7 @@ MAX_FEATURES_TO_DISPLAY = 25
 
 # JUDGEMENT LABELS
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
-JUDGEJMENT_DICT = { # everytime asshole appears an expression get added that replaces asshole with "ah"
+JUDGEJMENT_DICT = {  # everytime asshole appears an expression get added that replaces asshole with "ah"
     "YTA": ["YTA", "You're the asshole", "You are the asshole", "You are a little bit the asshole", "YWBTA", "You are an asshole", "You're an asshole", "yt absolute a"],
     "NTA": ["NTA", "not the asshole", "not an asshole", "don't think you're an asshole", "YWNBTA"],
     "INFO": ["INFO", "Not enough info", "Not enough information", "More info", ],
@@ -75,8 +81,10 @@ JUDGEJMENT_DICT = { # everytime asshole appears an expression get added that rep
     "NAH": ["NAH", "No Assholes here", "No Asshole here", "no one sucks here"],
 }
 BOT_STRINGS = ["automod", "i am a bot"]
-AITA = ["am i the asshole", "aita", "aitah", "am i an asshole", "aith", "was i the asshole", "was i an asshole", "amia", "am i ta", "am i being an asshole", "am i being the asshole", "was I an asshole", "was I the asshole", "amita", "was i ta", "am i ta"]
-WIBTA = ["wita", "witah", "wibta", "wibtah", "would i be the asshole","would i really be the asshole"]
+AITA = ["am i the asshole", "aita", "aitah", "am i an asshole", "aith", "was i the asshole", "was i an asshole", "amia", "am i ta",
+        "am i being an asshole", "am i being the asshole", "was I an asshole", "was I the asshole", "amita", "was i ta", "am i ta"]
+WIBTA = ["wita", "witah", "wibta", "wibtah",
+         "would i be the asshole", "would i really be the asshole"]
 
 # MULTITHREADING
 NR_THREADS = multiprocessing.cpu_count()
@@ -86,7 +94,7 @@ MONO_ID = "mono"
 # FEATURE DF POSTPEND
 # post_id,post_text,post_title,post_author_id,post_score,post_created_utc,post_num_comments
 # "post_ups", "post_downs"
-POST_PEND = ["post_id", "post_text", "post_num_comments", "post_flair" ]
+POST_PEND = ["post_id", "post_text", "post_num_comments", "post_flair"]
 POST_PEND_MONO = ["post_id"]
 
 # SPACY STRINGS
@@ -107,8 +115,9 @@ PRONOUNS = [["i", "me", "my", "mine", "myself"],
             ["we", "us", "our", "ours", "ourselves"],
             ["yourselves"],
             ["they", "them", "their", "theirs", "themselves"]]
-PRONOUN_MATCHING_MISC = ["i'm", "i am","aita", "im"]
-FLAIRS_TO_REMOVE = ["troll", "meta", "news", "shitpost", "troll", "community discussion", "awards", "fake","announcement", "spam","new rule", "shit post","Unintelligible"]
+PRONOUN_MATCHING_MISC = ["i'm", "i am", "aita", "im"]
+FLAIRS_TO_REMOVE = ["troll", "meta", "news", "shitpost", "troll", "community discussion",
+                    "awards", "fake", "announcement", "spam", "new rule", "shit post", "Unintelligible"]
 
 # EMO LEX EMOTIONS
 EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness',
@@ -132,26 +141,26 @@ FEATURES_TO_GENERATE_MP = {
 
     ],
     "reactions": [
-        #(check_crossposts, CS.POST_ID),  # slow
-        #(get_judgement_labels, CS.POST_ID)
+        # (check_crossposts, CS.POST_ID),  # slow
+        (get_judgement_labels, CS.POST_ID)
     ]
 }
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MONO = {
     "writing_sty": [
-        #(get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+        # (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
 }
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 SPACY_FUNCTIONS = [
-    #get_tense_in_spacy,
-    #get_voice_in_spacy,
-    #get_sentiment_in_spacy,
-    #get_focus_in_spacy,
-    #get_emotions_self_vs_other_in_spacy,
-    #get_profanity_self_vs_other_in_spacy,
+    # get_tense_in_spacy,
+    # get_voice_in_spacy,
+    # get_sentiment_in_spacy,
+    # get_focus_in_spacy,
+    # get_emotions_self_vs_other_in_spacy,
+    # get_profanity_self_vs_other_in_spacy,
 ]
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
@@ -162,6 +171,7 @@ TOPIC_DOWNSAMPLE_FRAC = 0.3
 # Loading
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 LOAD_POSTS = True
-LOAD_COMMENTS = True #get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+# get_judgement_labels in [item for sublist in FEATURES_TO_GENERATE_MP["reactions"]+FEATURES_TO_GENERATE_MONO["reactions"] for item in sublist]
+LOAD_COMMENTS = True
 LOAD_FOUNDATIONS = False
 LOAD_LIWC = False

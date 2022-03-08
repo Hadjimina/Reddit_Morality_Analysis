@@ -11,6 +11,7 @@ import helpers.globals_loader as globals_loader
 
 coloredlogs.install()
 
+
 def check_crossposts(post_id):
     """ Check if post has been crossposted to r/AmITheDevil or r/AmITheAngel, signifiying obvious wrong doing or correct behaviour respectively 
 
@@ -19,11 +20,11 @@ def check_crossposts(post_id):
 
     Returns:
         feature_list: list of features tuples e.g. [("account_age", age), ("account_comment_karma", comment_karma)]
-    """ 
+    """
     reddit = globals_loader.reddit
     post = reddit.submission(post_id)
     sub_list = []
-    
+
     for duplicate in post.duplicates():
         try:
             sub_list.append(duplicate.subreddit.display_name.lower())
@@ -37,7 +38,7 @@ def check_crossposts(post_id):
     feature_list = [("is_angel", is_angel), ("is_devil", is_devil)]
     return feature_list
 
-    
+
 def get_judgement_labels(post_id):
     """Returns judgement label counts (YTA, NTA, INFO, ESH, NAH)
 
@@ -52,46 +53,51 @@ def get_judgement_labels(post_id):
     df_comments = df_comments.loc[df_comments["post_id"] == post_id]
     df_comments = df_comments[["comment_text", "comment_score"]]
 
-    label_counter = CS.JUDGMENT_ACRONYM + ["weighted_"+s for s in CS.JUDGMENT_ACRONYM]
-    label_counter = dict.fromkeys(label_counter,0)
-    
-    
+    label_counter = CS.JUDGMENT_ACRONYM + \
+        ["weighted_"+s for s in CS.JUDGMENT_ACRONYM] + \
+        ["weighted_"+s+"_neg_vals" for s in CS.JUDGMENT_ACRONYM]
+    label_counter = dict.fromkeys(label_counter, 0)
+
     for i, comment_row in enumerate(df_comments.itertuples(), 1):
         _, comment_body, score = comment_row
-    
-        comment_body = get_clean_text(str(comment_body), None, do_lemmatization=False)
-        comment_body_no_punct = get_clean_text(str(comment_body), None, remove_punctuation=2, do_lemmatization=False)
+
+        comment_body = get_clean_text(
+            str(comment_body), None, do_lemmatization=False)
+        comment_body_no_punct = get_clean_text(
+            str(comment_body), None, remove_punctuation=2, do_lemmatization=False)
 
         if any(list(map(lambda x: x.lower() in comment_body, CS.BOT_STRINGS))):
-            #print("___SKIPPED___")
+            # print("___SKIPPED___")
             continue
 
-
-        #print("---start---")
-        #print(comment_body)
+        # print("---start---")
+        # print(comment_body)
         labels_loc = {}
 
-        middle = max(len(comment_body)//2,1)
-        middle_simple = max(len(comment_body_no_punct.split())//2,1)
+        middle = max(len(comment_body)//2, 1)
+        middle_simple = max(len(comment_body_no_punct.split())//2, 1)
 
         for k in CS.JUDGEJMENT_DICT.keys():
             idxes = []              # "e.g. You are the asshole"
-            center_dist = []                 
+            center_dist = []
 
-            for x in string_matching_arr_append_ah(CS.JUDGEJMENT_DICT[k]):   
-                if len(x.split()) > 1: 
+            for x in string_matching_arr_append_ah(CS.JUDGEJMENT_DICT[k]):
+                if len(x.split()) > 1:
                     idxes = find_all(comment_body, x.lower())
                     idxes = list(filter(lambda x: x != -1, idxes))
-                    center_dist_tmp = list(map(lambda q: (abs(middle-q) / middle), idxes ))
-                    
-                else: 
-                    idxes = [i for i,y in enumerate(comment_body_no_punct.split()) if y==x.lower()]
-                    center_dist_tmp = list(map(lambda q: (abs(middle_simple-q) / middle_simple), idxes ))
+                    center_dist_tmp = list(
+                        map(lambda q: (abs(middle-q) / middle), idxes))
+
+                else:
+                    idxes = [i for i, y in enumerate(
+                        comment_body_no_punct.split()) if y == x.lower()]
+                    center_dist_tmp = list(
+                        map(lambda q: (abs(middle_simple-q) / middle_simple), idxes))
 
                 # No longer index but distance from center
                 center_dist_tmp.sort(reverse=True)
                 center_dist += center_dist_tmp
-                
+
             # Order by distance
             #merged = center_dist + center_dist_simple
             center_dist.sort(reverse=True)
@@ -109,24 +115,24 @@ def get_judgement_labels(post_id):
                 if len(labels_loc[k]) > 0 and labels_loc[k][0] > max_value:
                     max_value = labels_loc[k][0]
                     max_label = k
-        
+
             vote = max_label
         else:
             # Take first dict entry that contains some value
             for k in labels_loc.keys():
                 if len(labels_loc[k]) > 0:
                     vote = k
-    
-        #print(labels_loc)
-        #print(vote)
-        #print("___end___")
+
+        # print(labels_loc)
+        # print(vote)
+        # print("___end___")
         if vote != "":
             label_counter[vote.upper()] += 1
-            label_counter["weighted_"+vote.upper()] += int(score)
-    
-    tuple_list =  dict_to_feature_tuples(label_counter) 
+            sc = int(score)
+            label_counter["weighted_"+vote.upper()] += sc if sc > 0 else 0
+            label_counter["weighted_" +
+                          vote.upper()+"_neg_vals"] += sc if sc < 0 else 0
+
+    tuple_list = dict_to_feature_tuples(label_counter)
 
     return tuple_list
-
-
-
