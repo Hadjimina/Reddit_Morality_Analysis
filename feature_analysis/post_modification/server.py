@@ -17,11 +17,11 @@ app = Flask(__name__)
 p = os.path.abspath('../../feature_extraction')
 sys.path.insert(1, p)
 
+import constants as CS
 from feature_functions.speaker_features import get_author_age_and_gender
 from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
 from feature_functions.topic_modelling import *
 from helpers.process_helper import process_run
-import constants as CS
 from helpers.globals_loader import load_spacy
 
 LIWC_EXE_PATH = "LIWC-22-cli"
@@ -207,7 +207,7 @@ def index():
                     "ahr_old": y_old,
                     "ahr_new": y_new,
                     "model_me": MODEL_ME,
-                    "liwc_error": cur_sum == 0,
+                    "liwc_error": False,# cur_sum == 0 too buggy
                     "changedFeatures": changed_list
                 }
             ]
@@ -236,7 +236,7 @@ def feature_explanation():
         return render_template('feature_explanation.html', data=data)
 
 
-@app.route('/feature_explanation', methods=['GET'])
+@app.route('/shap_analysis', methods=['GET'])
 def shap_analysis():
     if request.method == 'GET':
         return render_template('shap_analysis.html',)
