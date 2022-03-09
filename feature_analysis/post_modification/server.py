@@ -5,14 +5,16 @@ import pandas as pd
 import re
 import xgboost as xgb
 from collections import Counter
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for
 import subprocess
+import json
 
 app = Flask(__name__)
 
 p = os.path.abspath('../../feature_extraction')
 sys.path.insert(1, p)
 
+from functools import reduce
 from helpers.globals_loader import load_spacy
 import constants as CS
 from helpers.process_helper import process_run
@@ -20,18 +22,20 @@ from feature_functions.topic_modelling import *
 from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
 from feature_functions.speaker_features import get_author_age_and_gender
 
-# TODO if we deploy this as an actual website. Create copies of these functions and create copy repo
-# ALSO FIX constants file
-
 LIWC_EXE_PATH = "LIWC-22-cli"
 LIWC_IN = "./post_to_analyse.csv"
 MF_PATH = "./data/mf.dic"
 LIWC_2015 = "LIWC2015"
 
-XGB_PATH = "./data/xgboost08.03.2022.json"
-RF_PATH = "./data/rf03.03.2022.json"
+MODEL_ME = "0.33717"
+XGB_PATH = "./data/xgboost09.03.2022.json"
+#RF_PATH = "./data/rf03.03.2022.json"
 TRAIN_CSV = "./data/prepend_done_trained_feats.csv"
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
+
+with open('./feature_explanation.json', 'r') as f:
+  FEAT_EXPLANATION = json.load(f)
+
 
 
 def loadSpacy():
@@ -82,7 +86,7 @@ def analyseLIWC(csv_input, is_foundations=False):
 
     df_out = pd.read_csv(liwc_out)
     if "Row ID" in list(df_out.columns):
-        df_out.drop(columns=["Row ID"])
+        df_out= df_out.drop(columns=["Row ID"])
     return df_out
 
 
@@ -106,12 +110,17 @@ def reorderColumns(df):
         map(lambda x: "foundations_"+x.split("_")[1][2:].strip() if "foundations_" in x and x.split("_")[1][0].isdigit() else x
             , feats_train))
     
+    
     feats_pred = list(df.columns)
-    #if not set(feats_train) == set(feats_pred):
-    #    s1 = set(feats_train)
-    #    s2 = set(feats_pred)
-    #    raise Exception(
-    #        f"df_pred does not contain {len(s1-s2)} features:\n{s1-s2}")
+    
+    s1 = set(feats_train)
+    s2 = set(feats_pred)
+    
+    if len(s1-s2)>0:
+        print(len(s1))
+        print(len(s2))
+        print("This should be empty. If note we are not generating the following features in post modificaiton")
+        print(s1-s2)
 
     return df[feats_train]
 
@@ -184,10 +193,18 @@ def index():
             #sort by percentage chagne
             changed_list = sorted(changed_list, key=lambda d: d["perc_change"],reverse=True) 
             
+            cur_sum = 0
+            for x in changed_list:
+                if "liwc_" in x["name"]:
+                    cur_sum += x["perc_change"]
+                    
+            
             data = [
                 {
                     "ahr_old": y_old,
                     "ahr_new": y_new,
+                    "model_me": MODEL_ME,
+                    "liwc_error":cur_sum==0,
                     "changedFeatures": changed_list
                 }
             ]
@@ -195,5 +212,24 @@ def index():
             pass  # unknown
     return render_template('index.html', data=data)
 
+
+@app.route('/feature_explanation', methods=['GET'])
+def feature_explanation():
+    
+    if request.method == 'GET':
+        feature_name = request.args.get("feature_name")
+        feature_explanation = ""
+        
+        if "liwc_" in feature_name:
+            feature_explanation = "Search for liwc features in the documentation: https://drive.google.com/file/d/1EHrlt6KcL3jZ5gFAA1vjKd5GdXKLRWmk/view?usp=sharing\nSee the list of words associated with the features: https://docs.google.com/spreadsheets/d/16SZS-2UxsvUrEEPvJebmJwYTGJOAEsut/edit?usp=sharing&ouid=100412115316457474517&rtpof=true&sd=true\n"
+        elif "foundations_" in feature_name:
+            feature_explanation = "See the definition of moral foundations: https://moralfoundations.org/\nSee the entire dictionary: https://moralfoundations.org/wp-content/uploads/files/downloads/moral%20foundations%20dictionary.dic"
+        else: 
+            feature_explanation = FEAT_EXPLANATION[feature_name]
+        data = {
+            "feature_name" : feature_name,
+            "feature_explanation" : feature_explanation
+        }
+        return render_template('feature_explanation.html', data=data)
 
 app.run(host='0.0.0.0', port=3001)

@@ -20,8 +20,8 @@
         wrap="hard"
         placeholder="Enter the original post text here."
         style="
-          width: 60%;
-          height: 5em;
+          width: 70%;
+          height: 10em;
           max-height: 30em;
           max-width: 100%;
         "
@@ -33,8 +33,8 @@
         wrap="hard"
         placeholder="Enter the modified post text here."
         style="
-          width: 60%;
-          height: 5em;
+          width: 70%;
+          height: 10em;
           max-height: 30em;
           max-width: 100%;
         "
@@ -46,14 +46,18 @@
 
     {% for item in data %}
     <h2>Results:</h2>
-    <p>Assholeness ratio (AHR) = (YTA+ESH)/(YTA+ESH+NTA+NAH)</p>
     <p>AHR <b>original</b> post: {{item.ahr_old[0]}}</p>
     <p>AHR <b>modified</b> post: {{item.ahr_new[0]}}</p>
+    <p><b>{{"There might be a problem with LIWC! Contact me so I can fix it." if item.liwc_error else ""}}</b></p>
+    <p>The model has an Mean absolute error of {{item.model_me}}<br/>
+    Assholeness ratio (AHR) = (YTA+ESH)/(YTA+ESH+NTA+NAH)<p/>
+  </p>
+    
     <h3>Modified features</h3>
     <ul>
       {% for mod_feat in item.changedFeatures %}
       <li>
-        <b>{{mod_feat.name}}</b> {{"increased" if mod_feat.perc_change
+        <a href="{{ url_for('feature_explanation')+'?feature_name='+mod_feat.name }}" target="_blank" ><b>{{mod_feat.name}}</b> </a>{{"increased" if mod_feat.perc_change
         >0 else "decreased"}} by <b>{{mod_feat.perc_change*100}} %</b>
         <ul>
           <li>Old value: {{mod_feat.value_old}}</li>
