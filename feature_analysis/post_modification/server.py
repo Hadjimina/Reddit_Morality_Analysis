@@ -1,3 +1,6 @@
+
+
+from functools import reduce
 import sys
 import os
 import spacy
@@ -14,13 +17,12 @@ app = Flask(__name__)
 p = os.path.abspath('../../feature_extraction')
 sys.path.insert(1, p)
 
-from functools import reduce
-from helpers.globals_loader import load_spacy
-import constants as CS
-from helpers.process_helper import process_run
-from feature_functions.topic_modelling import *
-from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
 from feature_functions.speaker_features import get_author_age_and_gender
+from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
+from feature_functions.topic_modelling import *
+from helpers.process_helper import process_run
+import constants as CS
+from helpers.globals_loader import load_spacy
 
 LIWC_EXE_PATH = "LIWC-22-cli"
 LIWC_IN = "./post_to_analyse.csv"
@@ -34,8 +36,7 @@ TRAIN_CSV = "./data/prepend_done_trained_feats.csv"
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
 
 with open('./feature_explanation.json', 'r') as f:
-  FEAT_EXPLANATION = json.load(f)
-
+    FEAT_EXPLANATION = json.load(f)
 
 
 def loadSpacy():
@@ -86,7 +87,7 @@ def analyseLIWC(csv_input, is_foundations=False):
 
     df_out = pd.read_csv(liwc_out)
     if "Row ID" in list(df_out.columns):
-        df_out= df_out.drop(columns=["Row ID"])
+        df_out = df_out.drop(columns=["Row ID"])
     return df_out
 
 
@@ -103,20 +104,18 @@ def reorderColumns(df):
     df_train = df_train.drop(vote_acro_feats, axis=1)
     if "post_id" in list(df_train.columns):
         df_train = df_train.drop(columns=["post_id"])
-        
+
     feats_train = list(df_train.columns)
-    #fix shitty mf columns
+    # fix shitty mf columns
     feats_train = list(
-        map(lambda x: "foundations_"+x.split("_")[1][2:].strip() if "foundations_" in x and x.split("_")[1][0].isdigit() else x
-            , feats_train))
-    
-    
+        map(lambda x: "foundations_"+x.split("_")[1][2:].strip() if "foundations_" in x and x.split("_")[1][0].isdigit() else x, feats_train))
+
     feats_pred = list(df.columns)
-    
+
     s1 = set(feats_train)
     s2 = set(feats_pred)
-    
-    if len(s1-s2)>0:
+
+    if len(s1-s2) > 0:
         print(len(s1))
         print(len(s2))
         print("This should be empty. If note we are not generating the following features in post modificaiton")
@@ -130,7 +129,7 @@ def getFeatureValues(post_text, is_modified=False):
     df_tmp = pd.DataFrame(data={"post_text": [post_text]})
     df_tmp.to_csv(LIWC_IN, index=False)
     feat_type = "mod" if is_modified else "orig"
-    
+
     # Run through manual features
     feat_df_list = process_run(
         CS.FEATURES_TO_GENERATE_MP, df_tmp, 0)
@@ -147,16 +146,16 @@ def getFeatureValues(post_text, is_modified=False):
 
     merged_df = pd.concat([feature_df, mf, liwc_2015], axis=1, join="inner")
     merged_df.to_csv(feat_type+"_merged.csv", index=False)
-    
+
     # drop unnecessary cols
     if "post_id" in list(merged_df.columns):
         merged_df.drop(columns=["post_id"])
-        
+
     return merged_df
 
 
 def getPrediction(df):
-    
+
     clf = xgb.XGBRegressor()
     clf.load_model(XGB_PATH)
 
@@ -177,36 +176,38 @@ def index():
             df_new = getFeatureValues(request.form['new_post'].strip())
             df_new = reorderColumns(df_new)
             y_new = getPrediction(df_new)
-            
-            changed_list =[]
+
+            changed_list = []
             for i in range(len(df_old)):
                 for col in list(df_old.columns):
                     old = df_old.iloc[i][col]
                     new = df_new.iloc[i][col]
-                    delta = 0 if old == new else round(new/old-1,2)
-                    
+                    delta = 0 if old == new else round(new/old-1, 2)
+
                     changed_list.append({
-                        "name":col,
-                        "value_old":old,
-                        "value_new":new,
+                        "name": col,
+                        "value_old": old,
+                        "value_new": new,
                         "perc_change": delta
                     })
-            
-            #sort by percentage chagne
-            changed_list = sorted(changed_list, key=lambda d: d["perc_change"],reverse=True) 
-            
+
+            # sort by percentage chagne
+            changed_list = sorted(
+                changed_list, key=lambda d: d["perc_change"], reverse=True)
+
             cur_sum = 0
             for x in changed_list:
                 if "liwc_" in x["name"]:
                     cur_sum += x["perc_change"]
-                    
-            cur_sum = 1 if (len(request.form['old_post'].strip()) < 50) or (len(request.form['new_post'].strip()) < 50) else cur_sum
+
+            cur_sum = 1 if (len(request.form['old_post'].strip()) < 50) or (
+                len(request.form['new_post'].strip()) < 50) else cur_sum
             data = [
                 {
                     "ahr_old": y_old,
                     "ahr_new": y_new,
                     "model_me": MODEL_ME,
-                    "liwc_error":cur_sum==0,
+                    "liwc_error": cur_sum == 0,
                     "changedFeatures": changed_list
                 }
             ]
@@ -217,22 +218,28 @@ def index():
 
 @app.route('/feature_explanation', methods=['GET'])
 def feature_explanation():
-    
+
     if request.method == 'GET':
         feature_name = request.args.get("feature_name")
         feature_explanation = ""
-        
+
         if "liwc_" in feature_name:
             feature_explanation = "Search for liwc features in the documentation: https://drive.google.com/file/d/1EHrlt6KcL3jZ5gFAA1vjKd5GdXKLRWmk/view?usp=sharing\nSee the list of words associated with the features: https://docs.google.com/spreadsheets/d/16SZS-2UxsvUrEEPvJebmJwYTGJOAEsut/edit?usp=sharing&ouid=100412115316457474517&rtpof=true&sd=true\n"
         elif "foundations_" in feature_name:
             feature_explanation = "See the definition of moral foundations: https://moralfoundations.org/\nSee the entire dictionary: https://moralfoundations.org/wp-content/uploads/files/downloads/moral%20foundations%20dictionary.dic"
-        else: 
+        else:
             feature_explanation = FEAT_EXPLANATION[feature_name]
         data = {
-            "feature_name" : feature_name,
-            "feature_explanation" : feature_explanation
+            "feature_name": feature_name,
+            "feature_explanation": feature_explanation
         }
         return render_template('feature_explanation.html', data=data)
+
+
+@app.route('/feature_explanation', methods=['GET'])
+def shap_analysis():
+    if request.method == 'GET':
+        return render_template('shap_analysis.html',)
 
 
 #app.run(host='0.0.0.0', port=3001)
