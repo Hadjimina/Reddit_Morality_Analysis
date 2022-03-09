@@ -48,7 +48,7 @@
     <h2>Results:</h2>
     <p>AHR <b>original</b> post: {{item.ahr_old[0]}}</p>
     <p>AHR <b>modified</b> post: {{item.ahr_new[0]}}</p>
-    <p><b>{{"There might be a problem with LIWC! Contact me so I can fix it." if item.liwc_error else ""}}</b></p>
+    <p><b>{{"There might be a problem with LIWC! "}}<a href="mailto:p.m.hadjimina@gmail.com" target="_blank">{{"Contact me"}}</a> {{"so I can fix it." if item.liwc_error else ""}}</b></p>
     <p>The model has an Mean absolute error of {{item.model_me}}<br/>
     Assholeness ratio (AHR) = (YTA+ESH)/(YTA+ESH+NTA+NAH)<p/>
   </p>

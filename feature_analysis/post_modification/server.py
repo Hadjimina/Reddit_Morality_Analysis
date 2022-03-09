@@ -156,11 +156,11 @@ def getFeatureValues(post_text, is_modified=False):
 
 
 def getPrediction(df):
-    df_ordered = reorderColumns(df)
+    
     clf = xgb.XGBRegressor()
     clf.load_model(XGB_PATH)
 
-    y_pred = clf.predict(df_ordered)
+    y_pred = clf.predict(df)
     return y_pred
 
 
@@ -171,9 +171,11 @@ def index():
         if request.form['submit_posts'] == 'Analyze':
 
             df_old = getFeatureValues(request.form['old_post'].strip())
+            df_old = reorderColumns(df_old)
             y_old = getPrediction(df_old)
 
             df_new = getFeatureValues(request.form['new_post'].strip())
+            df_new = reorderColumns(df_new)
             y_new = getPrediction(df_new)
             
             changed_list =[]
@@ -198,7 +200,7 @@ def index():
                 if "liwc_" in x["name"]:
                     cur_sum += x["perc_change"]
                     
-            
+            cur_sum = 1 if (len(request.form['old_post'].strip()) < 50) or (len(request.form['new_post'].strip()) < 50) else cur_sum
             data = [
                 {
                     "ahr_old": y_old,
@@ -232,4 +234,5 @@ def feature_explanation():
         }
         return render_template('feature_explanation.html', data=data)
 
-app.run(host='0.0.0.0', port=3001)
+
+#app.run(host='0.0.0.0', port=3001)
