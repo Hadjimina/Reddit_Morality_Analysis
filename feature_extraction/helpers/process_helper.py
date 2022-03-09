@@ -54,13 +54,15 @@ def process_run(feat_to_gen, sub_df, id):
                         #    sent_msgs.append(msg)
     
     # Post pends some post specific information
-    if id == CS.MONO_ID:
+    if id == CS.MONO_ID and set(CS.POST_PEND_MONO).issubset(list(sub_df.columns)):
         post_pend = sub_df[CS.POST_PEND_MONO]
-    else:
+    elif set(CS.POST_PEND).issubset(list(sub_df.columns)):
         post_pend = sub_df[CS.POST_PEND]
+    
     #TODO: here we assume that order is kept and never switched up => also pass ids into process_run and merge based on id in the end to be sure
-    post_pend.reset_index(drop=True, inplace=True)
-    feature_df_list.append(post_pend)
+    if 'post_pend' in locals():
+        post_pend.reset_index(drop=True, inplace=True)
+        feature_df_list.append(post_pend)
     return feature_df_list
 
 

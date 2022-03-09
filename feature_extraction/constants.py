@@ -130,37 +130,38 @@ FEATURES_TO_GENERATE_MP = {
     "speaker": [
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
         #(get_author_info, CS.POST_AUTHOR),
-        #(get_author_age_and_gender, CS.POST_TEXT)
+        (get_author_age_and_gender, CS.POST_TEXT)
     ],
     "writing_sty": [
-        #(get_punctuation_count, CS.POST_TEXT),
-        #(get_emotions, CS.POST_TEXT),
-        #(aita_location, CS.POST_TEXT),
-        #(get_profanity_count, CS.POST_TEXT),
-        #(check_wibta, CS.POST_TEXT)
+        (get_punctuation_count, CS.POST_TEXT),
+        (get_emotions, CS.POST_TEXT),
+        (aita_location, CS.POST_TEXT),
+        (get_profanity_count, CS.POST_TEXT),
+        (check_wibta, CS.POST_TEXT),
+        (get_spacy_features, CS.POST_TEXT) #remove this for feature generation
 
     ],
     "reactions": [
         # (check_crossposts, CS.POST_ID),  # slow
-        (get_judgement_labels, CS.POST_ID)
+        #(get_judgement_labels, CS.POST_ID)
     ]
 }
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MONO = {
     "writing_sty": [
-        # (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
 }
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...
 SPACY_FUNCTIONS = [
-    # get_tense_in_spacy,
-    # get_voice_in_spacy,
-    # get_sentiment_in_spacy,
-    # get_focus_in_spacy,
-    # get_emotions_self_vs_other_in_spacy,
-    # get_profanity_self_vs_other_in_spacy,
+    get_tense_in_spacy,
+    get_voice_in_spacy,
+    get_sentiment_in_spacy,
+    get_focus_in_spacy,
+    get_emotions_self_vs_other_in_spacy,
+    get_profanity_self_vs_other_in_spacy,
 ]
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const...

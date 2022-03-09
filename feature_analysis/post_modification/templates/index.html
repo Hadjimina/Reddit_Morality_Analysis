@@ -30,11 +30,11 @@
     <ul>
         {% for mod_feat in item.changedFeatures %}
         <li>
-            <b>{{mod_feat.name}}</b>
-            = {{mod_feat.value|string}}
-
-            {{"increase" if mod_feat.perc_change >0 else "decrease"}}
-            of {{mod_feat.perc_change*100}}
+            <b>{{mod_feat.name}}</b> {{"increased" if mod_feat.perc_change >0 else "decreased"}} by <b>{{mod_feat.perc_change*100}} %</b>
+            <ul>
+                <li> Old value: {{mod_feat.value_old}}</li>
+                <li> New value: {{mod_feat.value_new}}</li>
+            </ul>
 
         </li>
         {% endfor %}
