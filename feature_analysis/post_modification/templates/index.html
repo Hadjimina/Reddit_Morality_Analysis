@@ -1,45 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>AITA Post modification</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>Reddit AITA post modification tool</h1>
-    <p>With this tool you can see how modifications of a post change the outcome of it's judgement</p>
-    <form method="post" style="width: 40%;">
+    <p>
+      With this tool you can see how modifications of a post change
+      the outcome of it's judgement
+    </p>
+    <form method="post" style="width: 40%">
+      <textarea
+        rows="2"
+        cols="20"
+        id="old_post_txt"
+        name="old_post"
+        wrap="hard"
+        placeholder="Enter the original post text here."
+        style="
+          width: 60%;
+          height: 5em;
+          max-height: 30em;
+          max-width: 100%;
+        "
+      ></textarea>
+      <br /><br />
+      <textarea
+        id="new_post_txt"
+        name="new_post"
+        wrap="hard"
+        placeholder="Enter the modified post text here."
+        style="
+          width: 60%;
+          height: 5em;
+          max-height: 30em;
+          max-width: 100%;
+        "
+      ></textarea>
 
-        <textarea rows="2" cols="20" id="old_post_txt" name="old_post" wrap="hard"
-            placeholder="Enter the original post text here."
-            style="width:60%; height:5em;max-height:30em; max-width:100%"></textarea>
-        <br><br>
-        <textarea id="new_post_txt" name="new_post" wrap="hard" placeholder="Enter the modified post text here."
-            style="width:60%; height:5em;max-height:30em; max-width:100%"></textarea>
-
-        <br><br>
-        <input type="submit" name="submit_posts" value="Analyze">
+      <br /><br />
+      <input type="submit" name="submit_posts" value="Analyze" />
     </form>
 
     {% for item in data %}
     <h2>Results:</h2>
-    <p> Assholeness ratio of <b>original</b> post: {{item.ahr_old}}</p>
-    <p> Assholeness ratio of <b>modified</b> post: {{item.ahr_new}}</p>
+    <p>Assholeness ratio (AHR) = (YTA+ESH)/(YTA+ESH+NTA+NAH)</p>
+    <p>AHR <b>original</b> post: {{item.ahr_old[0]}}</p>
+    <p>AHR <b>modified</b> post: {{item.ahr_new[0]}}</p>
     <h3>Modified features</h3>
     <ul>
-        {% for mod_feat in item.changedFeatures %}
-        <li>
-            <b>{{mod_feat.name}}</b> {{"increased" if mod_feat.perc_change >0 else "decreased"}} by <b>{{mod_feat.perc_change*100}} %</b>
-            <ul>
-                <li> Old value: {{mod_feat.value_old}}</li>
-                <li> New value: {{mod_feat.value_new}}</li>
-            </ul>
-
-        </li>
-        {% endfor %}
+      {% for mod_feat in item.changedFeatures %}
+      <li>
+        <b>{{mod_feat.name}}</b> {{"increased" if mod_feat.perc_change
+        >0 else "decreased"}} by <b>{{mod_feat.perc_change*100}} %</b>
+        <ul>
+          <li>Old value: {{mod_feat.value_old}}</li>
+          <li>New value: {{mod_feat.value_new}}</li>
+        </ul>
+      </li>
+      {% endfor %}
     </ul>
     {% endfor %}
-</body>
-
+  </body>
 </html>
