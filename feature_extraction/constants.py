@@ -130,6 +130,7 @@ FEATURES_TO_GENERATE_MP = {
     "speaker": [
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
         #(get_author_info, CS.POST_AUTHOR),
+
         (get_author_age_and_gender, CS.POST_TEXT)
     ],
     "writing_sty": [
@@ -138,7 +139,8 @@ FEATURES_TO_GENERATE_MP = {
         (aita_location, CS.POST_TEXT),
         (get_profanity_count, CS.POST_TEXT),
         (check_wibta, CS.POST_TEXT),
-        (get_spacy_features, CS.POST_TEXT) #remove this for feature generation
+        # remove this for feature generation
+        (get_spacy_features, CS.POST_TEXT)
 
     ],
     "reactions": [
