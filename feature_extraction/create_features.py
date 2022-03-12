@@ -180,8 +180,10 @@ def create_features():
     lg.info(f"Removed {df_size-feature_df.shape[0]} posts with flairs")
     # Save features in one big dataframe
     date_time = get_date_str()
-    feature_df_to_save = feature_df.drop("post_text", axis=1)
-    feature_df_to_save = feature_df.drop("post_flair", axis=1)
+    if "post_text" in list(feature_df.columns):
+        feature_df_to_save = feature_df.drop("post_text", axis=1)
+    if "post_flair" in list(feature_df.columns):
+        feature_df_to_save = feature_df.drop("post_flair", axis=1)
     mini = "_mini" if CS.USE_MINIFIED_DATA else ""
     feature_df_to_save.to_csv(
         CS.OUTPUT_DIR+"features_output_"+date_time+mini+".csv", index=False)
