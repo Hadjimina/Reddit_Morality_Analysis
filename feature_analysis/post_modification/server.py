@@ -83,12 +83,14 @@ def analyseLIWC(csv_input, is_foundations=False):
                  "--input", csv_input,
                  "--output", liwc_out]
 
-    subprocess.call(call_liwc)
+    liwc_output = subprocess.check_output(call_liwc, encoding="utf8")
+    print(liwc_output)
+    liwc_is_down = "Unable to connect with LIWC-22" in liwc_output
 
     df_out = pd.read_csv(liwc_out)
     if "Row ID" in list(df_out.columns):
         df_out = df_out.drop(columns=["Row ID"])
-    return df_out
+    return df_out, liwc_is_down
 
 
 def dictValToList(feat_dict):
@@ -137,11 +139,11 @@ def getFeatureValues(post_text, is_modified=False):
     feature_df.to_csv(feat_type + "_feat_tmp.csv", index=False)
 
     # Run LIWC 2015
-    liwc_2015 = analyseLIWC(LIWC_IN, is_foundations=False)
+    liwc_2015, liwc_is_down = analyseLIWC(LIWC_IN, is_foundations=False)
     liwc_2015 = liwc_2015.add_prefix("liwc_")
 
     # Run Foundations LIWC
-    mf = analyseLIWC(LIWC_IN, is_foundations=True)
+    mf, mf_is_down = analyseLIWC(LIWC_IN, is_foundations=True)
     mf = mf.add_prefix("foundations_")
 
     merged_df = pd.concat([feature_df, mf, liwc_2015], axis=1, join="inner")
@@ -151,7 +153,7 @@ def getFeatureValues(post_text, is_modified=False):
     if "post_id" in list(merged_df.columns):
         merged_df.drop(columns=["post_id"])
 
-    return merged_df
+    return merged_df, liwc_is_down or mf_is_down
 
 
 def getPrediction(df):
@@ -165,15 +167,26 @@ def getPrediction(df):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    data = []
+    data = [
+                {
+                    "ahr_old": "",
+                    "text_old":"",
+                    "ahr_new": "",
+                    "text_new":"",
+                    "model_me": "",
+                    "liwc_error": "",
+                    "changedFeatures": ""
+                }
+            ]
+    
     if request.method == 'POST':
         if request.form['submit_posts'] == 'Analyze':
 
-            df_old = getFeatureValues(request.form['old_post'].strip())
+            df_old, is_down_old = getFeatureValues(request.form['old_post'].strip())
             df_old = reorderColumns(df_old)
             y_old = getPrediction(df_old)
 
-            df_new = getFeatureValues(request.form['new_post'].strip())
+            df_new, is_down_new = getFeatureValues(request.form['new_post'].strip())
             df_new = reorderColumns(df_new)
             y_new = getPrediction(df_new)
 
@@ -193,21 +206,16 @@ def index():
 
             # sort by percentage chagne
             changed_list = sorted(
-                changed_list, key=lambda d: d["perc_change"], reverse=True)
+                changed_list, key=lambda d: abs(d["perc_change"]), reverse=True)
 
-            cur_sum = 0
-            for x in changed_list:
-                if "liwc_" in x["name"]:
-                    cur_sum += x["perc_change"]
-
-            cur_sum = 1 if (len(request.form['old_post'].strip()) < 50) or (
-                len(request.form['new_post'].strip()) < 50) else cur_sum
             data = [
                 {
                     "ahr_old": y_old,
+                    "text_old":request.form['old_post'].strip(),
                     "ahr_new": y_new,
+                    "text_new":request.form['new_post'].strip(),
                     "model_me": MODEL_ME,
-                    "liwc_error": False,# cur_sum == 0 too buggy
+                    "liwc_error": is_down_old or is_down_new,
                     "changedFeatures": changed_list
                 }
             ]

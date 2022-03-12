@@ -25,7 +25,7 @@
           max-height: 30em;
           max-width: 100%;
         "
-      ></textarea>
+      >{{ data[0].text_old }}</textarea>
       <br /><br />
       <textarea
         id="new_post_txt"
@@ -38,7 +38,7 @@
           max-height: 30em;
           max-width: 100%;
         "
-      ></textarea>
+      >{{ data[0].text_new }}</textarea>
 
       <br /><br />
       See <a href="{{ url_for('shap_analysis')}}" target="_blank">Feature ranking and directionality</a> (shap summary)<br/><br/>
@@ -46,10 +46,13 @@
     </form>
 
     {% for item in data %}
+    {% if item.ahr_new != "" %}
     <h2>Results:</h2>
     <p>AHR <b>original</b> post: {{item.ahr_old[0]}}</p>
     <p>AHR <b>modified</b> post: {{item.ahr_new[0]}}</p>
+    {% if item.liwc_error %}
     <p><b>{{"There might be a problem with LIWC! "}}<a href="mailto:p.m.hadjimina@gmail.com" target="_blank">{{"Contact me"}}</a> {{"so I can fix it." if item.liwc_error else ""}}</b></p>
+    {% endif %}
     <p>The model has an Mean absolute error of {{item.model_me}}<br/>
     Assholeness ratio (AHR) = (YTA+ESH)/(YTA+ESH+NTA+NAH)<p/>
   </p>
@@ -67,6 +70,7 @@
       </li>
       {% endfor %}
     </ul>
+    {%endif%}
     {% endfor %}
   </body>
 </html>
