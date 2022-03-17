@@ -10,8 +10,7 @@ def start_server():
 def start_keep_alive():
     while True:
         proc=subprocess.Popen(LIWC_PATH)
-        #time.sleep(1*60*60) # 3 hours
-        time.sleep(30)
+        time.sleep(1*60*60) # 3 hours
         proc.kill()
         time.sleep(10)  # 30 seconds
         
