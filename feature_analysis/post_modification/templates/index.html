@@ -12,6 +12,7 @@
       the outcome of it's judgement
     </p>
     <form method="post" style="width: 40%">
+      <input type="text" id="post_id" name="post_id"placeholder="optional post_id" ><br><br>
       <textarea
         rows="2"
         cols="20"
@@ -42,7 +43,8 @@
 
       <br /><br />
       See <a href="{{ url_for('shap_analysis')}}" target="_blank">Feature ranking and directionality</a> (shap summary)<br/><br/>
-      <input type="submit" name="submit_posts" value="Analyze" />
+      <input type="submit" name="submit" value="Analyze" /><br/><br/>
+      <input type="submit" name="submit" value="See texts in html dict format" />
     </form>
 
     {% for item in data %}

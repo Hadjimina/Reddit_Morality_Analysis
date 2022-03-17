@@ -8,7 +8,7 @@ import pandas as pd
 import re
 import xgboost as xgb
 from collections import Counter
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request, url_for, redirect,session
 import subprocess
 import json
 
@@ -104,8 +104,12 @@ def reorderColumns(df):
     vote_acro_feats = list(
         filter(lambda x: any(substring in x for substring in JUDGMENT_ACRONYM), list(df_train.columns)))
     df_train = df_train.drop(vote_acro_feats, axis=1)
+    
     if "post_id" in list(df_train.columns):
         df_train = df_train.drop(columns=["post_id"])
+    
+
+    
 
     feats_train = list(df_train.columns)
     # fix shitty mf columns
@@ -155,6 +159,31 @@ def getFeatureValues(post_text, is_modified=False):
 
     return merged_df, liwc_is_down or mf_is_down
 
+def styleHTMLTitle(text):
+    question = text.find("?")
+    dot =text.find(".")
+    
+    #if dot or question not found
+    if dot <0:
+        dot = 100000
+    if question <0:
+        question = 100000
+        
+    if dot < 150 or question < 150:
+        title_idx = min(dot, question)+1
+        text = "<h1>"+text[:title_idx]+"</h1>"+text[title_idx:]
+    return text
+        
+def getHTMLDict(old_text, new_text, post_id):
+    old_text = styleHTMLTitle(old_text)
+    new_text = styleHTMLTitle(new_text)
+    old_text = old_text.replace('\r', '<br/>').replace('\n', '')
+    new_text = new_text.replace('\r', '<br/>').replace('\n', '')
+    
+    if len(post_id) == 0:
+        post_id = "ADD_POST_ID"
+    return {"post_id":post_id, "text_mod":new_text, "text_unmod":old_text}
+    
 
 def getPrediction(df):
 
@@ -180,13 +209,13 @@ def index():
             ]
     
     if request.method == 'POST':
-        if request.form['submit_posts'] == 'Analyze':
+        if request.form['submit'] == 'Analyze':
 
-            df_old, is_down_old = getFeatureValues(request.form['old_post'].strip())
+            df_old, is_down_old = getFeatureValues(request.form['old_post'].strip().replace('\r', '').replace('\n', ''))
             df_old = reorderColumns(df_old)
             y_old = getPrediction(df_old)
 
-            df_new, is_down_new = getFeatureValues(request.form['new_post'].strip())
+            df_new, is_down_new = getFeatureValues(request.form['new_post'].strip().replace('\r', '').replace('\n', ''))
             df_new = reorderColumns(df_new)
             y_new = getPrediction(df_new)
 
@@ -219,6 +248,11 @@ def index():
                     "changedFeatures": changed_list
                 }
             ]
+        elif request.form['submit'] == "See texts in html dict format":
+            htmlDict = getHTMLDict(request.form['old_post'].strip(), request.form['new_post'].strip(), request.form['post_id'].strip() )
+            htmlDictJson = json.dumps(htmlDict)
+            #session['dict'] = htmlDict
+            return redirect(url_for('.html_dict',html_dict_json=htmlDictJson))
         else:
             pass  # unknown
     return render_template('index.html', data=data)
@@ -249,5 +283,11 @@ def shap_analysis():
     if request.method == 'GET':
         return render_template('shap_analysis.html',)
 
+@app.route('/html_dict', methods=['GET'])
+def html_dict():
+    if request.method == 'GET':
+        htmlDictJson = request.args['html_dict_json']
+        htmlDict = json.loads(htmlDictJson)
+        return render_template('html_dict.html', data={"html_dict":htmlDict})
 
 #app.run(host='0.0.0.0', port=3001)

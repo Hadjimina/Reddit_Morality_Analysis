@@ -134,13 +134,13 @@ FEATURES_TO_GENERATE_MP = {
         (get_author_age_and_gender, CS.POST_TEXT)
     ],
     "writing_sty": [
-        #(get_punctuation_count, CS.POST_TEXT),
-        #(get_emotions, CS.POST_TEXT),
-        #(aita_location, CS.POST_TEXT),
-        #(get_profanity_count, CS.POST_TEXT),
-        #(check_wibta, CS.POST_TEXT),
-        # remove this for feature generation
-        #(get_spacy_features, CS.POST_TEXT)
+        (get_punctuation_count, CS.POST_TEXT),
+        (get_emotions, CS.POST_TEXT),
+        (aita_location, CS.POST_TEXT),
+        (get_profanity_count, CS.POST_TEXT),
+        (check_wibta, CS.POST_TEXT),
+        
+        (get_spacy_features, CS.POST_TEXT)# remove this for feature generation
 
     ],
     "reactions": [
