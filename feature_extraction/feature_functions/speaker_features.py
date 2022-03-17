@@ -126,9 +126,6 @@ def get_author_age_and_gender(post_text):
     both_valid = list(filter(lambda x: x[0]>= 0 and x[1] >= 0, age_gender_list))
     age_gender_list = both_valid if len(both_valid)>0 else age_gender_list
     
-    print("AGE GENDER:")
-    print(age_gender_list)
-    print("--------")
     if len(age_gender_list) > 1:
         True
         #lg.warning("More than 1 age/gender found for poster.")
