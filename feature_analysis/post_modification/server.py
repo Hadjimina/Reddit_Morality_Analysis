@@ -1,10 +1,5 @@
 
-import constants as CS
-from feature_functions.speaker_features import get_author_age_and_gender
-from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
-from feature_functions.topic_modelling import *
-from helpers.process_helper import process_run
-from helpers.globals_loader import load_spacy
+
 from functools import reduce
 from sklearn import preprocessing
 import sys
@@ -22,6 +17,14 @@ app = Flask(__name__)
 
 p = os.path.abspath('../../feature_extraction')
 sys.path.insert(1, p)
+
+
+import constants as CS
+from feature_functions.speaker_features import get_author_age_and_gender
+from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
+from feature_functions.topic_modelling import *
+from helpers.process_helper import process_run
+from helpers.globals_loader import load_spacy
 
 LIWC_EXE_PATH = "LIWC-22-cli"
 LIWC_IN = "./post_to_analyse.csv"
@@ -187,8 +190,8 @@ def getPrediction(df):
 
     clf = xgb.XGBRegressor()
     clf.load_model(XGB_PATH)
-    scaled = preprocessing.StandardScaler().fit_transform(df.values)
-    y_pred = clf.predict(scaled)
+    #scaled = preprocessing.StandardScaler().fit_transform(df.values)
+    y_pred = clf.predict(df)
     return y_pred
 
 
