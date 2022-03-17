@@ -1,6 +1,12 @@
 
-
+import constants as CS
+from feature_functions.speaker_features import get_author_age_and_gender
+from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
+from feature_functions.topic_modelling import *
+from helpers.process_helper import process_run
+from helpers.globals_loader import load_spacy
 from functools import reduce
+from sklearn import preprocessing
 import sys
 import os
 import spacy
@@ -16,13 +22,6 @@ app = Flask(__name__)
 
 p = os.path.abspath('../../feature_extraction')
 sys.path.insert(1, p)
-
-import constants as CS
-from feature_functions.speaker_features import get_author_age_and_gender
-from feature_functions.writing_style_features import get_spacy_features, get_punctuation_count, get_emotions, aita_location, get_profanity_count, check_wibta
-from feature_functions.topic_modelling import *
-from helpers.process_helper import process_run
-from helpers.globals_loader import load_spacy
 
 LIWC_EXE_PATH = "LIWC-22-cli"
 LIWC_IN = "./post_to_analyse.csv"
@@ -160,33 +159,35 @@ def getPrediction(df):
 
     clf = xgb.XGBRegressor()
     clf.load_model(XGB_PATH)
-
-    y_pred = clf.predict(df)
+    scaled = preprocessing.StandardScaler().fit_transform(df.values)
+    y_pred = clf.predict(scaled)
     return y_pred
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     data = [
-                {
-                    "ahr_old": "",
-                    "text_old":"",
-                    "ahr_new": "",
-                    "text_new":"",
-                    "model_me": "",
-                    "liwc_error": "",
-                    "changedFeatures": ""
-                }
-            ]
-    
+        {
+            "ahr_old": "",
+            "text_old": "",
+            "ahr_new": "",
+            "text_new": "",
+            "model_me": "",
+            "liwc_error": "",
+            "changedFeatures": ""
+        }
+    ]
+
     if request.method == 'POST':
         if request.form['submit_posts'] == 'Analyze':
 
-            df_old, is_down_old = getFeatureValues(request.form['old_post'].strip())
+            df_old, is_down_old = getFeatureValues(
+                request.form['old_post'].strip())
             df_old = reorderColumns(df_old)
             y_old = getPrediction(df_old)
 
-            df_new, is_down_new = getFeatureValues(request.form['new_post'].strip())
+            df_new, is_down_new = getFeatureValues(
+                request.form['new_post'].strip())
             df_new = reorderColumns(df_new)
             y_new = getPrediction(df_new)
 
@@ -211,7 +212,7 @@ def index():
             data = [
                 {
                     "ahr_old": y_old,
-                    "text_old":request.form['old_post'].strip(),
+                    "text_old": request.form['old_post'].strip(),
                     "ahr_new": y_new,
                     "text_new":request.form['new_post'].strip(),
                     "model_me": MODEL_ME,
