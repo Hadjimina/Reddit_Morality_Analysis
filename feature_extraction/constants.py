@@ -129,7 +129,7 @@ EMOTIONS = ['fear', 'anger', 'trust', 'surprise', 'sadness',
 FEATURES_TO_GENERATE_MP = {
     "speaker": [
         #(get_author_amita_post_activity, CS.POST_AUTHOR),
-        #(get_author_info, CS.POST_AUTHOR),
+       # (get_author_info, CS.POST_AUTHOR),
 
         (get_author_age_and_gender, CS.POST_TEXT)
     ],
@@ -144,15 +144,15 @@ FEATURES_TO_GENERATE_MP = {
 
     ],
     "reactions": [
-        # (check_crossposts, CS.POST_ID),  # slow
-        #(get_judgement_labels, CS.POST_ID)
+       # (check_crossposts, CS.POST_ID),  # slow
+       # (get_judgement_labels, CS.POST_ID)
     ]
 }
 
 # Modified in create_features.set_featueres_to_run_dist => so no longer const
 FEATURES_TO_GENERATE_MONO = {
     "writing_sty": [
-        # (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
+        (get_spacy_features, CS.POST_TEXT),  # => 4h for 10%
     ],
 }
 
