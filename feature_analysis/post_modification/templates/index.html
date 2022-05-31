@@ -6,12 +6,13 @@
   </head>
 
   <body>
+    <center>
     <h1>Reddit AITA post modification tool</h1>
     <p>
       With this tool you can see how modifications of a post change
       the outcome of it's judgement
     </p>
-    <form method="post" style="width: 40%">
+    <form method="post" style="width: 80%">
       <input type="text" id="post_id" name="post_id"placeholder="optional post_id" ><br><br>
       <textarea
         rows="2"
@@ -46,6 +47,7 @@
       <input type="submit" name="submit" value="Analyze" /><br/><br/>
       <input type="submit" name="submit" value="See texts in html dict format" />
     </form>
+  </center>
 
     {% for item in data %}
     {% if item.ahr_new != "" %}

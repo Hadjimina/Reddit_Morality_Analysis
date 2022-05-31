@@ -32,7 +32,7 @@ MF_PATH = "./data/mf.dic"
 LIWC_2015 = "LIWC2015"
 
 MODEL_ME = "0.33717"
-XGB_PATH = "./data/xgboost09.03.2022.json"
+XGB_PATH = "./data/xgboost17.03.2022.json"
 #RF_PATH = "./data/rf03.03.2022.json"
 TRAIN_CSV = "./data/prepend_done_trained_feats.csv"
 JUDGMENT_ACRONYM = ["YTA", "NTA", "INFO", "ESH", "NAH"]
@@ -171,7 +171,7 @@ def styleHTMLTitle(text):
 
     if dot < 150 or question < 150:
         title_idx = min(dot, question)+1
-        text = "<h1>"+text[:title_idx]+"</h1>"+text[title_idx:]
+        text = "<h1>"+text[:title_idx]+"</h1><br/>"+text[title_idx:]
     return text
 
 
