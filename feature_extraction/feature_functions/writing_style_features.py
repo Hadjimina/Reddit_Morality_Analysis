@@ -267,7 +267,8 @@ def get_profanity_count(post_text):
 
 
 def get_focus_in_spacy(token, count_possesive_pronouns=True):
-    """ Check if  token in the text is a pronoun. If so, check if they are subjects, objects or possesive pronouns (optional). 
+    """ Check if  token in the text is a pronoun. If so, check if they are subjects, objects. 
+        If count_possesive_pronouns is True, we only count possesive pronouns in the text.
 
     Args:
         token (spaCy token): token we got from analysing the entire post text using spaCy
