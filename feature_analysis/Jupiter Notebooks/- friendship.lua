@@ -1,0 +1,42 @@
+- friendship
+- shared living
+- parents
+- work
+- family celebration
+- pets
+- female family members
+- marriage
+- wedding
+- male family members
+- Education
+- Play
+- Race
+- Sexual orientation
+- Food 
+- Appearance
+- Food
+- Death
+- Smoking
+- Religion
+- Music
+- AITA forum
+- Extended Family
+- Pregnancy
+- Naming conventions
+- Entertainment
+- Bathrooms
+- Public Transportation
+
+Grouped topics:
+- Family (parents, family celebration, female family members, marriage, wedding, male family members, Extended Family, Family death)
+- Food (shared living, food, appearance)
+- Education (work, education)
+- Play (pets, play)
+- Race (race)
+- Sexual orientation (sexual orientation)
+- Smoking (smoking)
+- Religion (religion)
+- Music (music)
+- AITA forum (AITA forum)
+- Bathrooms (bathrooms)
+- Public transportation (public transportation)
